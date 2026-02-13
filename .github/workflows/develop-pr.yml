@@ -1,8 +1,8 @@
-name: CI
+name: Develop PR Check
 
 on:
   pull_request:
-    branches: [develop, main]
+    branches: [develop]
 
 jobs:
   build:
