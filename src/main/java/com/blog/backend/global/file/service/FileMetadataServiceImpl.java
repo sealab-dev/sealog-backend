@@ -3,7 +3,7 @@ package com.blog.backend.global.file.service;
 import com.blog.backend.global.file.entity.FileMetadata;
 import com.blog.backend.global.file.repository.FileMetadataRepository;
 import com.blog.backend.global.core.exception.CustomException;
-import com.blog.backend.infra.s3.dto.S3UploadResult;
+import com.blog.backend.infra.storage.dto.FileUploadResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,7 @@ public class FileMetadataServiceImpl implements FileMetadataService {
 
     @Override
     @Transactional
-    public FileMetadata saveFileMetadata(S3UploadResult uploadResult) {
+    public FileMetadata saveFileMetadata(FileUploadResult uploadResult) {
         FileMetadata fileMetadata = FileMetadata.builder()
                 .originalName(uploadResult.originalName())
                 .path(uploadResult.path())

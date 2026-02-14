@@ -7,7 +7,7 @@ import com.blog.backend.feature.user.repository.UserFileRepository;
 import com.blog.backend.feature.user.repository.UserRepository;
 import com.blog.backend.global.file.repository.FileMetadataRepository;
 import com.blog.backend.global.core.exception.CustomException;
-import com.blog.backend.infra.s3.service.S3Service;
+import com.blog.backend.infra.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,7 +24,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserFileRepository userFileRepository;
     private final FileMetadataRepository fileMetadataRepository;
     private final PasswordEncoder passwordEncoder;
-    private final S3Service s3Service;
+    private final FileStorageService fileStorageService;
     private final UserValidatorService userValidatorService;
 
     @Override

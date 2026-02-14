@@ -5,8 +5,8 @@ import com.blog.backend.global.file.dto.FileUploadResponse;
 import com.blog.backend.global.file.entity.FileMetadata;
 import com.blog.backend.global.file.service.FileMetadataService;
 import com.blog.backend.global.file.util.FileValidator;
-import com.blog.backend.infra.s3.dto.S3UploadResult;
-import com.blog.backend.infra.s3.service.S3Service;
+import com.blog.backend.infra.storage.dto.FileUploadResult;
+import com.blog.backend.infra.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +27,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class FileUploadController {
 
-    private final S3Service s3Service;
+    private final FileStorageService fileStorageService;
     private final FileMetadataService fileMetadataService;
 
     /**
@@ -56,7 +56,7 @@ public class FileUploadController {
         log.info("파일 검증 완료: filename={}", file.getOriginalFilename());
 
         // 2. 업로드 (타입별 경로 자동 분류)
-        S3UploadResult uploadResult = s3Service.uploadFile(file);
+        FileUploadResult uploadResult = fileStorageService.uploadFile(file);
         log.info("업로드 완료: originalName={} path={} contentType={}",
                 uploadResult.originalName(), uploadResult.path(), uploadResult.contentType());
 

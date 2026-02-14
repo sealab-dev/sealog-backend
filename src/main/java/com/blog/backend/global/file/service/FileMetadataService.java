@@ -1,7 +1,7 @@
 package com.blog.backend.global.file.service;
 
 import com.blog.backend.global.file.entity.FileMetadata;
-import com.blog.backend.infra.s3.dto.S3UploadResult;
+import com.blog.backend.infra.storage.dto.FileUploadResult;
 
 import java.util.List;
 import java.util.Set;
@@ -17,12 +17,12 @@ import java.util.Set;
 public interface FileMetadataService {
 
     /**
-     * S3UploadResult를 기반으로 FileMetadata를 생성하고 저장합니다.
+     * FileUploadResult를 기반으로 FileMetadata를 생성하고 저장합니다.
      *
      * @param uploadResult S3 업로드 결과
      * @return 저장된 FileMetadata
      */
-    FileMetadata saveFileMetadata(S3UploadResult uploadResult);
+    FileMetadata saveFileMetadata(FileUploadResult uploadResult);
 
     /**
      * 파일 메타데이터를 ID로 조회합니다.

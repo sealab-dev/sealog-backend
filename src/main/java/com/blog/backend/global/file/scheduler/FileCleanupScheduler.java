@@ -3,7 +3,7 @@ package com.blog.backend.global.file.scheduler;
 import com.blog.backend.global.file.collector.FileUsageCollector;
 import com.blog.backend.global.file.entity.FileMetadata;
 import com.blog.backend.global.file.service.FileMetadataService;
-import com.blog.backend.infra.s3.service.S3Service;
+import com.blog.backend.infra.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FileCleanupScheduler {
 
-    private final S3Service s3Service;
+    private final FileStorageService fileStorageService;
     private final FileMetadataService fileMetadataService;
     private final List<FileUsageCollector> fileUsageCollectors;
 
@@ -74,7 +74,7 @@ public class FileCleanupScheduler {
                     .map(FileMetadata::getPath)
                     .collect(Collectors.toList());
 
-            List<String> deletedS3Keys = s3Service.deleteFiles(s3Keys);
+            List<String> deletedS3Keys = fileStorageService.deleteFiles(s3Keys);
 
             if (deletedS3Keys.isEmpty()) {
                 log.warn("=== S3 파일 삭제가 모두 실패했습니다 ===");
