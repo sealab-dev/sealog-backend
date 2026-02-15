@@ -51,7 +51,7 @@ jobs:
           AWS_DISTRIBUTION_ID: TEST123
 
           # JWT
-          JWT_KEY: ci-test-jwt-secret-key-1234567890-abcdef
+          JWT_KEY: bG9jYWwtZGV2LWp3dC1zZWNyZXQta2V5LTEyMzQ1Njc4OTAtYWJjZGVm
 
         run: |
           chmod +x gradlew
