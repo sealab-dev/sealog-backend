@@ -1,9 +1,8 @@
-# develop-pr.yml
-name: Develop PR Check
+name: Main PR Check
 
 on:
   pull_request:
-    branches: [develop]
+    branches: [main]
 
 jobs:
   build:
@@ -39,18 +38,18 @@ jobs:
           DATABASE_URL: jdbc:mariadb://localhost:3306/testdb
           DATABASE_USER: root
           DATABASE_PASSWORD: root
-          
+
           # JPA
-          JPA_SHOW_SQL: true
+          JPA_SHOW_SQL: false
           JPA_HIBERNATE_DDL: create-drop
-          
+
           # AWS (더미값)
           AWS_ACCESS_KEY: test-key
           AWS_SECRET_KEY: test-secret
           AWS_BUCKET: test-bucket
           AWS_DOMAIN: test.cloudfront.net
           AWS_DISTRIBUTION_ID: TEST123
-          
+
           # JWT
           JWT_KEY: ci-test-jwt-secret-key-1234567890-abcdef
 
