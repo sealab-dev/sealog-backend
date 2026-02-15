@@ -4,9 +4,9 @@ plugins {
 	id 'io.spring.dependency-management' version '1.1.7'
 }
 
-group = "com.blog.backend"
+group = "com.sealog.backend"
 version = "@v1.0"
-description = "blog backend"
+description = "sealog backend"
 
 bootJar {
 	archiveFileName = "sealog${version}.jar"
