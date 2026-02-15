@@ -1,3 +1,4 @@
+# develop-pr.yml
 name: Develop PR Check
 
 on:
@@ -7,6 +8,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:11.4.8
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: testdb
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Checkout
@@ -18,10 +33,27 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build with Gradle
+      - name: Build and Test
+        env:
+          # Database
+          DATABASE_URL: jdbc:mariadb://localhost:3306/testdb
+          DATABASE_USER: root
+          DATABASE_PASSWORD: root
+          
+          # JPA
+          JPA_SHOW_SQL: true
+          JPA_HIBERNATE_DDL: create-drop
+          
+          # AWS (더미값)
+          AWS_ACCESS_KEY: test-key
+          AWS_SECRET_KEY: test-secret
+          AWS_BUCKET: test-bucket
+          AWS_DOMAIN: test.cloudfront.net
+          AWS_DISTRIBUTION_ID: TEST123
+          
+          # JWT
+          JWT_KEY: ci-test-jwt-secret-key-1234567890-abcdef
+
         run: |
           chmod +x gradlew
           ./gradlew build
-
-      - name: Run tests
-        run: ./gradlew test

@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   mariadb:
-    image: mariadb:10.11
+    image: mariadb:11.4.8
     container_name: mariadb-dev
     restart: always
     ports:
