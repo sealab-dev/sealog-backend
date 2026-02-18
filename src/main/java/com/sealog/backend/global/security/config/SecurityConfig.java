@@ -74,6 +74,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/stacks/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/user/**").permitAll()
+
+                        // Swagger html 경로
+                                .requestMatchers("/swagger-ui/**","/v3/api-docs/**","/swagger-ui.html", "/docs/**").permitAll()
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )

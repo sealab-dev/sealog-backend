@@ -5,9 +5,11 @@ import com.sealog.backend.feature.post.dto.PostResponse;
 import com.sealog.backend.feature.post.dto.PostSearchCondition;
 import com.sealog.backend.feature.post.entity.PostType;
 import com.sealog.backend.feature.post.service.MyPostService;
-import com.sealog.backend.global.core.response.ApiResponse;
+import com.sealog.backend.global.core.response.CustomResponse;
 import com.sealog.backend.global.core.response.PageResponse;
 import com.sealog.backend.global.security.auth.CustomUserDetails;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,13 +20,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 /**
  * 내 게시글 컨트롤러 (인증 필수)
  *
  * 로그인한 사용자만 접근 가능한 게시글 관리 API
  * - 게시글 생성, 수정, 삭제, 복구
  */
+@Tag(name = "게시글1111", description = "게시글 관련 API")
 @RestController
 @RequestMapping("/api/my/posts")
 @RequiredArgsConstructor
@@ -41,7 +43,7 @@ public class MyPostController {
      * @param request 게시글 데이터 (thumbnailFileId, thumbnailUrl 포함)
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<PostResponse.Detail>> createPost(
+    public ResponseEntity<CustomResponse<PostResponse.Detail>> createPost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody @Valid PostRequest.Create request
     ) {
@@ -51,7 +53,7 @@ public class MyPostController {
         );
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ApiResponse.success(response, "게시글이 생성되었습니다"));
+                .body(CustomResponse.success(response, "게시글이 생성되었습니다"));
     }
 
     /**
@@ -59,12 +61,16 @@ public class MyPostController {
      * GET /api/my/posts/{slug}/edit
      */
     @GetMapping("/{slug}/edit")
-    public ResponseEntity<ApiResponse<PostResponse.Edit>> getPostForEdit(
+    @Operation(summary = "게시글 목록 조회", description = "게시글 목록을 조회합니다.")
+    @Tag(name = "게시글", description = "게시글 관련 API")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "파라미터 오류")
+    public ResponseEntity<CustomResponse<PostResponse.Edit>> getPostForEdit(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug
     ) {
         PostResponse.Edit response = myPostService.getPostForEdit(userDetails.getUserId(), slug);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(CustomResponse.success(response));
     }
 
     /**
@@ -75,7 +81,7 @@ public class MyPostController {
      * @param request 게시글 데이터 (thumbnailFileId, thumbnailUrl, removeThumbnail 포함)
      */
     @PutMapping("/{slug}")
-    public ResponseEntity<ApiResponse<PostResponse.Detail>> updatePost(
+    public ResponseEntity<CustomResponse<PostResponse.Detail>> updatePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug,
             @RequestBody @Valid PostRequest.Update request
@@ -85,7 +91,7 @@ public class MyPostController {
                 slug,
                 request
         );
-        return ResponseEntity.ok(ApiResponse.success(response, "게시글이 수정되었습니다"));
+        return ResponseEntity.ok(CustomResponse.success(response, "게시글이 수정되었습니다"));
     }
 
     /**
@@ -95,12 +101,12 @@ public class MyPostController {
      * @param slug 삭제할 게시글 slug
      */
     @DeleteMapping("/{slug}")
-    public ResponseEntity<ApiResponse<Void>> deletePost(
+    public ResponseEntity<CustomResponse<Void>> deletePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug
     ) {
         myPostService.deletePost(userDetails.getUserId(), slug);
-        return ResponseEntity.ok(ApiResponse.success(null, "게시글이 삭제되었습니다"));
+        return ResponseEntity.ok(CustomResponse.success(null, "게시글이 삭제되었습니다"));
     }
 
     /**
@@ -110,12 +116,12 @@ public class MyPostController {
      * @param slug 복구할 게시글 slug
      */
     @PostMapping("/{slug}/restore")
-    public ResponseEntity<ApiResponse<Void>> restorePost(
+    public ResponseEntity<CustomResponse<Void>> restorePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug
     ) {
         myPostService.restorePost(userDetails.getUserId(), slug);
-        return ResponseEntity.ok(ApiResponse.success(null, "게시글이 복구되었습니다"));
+        return ResponseEntity.ok(CustomResponse.success(null, "게시글이 복구되었습니다"));
     }
 
     // ========== 조회 ========== //
@@ -127,7 +133,7 @@ public class MyPostController {
      * - DELETED 상태 제외 (삭제된 게시글은 별도 엔드포인트)
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<PostResponse.PostItems>>> searchMyPosts(
+    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> searchMyPosts(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false) PostType postType,
             @RequestParam(required = false) String stack,
@@ -140,7 +146,7 @@ public class MyPostController {
                 condition,
                 pageable
         );
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(posts)));
+        return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
     }
 
     /**
@@ -148,7 +154,7 @@ public class MyPostController {
      * GET /api/my/posts/deleted
      */
     @GetMapping("/deleted")
-    public ResponseEntity<ApiResponse<PageResponse<PostResponse.PostItems>>> getDeletedPosts(
+    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getDeletedPosts(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 10, sort = "deletedAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
@@ -156,6 +162,6 @@ public class MyPostController {
                 userDetails.getUserId(),
                 pageable
         );
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(posts)));
+        return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
     }
 }

@@ -3,11 +3,14 @@ package com.sealog.backend.feature.user.controller;
 import com.sealog.backend.feature.user.dto.AuthRequest;
 import com.sealog.backend.feature.user.service.AuthService;
 import com.sealog.backend.feature.user.entity.User;
-import com.sealog.backend.global.core.response.ApiResponse;
+import com.sealog.backend.global.core.response.CustomResponse;
 import com.sealog.backend.global.core.exception.CustomException;
 import com.sealog.backend.global.security.util.CookieUtil;
 import com.sealog.backend.global.security.jwt.JwtTokenProvider;
 import com.sealog.backend.feature.user.dto.UserResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -33,7 +36,10 @@ public class AuthController {
      * POST /api/auth/login
      */
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<UserResponse.UserInfo>> login(
+    @Tag(name = "Auth", description = "인증 API")
+    @Operation(summary = "로그인", description = "로그인 후 JWT 발급")
+    @SecurityRequirements()
+    public ResponseEntity<CustomResponse<UserResponse.UserInfo>> login(
             @Valid @RequestBody AuthRequest.LoginRequest request,
             HttpServletResponse response
     ) {
@@ -41,7 +47,7 @@ public class AuthController {
 
         setTokenCookies(response, user);
 
-        return ResponseEntity.ok(ApiResponse.success(UserResponse.UserInfo.from(user), "로그인 성공"));
+        return ResponseEntity.ok(CustomResponse.success(UserResponse.UserInfo.from(user), "로그인 성공"));
     }
 
     /**
@@ -50,7 +56,7 @@ public class AuthController {
      * - Refresh Token은 쿠키에서 자동으로 추출
      */
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<UserResponse.UserInfo>> refresh(
+    public ResponseEntity<CustomResponse<UserResponse.UserInfo>> refresh(
             HttpServletRequest request,
             HttpServletResponse response
     ) {
@@ -71,7 +77,7 @@ public class AuthController {
         // 새 토큰 생성 및 쿠키 설정
         setTokenCookies(response, user);
 
-        return ResponseEntity.ok(ApiResponse.success(UserResponse.UserInfo.from(user), "토큰이 재발급되었습니다"));
+        return ResponseEntity.ok(CustomResponse.success(UserResponse.UserInfo.from(user), "토큰이 재발급되었습니다"));
     }
 
     /**
@@ -79,9 +85,9 @@ public class AuthController {
      * POST /api/auth/logout
      */
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(HttpServletResponse response) {
+    public ResponseEntity<CustomResponse<Void>> logout(HttpServletResponse response) {
         cookieUtil.deleteTokenCookies(response);
-        return ResponseEntity.ok(ApiResponse.success(null, "로그아웃 되었습니다"));
+        return ResponseEntity.ok(CustomResponse.success(null, "로그아웃 되었습니다"));
     }
 
     /**
