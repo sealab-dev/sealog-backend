@@ -40,7 +40,7 @@ jobs:
           DATABASE_PASSWORD: root
           
           # JPA
-          JPA_SHOW_SQL: true
+          JPA_SHOW_SQL: false
           JPA_HIBERNATE_DDL: create-drop
           
           # AWS (더미값)

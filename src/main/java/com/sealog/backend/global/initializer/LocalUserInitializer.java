@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Profile("local")
 @RequiredArgsConstructor
-public class LocalDataInitializer implements ApplicationRunner {
+public class LocalUserInitializer implements ApplicationRunner {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
