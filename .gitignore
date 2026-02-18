@@ -37,3 +37,6 @@ out/
 .vscode/
 
 .env.local
+
+### Local Upload Files ###
+/uploads
