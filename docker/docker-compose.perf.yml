@@ -1,0 +1,84 @@
+name: sealog-perf
+
+services:
+  spring-app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: sealog-backend:perf
+    container_name: sealog-spring-perf
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+
+      - DATABASE_URL=jdbc:mariadb://mariadb-perf:3306/devdb
+      - DATABASE_USER=devuser
+      - DATABASE_PASSWORD=devpass
+
+      - JPA_SHOW_SQL=false
+      - JPA_HIBERNATE_DDL=update
+
+      - SPRING_DATA_REDIS_HOST=redis-perf
+      - SPRING_DATA_REDIS_PORT=6379
+      - JAVA_OPTS=-Xmx768m -Xms768m
+      - JWT_KEY=bG9jYWwtZGV2LWp3dC1zZWNyZXQta2V5LTEyMzQ1Njc4OTAtYWJjZGVm
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+    depends_on:
+      mariadb-perf:
+        condition: service_healthy
+      redis-perf:
+        condition: service_started
+    networks:
+      - perf-net
+
+  mariadb-perf:
+    image: mariadb:11.4.8
+    container_name: sealog-mariadb-perf
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: devdb
+      MARIADB_USER: devuser
+      MARIADB_PASSWORD: devpass
+    volumes:
+      - mariadb_data_perf:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+    networks:
+      - perf-net
+
+  redis-perf:
+    image: redis:7.2-alpine
+    container_name: sealog-redis-perf
+    restart: always
+    ports:
+      - "6380:6379"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+    networks:
+      - perf-net
+
+volumes:
+  mariadb_data_perf:
+
+networks:
+  perf-net:
+    driver: bridge
