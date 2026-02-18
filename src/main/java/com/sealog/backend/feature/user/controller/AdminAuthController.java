@@ -2,7 +2,7 @@ package com.sealog.backend.feature.user.controller;
 
 import com.sealog.backend.feature.user.dto.AuthRequest;
 import com.sealog.backend.feature.user.service.AuthService;
-import com.sealog.backend.global.core.response.ApiResponse;
+import com.sealog.backend.global.core.response.CustomResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,10 +23,10 @@ public class AdminAuthController {
      * POST /api/admin/auth/signup
      */
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<Void>> signUp(
+    public ResponseEntity<CustomResponse<Void>> signUp(
             @Valid @RequestBody AuthRequest.SignUpRequest request
     ) {
         authService.signUp(request);
-        return ResponseEntity.ok(ApiResponse.success(null, "회원가입이 성공적으로 완료되었습니다."));
+        return ResponseEntity.ok(CustomResponse.success(null, "회원가입이 성공적으로 완료되었습니다."));
     }
 }

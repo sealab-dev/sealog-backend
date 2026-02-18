@@ -90,4 +90,6 @@ logging:
         org.hibernate.SQL: ${LOG_LEVEL_HIBERNATE:ERROR}
 
 
-
+springdoc:
+  swagger-ui:
+    path: /docs

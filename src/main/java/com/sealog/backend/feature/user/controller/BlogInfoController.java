@@ -2,7 +2,7 @@ package com.sealog.backend.feature.user.controller;
 
 import com.sealog.backend.feature.user.dto.UserResponse;
 import com.sealog.backend.feature.user.service.UserService;
-import com.sealog.backend.global.core.response.ApiResponse;
+import com.sealog.backend.global.core.response.CustomResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,10 +19,10 @@ public class BlogInfoController {
      * GET /api/user/{nickname}
      */
     @GetMapping("/{nickname}")
-    public ResponseEntity<ApiResponse<UserResponse.BlogUserInfo>> signUp(
+    public ResponseEntity<CustomResponse<UserResponse.BlogUserInfo>> signUp(
             @PathVariable String nickname
     ) {
         UserResponse.BlogUserInfo blogUser = userService.getBlogUser(nickname);
-        return ResponseEntity.ok(ApiResponse.success(blogUser, "회원가입이 성공적으로 완료되었습니다."));
+        return ResponseEntity.ok(CustomResponse.success(blogUser, "회원가입이 성공적으로 완료되었습니다."));
     }
 }

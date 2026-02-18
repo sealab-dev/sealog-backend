@@ -1,6 +1,6 @@
 package com.sealog.backend.global.file.controller;
 
-import com.sealog.backend.global.core.response.ApiResponse;
+import com.sealog.backend.global.core.response.CustomResponse;
 import com.sealog.backend.global.file.dto.FileUploadResponse;
 import com.sealog.backend.global.file.entity.FileMetadata;
 import com.sealog.backend.global.file.service.FileMetadataService;
@@ -45,7 +45,7 @@ public class FileUploadController {
      */
     @PostMapping("/upload")
     @Transactional
-    public ResponseEntity<ApiResponse<FileUploadResponse>> uploadFile(
+    public ResponseEntity<CustomResponse<FileUploadResponse>> uploadFile(
             @RequestParam("file") MultipartFile file
     ) throws IOException {
         log.info("파일 업로드 요청: filename={}, contentType={}, size={}bytes",
@@ -68,6 +68,6 @@ public class FileUploadController {
         FileUploadResponse response = FileUploadResponse.from(fileMetadata);
         log.info("파일 업로드 성공: fileId={}, path={}", response.id(), response.path());
 
-        return ResponseEntity.ok(ApiResponse.success(response, "파일이 업로드되었습니다"));
+        return ResponseEntity.ok(CustomResponse.success(response, "파일이 업로드되었습니다"));
     }
 }

@@ -4,7 +4,7 @@ import com.sealog.backend.feature.post.dto.PostResponse;
 import com.sealog.backend.feature.post.dto.PostSearchCondition;
 import com.sealog.backend.feature.post.entity.PostType;
 import com.sealog.backend.feature.post.service.PublicPostService;
-import com.sealog.backend.global.core.response.ApiResponse;
+import com.sealog.backend.global.core.response.CustomResponse;
 import com.sealog.backend.global.core.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,12 +38,12 @@ public class PublicPostController {
      * @return 게시글 상세 정보 (관련 게시글 포함)
      */
     @GetMapping("/{nickname}/{slug}")
-    public ResponseEntity<ApiResponse<PostResponse.Detail>> getPostByNicknameAndSlug(
+    public ResponseEntity<CustomResponse<PostResponse.Detail>> getPostByNicknameAndSlug(
             @PathVariable String nickname,
             @PathVariable String slug
     ) {
         PostResponse.Detail response = publicPostService.getPostByNicknameAndSlug(nickname, slug);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(CustomResponse.success(response));
     }
 
     /**
@@ -59,7 +59,7 @@ public class PublicPostController {
      * @return 공개 게시글 페이지
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<PostResponse.PostItems>>> searchPosts(
+    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> searchPosts(
             @RequestParam(required = false) PostType postType,
             @RequestParam(required = false) String stack,
             @RequestParam(required = false) String keyword,
@@ -67,7 +67,7 @@ public class PublicPostController {
     ) {
         PostSearchCondition condition = PostSearchCondition.ofPublic(postType, stack, keyword);
         Page<PostResponse.PostItems> posts = publicPostService.searchPosts(condition, pageable);
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(posts)));
+        return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
     }
 
     /**
@@ -84,7 +84,7 @@ public class PublicPostController {
      * @return 해당 사용자의 공개 게시글 목록
      */
     @GetMapping("/user/{nickname}")
-    public ResponseEntity<ApiResponse<PageResponse<PostResponse.PostItems>>> getUserPublicPosts(
+    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getUserPublicPosts(
             @PathVariable String nickname,
             @RequestParam(required = false) PostType postType,
             @RequestParam(required = false) String stack,
@@ -93,7 +93,7 @@ public class PublicPostController {
     ) {
         PostSearchCondition condition = PostSearchCondition.ofUser(nickname, postType, stack, keyword);
         Page<PostResponse.PostItems> posts = publicPostService.searchPosts(condition, pageable);
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(posts)));
+        return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
     }
 
     /**
@@ -108,10 +108,10 @@ public class PublicPostController {
      * @return 검색된 게시글 목록
      */
     @GetMapping("/autocomplete")
-    public ResponseEntity<ApiResponse<List<PostResponse.PostItems>>> autocomplete(
+    public ResponseEntity<CustomResponse<List<PostResponse.PostItems>>> autocomplete(
             @RequestParam(required = false, defaultValue = "") String keyword
     ) {
         List<PostResponse.PostItems> results = publicPostService.autocomplete(keyword);
-        return ResponseEntity.ok(ApiResponse.success(results));
+        return ResponseEntity.ok(CustomResponse.success(results));
     }
 }
