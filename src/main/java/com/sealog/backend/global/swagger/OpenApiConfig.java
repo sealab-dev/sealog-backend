@@ -1,10 +1,11 @@
-package com.sealog.backend.infra.storage.config;
+package com.sealog.backend.global.swagger;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,5 +31,36 @@ public class OpenApiConfig {
                                 .scheme("bearer")
                                 .bearerFormat("JWT")
                 ));
+    }
+
+    // 관리자 API 문서
+    @Bean
+    public GroupedOpenApi adminApi() {
+        return GroupedOpenApi.builder()
+                .group("admin")
+                .pathsToMatch("/api/admin/**")
+                .build();
+    }
+
+
+    // 일반 API 문서
+    @Bean
+    public GroupedOpenApi usersApi() {
+        return GroupedOpenApi.builder()
+                .group("users")
+                .pathsToMatch("/api/me/**","/api/my/**","/api/files/**")
+                .pathsToExclude("/api/admin/**","/api/auth/**","/api/user/**","/api/stack/**")
+                .build();
+    }
+
+
+
+    @Bean
+    public GroupedOpenApi guestApi() {
+        return GroupedOpenApi.builder()
+                .group("guest")
+                .pathsToMatch("/api/**")
+                .pathsToExclude("/api/admin/**","/api/me/**","/api/my/**","/api/files/**")
+                .build();
     }
 }

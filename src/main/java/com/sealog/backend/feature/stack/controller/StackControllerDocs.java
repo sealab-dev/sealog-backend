@@ -35,7 +35,7 @@ public interface StackControllerDocs {
             content = @Content(schema = @Schema(hidden = true))),
     })
     ResponseEntity<CustomResponse<StackResponse.GroupedStacks>> getGroupedStacksByUser(
-        @Parameter(description = "사용자 닉네임", example = "seadev") String nickname
+        @Parameter(description = "사용자 닉네임", example = "테스터") String nickname
     );
 
     @Operation(summary = "인기 스택 조회", description = "게시글 수 기준 인기 스택을 반환합니다. 사이드바에서 사용됩니다.")

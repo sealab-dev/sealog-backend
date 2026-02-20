@@ -25,7 +25,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
-public class PublicPostController {
+public class PublicPostController implements PublicPostControllerDocs{
 
     private final PublicPostService publicPostService;
 
@@ -37,6 +37,7 @@ public class PublicPostController {
      * @param slug 게시글 slug
      * @return 게시글 상세 정보 (관련 게시글 포함)
      */
+    @Override
     @GetMapping("/{nickname}/{slug}")
     public ResponseEntity<CustomResponse<PostResponse.Detail>> getPostByNicknameAndSlug(
             @PathVariable String nickname,
@@ -58,6 +59,7 @@ public class PublicPostController {
      *
      * @return 공개 게시글 페이지
      */
+    @Override
     @GetMapping
     public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> searchPosts(
             @RequestParam(required = false) PostType postType,
@@ -83,6 +85,7 @@ public class PublicPostController {
      * @param nickname 사용자 닉네임
      * @return 해당 사용자의 공개 게시글 목록
      */
+    @Override
     @GetMapping("/user/{nickname}")
     public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getUserPublicPosts(
             @PathVariable String nickname,
@@ -107,6 +110,7 @@ public class PublicPostController {
      * @param keyword 검색 키워드
      * @return 검색된 게시글 목록
      */
+    @Override
     @GetMapping("/autocomplete")
     public ResponseEntity<CustomResponse<List<PostResponse.PostItems>>> autocomplete(
             @RequestParam(required = false, defaultValue = "") String keyword

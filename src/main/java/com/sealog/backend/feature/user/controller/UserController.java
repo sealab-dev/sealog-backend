@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/me")
 @RequiredArgsConstructor
-public class UserController {
+public class UserController implements UserControllerDocs{
 
     private final UserService userService;
 
@@ -23,6 +23,7 @@ public class UserController {
      * 내 정보 조회
      * GET /api/me
      */
+    @Override
     @GetMapping
     public ResponseEntity<CustomResponse<UserResponse.UserInfo>> getMe(
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -37,6 +38,7 @@ public class UserController {
      * - 닉네임 및/또는 프로필 이미지 수정
      * - MultipartFile과 JSON을 함께 전송하기 위해 @RequestPart 사용
      */
+    @Override
     @PatchMapping("/profile")
     public ResponseEntity<CustomResponse<UserResponse.UserInfo>> updateProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -59,6 +61,7 @@ public class UserController {
      * PATCH /api/me/password
      * - 현재 비밀번호 확인 후 새 비밀번호로 변경
      */
+    @Override
     @PatchMapping("/password")
     public ResponseEntity<CustomResponse<Void>> changePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
