@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/admin/auth")
 @RequiredArgsConstructor
-public class AdminAuthController {
+public class AdminAuthController implements AdminAuthControllerDocs{
 
     private final AuthService authService;
 
@@ -22,6 +22,7 @@ public class AdminAuthController {
      * 회원가입
      * POST /api/admin/auth/signup
      */
+    @Override
     @PostMapping("/signup")
     public ResponseEntity<CustomResponse<Void>> signUp(
             @Valid @RequestBody AuthRequest.SignUpRequest request

@@ -22,7 +22,7 @@ public class StackResponse {
         @Schema(description = "스택명", example = "Spring Boot")
         private String name;
 
-        @Schema(description = "스택 그룹", example = "BACKEND")
+        @Schema(description = "스택 그룹", example = "ETC")
         private StackGroup stackGroup;
 
         public static StackItem from(Stack stack) {
@@ -45,7 +45,7 @@ public class StackResponse {
         @Schema(description = "스택명", example = "Spring Boot")
         private String name;
 
-        @Schema(description = "스택 그룹", example = "BACKEND")
+        @Schema(description = "스택 그룹", example = "ETC")
         private StackGroup stackGroup;
 
         @Schema(description = "게시글 수", example = "12")

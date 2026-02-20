@@ -1,5 +1,6 @@
 package com.sealog.backend.feature.user.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -16,16 +17,28 @@ public class UserRequest {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @Schema(description = "프로필 수정 요청")
     public static class UpdateProfileRequest {
 
         @Size(min = 2, max = 20, message = "닉네임은 2~20자로 입력해주세요")
+        @Schema(description = "닉네임", example = "seadev")
         private String nickname;
+
         @Size(max = 50, message = "포지션은 50글자 이내로 입력해주세요")
+        @Schema(description = "포지션", example = "Backend Developer")
         private String position;
+
         @Size(max = 500, message = "소개는 500자 이내로 입력해주세요.")
+        @Schema(description = "소개", example = "Java/Spring 기반 백엔드 개발자입니다.")
         private String about;
+
+        @Schema(description = "프로필 이미지 ID", example = "10")
         private Long profileImageId;
+
+        @Schema(description = "프로필 이미지 경로", example = "https://cdn.example.com/profile/10.png")
         private String profileImagePath;
+
+        @Schema(description = "프로필 이미지 제거 여부", example = "false")
         private Boolean removeProfileImage;
     }
 
@@ -36,16 +49,20 @@ public class UserRequest {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @Schema(description = "비밀번호 변경 요청")
     public static class ChangePasswordRequest {
 
         @NotBlank(message = "현재 비밀번호를 입력해주세요")
+        @Schema(description = "현재 비밀번호", example = "test1234")
         private String currentPassword;
 
         @NotBlank(message = "새 비밀번호를 입력해주세요")
         @Size(min = 8, max = 20, message = "비밀번호는 8~20자로 입력해주세요")
+        @Schema(description = "새 비밀번호", example = "newpass1234")
         private String newPassword;
 
         @NotBlank(message = "새 비밀번호 확인을 입력해주세요")
+        @Schema(description = "새 비밀번호 확인", example = "newpass1234")
         private String newPasswordConfirm;
     }
 }

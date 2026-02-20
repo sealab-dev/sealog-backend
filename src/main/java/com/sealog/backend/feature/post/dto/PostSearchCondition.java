@@ -1,6 +1,7 @@
 package com.sealog.backend.feature.post.dto;
 
 import com.sealog.backend.feature.post.entity.PostType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,11 +11,16 @@ import lombok.Getter;
  */
 @Getter
 @Builder
+@Schema(description = "게시글 검색 조건")
 public class PostSearchCondition {
 
+    @Schema(description = "게시글 타입", example = "CORE")
     private PostType postType;
+    @Schema(description = "스택명", example = "Spring Boot")
     private String stackName;
+    @Schema(description = "검색어", example = "JWT")
     private String keyword;
+    @Schema(description = "작성자 닉네임", example = "테스터")
     private String nickname;  // 작성자 닉네임 필터
 
     /**

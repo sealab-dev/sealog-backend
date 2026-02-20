@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class AuthController {
+public class AuthController implements AuthControllerDocs{
 
     private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
@@ -35,10 +35,8 @@ public class AuthController {
      * 로그인
      * POST /api/auth/login
      */
+    @Override
     @PostMapping("/login")
-    @Tag(name = "Auth", description = "인증 API")
-    @Operation(summary = "로그인", description = "로그인 후 JWT 발급")
-    @SecurityRequirements()
     public ResponseEntity<CustomResponse<UserResponse.UserInfo>> login(
             @Valid @RequestBody AuthRequest.LoginRequest request,
             HttpServletResponse response
@@ -55,6 +53,7 @@ public class AuthController {
      * POST /api/auth/refresh
      * - Refresh Token은 쿠키에서 자동으로 추출
      */
+    @Override
     @PostMapping("/refresh")
     public ResponseEntity<CustomResponse<UserResponse.UserInfo>> refresh(
             HttpServletRequest request,
@@ -84,6 +83,7 @@ public class AuthController {
      * 로그아웃
      * POST /api/auth/logout
      */
+    @Override
     @PostMapping("/logout")
     public ResponseEntity<CustomResponse<Void>> logout(HttpServletResponse response) {
         cookieUtil.deleteTokenCookies(response);

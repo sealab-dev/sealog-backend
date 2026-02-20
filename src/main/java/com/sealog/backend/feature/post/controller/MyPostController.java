@@ -26,11 +26,11 @@ import org.springframework.web.bind.annotation.*;
  * 로그인한 사용자만 접근 가능한 게시글 관리 API
  * - 게시글 생성, 수정, 삭제, 복구
  */
-@Tag(name = "게시글1111", description = "게시글 관련 API")
+
 @RestController
 @RequestMapping("/api/my/posts")
 @RequiredArgsConstructor
-public class MyPostController {
+public class MyPostController implements MyPostControllerDocs{
 
     private final MyPostService myPostService;
 
@@ -42,6 +42,7 @@ public class MyPostController {
      *
      * @param request 게시글 데이터 (thumbnailFileId, thumbnailUrl 포함)
      */
+    @Override
     @PostMapping
     public ResponseEntity<CustomResponse<PostResponse.Detail>> createPost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -60,11 +61,8 @@ public class MyPostController {
      * 게시글 수정용 데이터 조회
      * GET /api/my/posts/{slug}/edit
      */
+    @Override
     @GetMapping("/{slug}/edit")
-    @Operation(summary = "게시글 목록 조회", description = "게시글 목록을 조회합니다.")
-    @Tag(name = "게시글", description = "게시글 관련 API")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "파라미터 오류")
     public ResponseEntity<CustomResponse<PostResponse.Edit>> getPostForEdit(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug
@@ -80,6 +78,7 @@ public class MyPostController {
      * @param slug 수정할 게시글 slug
      * @param request 게시글 데이터 (thumbnailFileId, thumbnailUrl, removeThumbnail 포함)
      */
+    @Override
     @PutMapping("/{slug}")
     public ResponseEntity<CustomResponse<PostResponse.Detail>> updatePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -100,6 +99,7 @@ public class MyPostController {
      *
      * @param slug 삭제할 게시글 slug
      */
+    @Override
     @DeleteMapping("/{slug}")
     public ResponseEntity<CustomResponse<Void>> deletePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -115,6 +115,7 @@ public class MyPostController {
      *
      * @param slug 복구할 게시글 slug
      */
+    @Override
     @PostMapping("/{slug}/restore")
     public ResponseEntity<CustomResponse<Void>> restorePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -132,6 +133,7 @@ public class MyPostController {
      *
      * - DELETED 상태 제외 (삭제된 게시글은 별도 엔드포인트)
      */
+    @Override
     @GetMapping
     public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> searchMyPosts(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -153,6 +155,7 @@ public class MyPostController {
      * 삭제된 게시글 목록 조회
      * GET /api/my/posts/deleted
      */
+    @Override
     @GetMapping("/deleted")
     public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getDeletedPosts(
             @AuthenticationPrincipal CustomUserDetails userDetails,

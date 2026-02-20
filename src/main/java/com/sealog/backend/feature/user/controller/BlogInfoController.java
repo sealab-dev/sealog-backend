@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
-public class BlogInfoController {
+public class BlogInfoController implements BlogInfoControllerDocs{
 
     private final UserService userService;
 
@@ -18,6 +18,7 @@ public class BlogInfoController {
      * 블로그 사용자 정보
      * GET /api/user/{nickname}
      */
+    @Override
     @GetMapping("/{nickname}")
     public ResponseEntity<CustomResponse<UserResponse.BlogUserInfo>> signUp(
             @PathVariable String nickname

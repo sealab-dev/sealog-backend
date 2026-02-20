@@ -25,7 +25,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
-public class FileUploadController {
+public class FileUploadController implements FileUploadControllerDocs{
 
     private final FileStorageService fileStorageService;
     private final FileMetadataService fileMetadataService;
@@ -43,6 +43,7 @@ public class FileUploadController {
      * @return FileUploadResponse 업로드된 파일 정보 (ID, URL 등)
      * @throws IOException 파일 처리 중 오류 발생 시
      */
+    @Override
     @PostMapping("/upload")
     @Transactional
     public ResponseEntity<CustomResponse<FileUploadResponse>> uploadFile(
