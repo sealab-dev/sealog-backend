@@ -53,6 +53,9 @@ jobs:
           # JWT
           JWT_KEY: bG9jYWwtZGV2LWp3dC1zZWNyZXQta2V5LTEyMzQ1Njc4OTAtYWJjZGVm
 
+          # Spring AI (더미값)
+          OPENAI_API_KEY: EXAMPLE123
+
         run: |
           chmod +x gradlew
           ./gradlew build

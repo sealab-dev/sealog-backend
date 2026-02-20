@@ -3,6 +3,7 @@ package com.sealog.backend.infra.ai.provider;
 import com.sealog.backend.infra.ai.enums.ChatOption;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import java.util.Map;
 /**
  * OpenAI 기반 ChatOptionProvider 구현 클래스
  */
+@Component
 public class OpenAiChatOptionProvider implements ChatOptionProvider {
 
     // 옵션 상수

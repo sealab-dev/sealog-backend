@@ -41,13 +41,11 @@ public class AiChatPrompt {
 
     // 에이전트 프롬프트 - default
     public static String PROMPT_AGENT_DEFAULT = """
-        
-        
+        wddw
     """;
 
     // 에이전트 프롬프트 - user
     public static String PROMPT_AGENT_USER = """
-        
-        
+        dwdwd
     """;
 }
