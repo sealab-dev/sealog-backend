@@ -26,6 +26,10 @@ configurations {
 
 repositories {
 	mavenCentral()
+
+	// ========== spring ai ========== //
+	maven { url 'https://repo.spring.io/mtailestone/' }
+	maven { url 'https://repo.spring.io/snapshot/' }
 }
 
 dependencies {
@@ -69,6 +73,17 @@ dependencies {
 
     // === swagger ===//
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15"
+
+	// === spring ai ===//
+	implementation "org.springframework.ai:spring-ai-starter-model-openai"
+}
+
+dependencyManagement {
+
+	// ========== spring ai ========== //
+	imports {
+		mavenBom "org.springframework.ai:spring-ai-bom:1.1.0"
+	}
 }
 
 tasks.named('test') {

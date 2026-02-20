@@ -55,6 +55,18 @@ spring:
                 domain: ${AWS_DOMAIN}
                 distribution-id: ${AWS_DISTRIBUTION_ID}
 
+    ai:
+        openai:
+            api-key: ${OPENAI_API_KEY}
+            chat:
+                options:
+                    model: gpt-4o-mini
+
+            embedding:
+                options:
+                    model: text-embedding-3-small
+
+
 server:
     port: ${SERVER_PORT:8080}
 
