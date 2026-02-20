@@ -9,6 +9,7 @@ import com.sealog.backend.infra.storage.dto.FileUploadResult;
 import com.sealog.backend.infra.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -44,10 +45,10 @@ public class FileUploadController implements FileUploadControllerDocs{
      * @throws IOException 파일 처리 중 오류 발생 시
      */
     @Override
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Transactional
     public ResponseEntity<CustomResponse<FileUploadResponse>> uploadFile(
-            @RequestParam("file") MultipartFile file
+            @RequestPart("file") MultipartFile file
     ) throws IOException {
         log.info("파일 업로드 요청: filename={}, contentType={}, size={}bytes",
                 file.getOriginalFilename(), file.getContentType(), file.getSize());
