@@ -31,7 +31,7 @@ public interface AuthControllerDocs {
             HttpServletResponse response
     );
 
-    @Operation(summary = "토큰 재발급", description = "쿠키의 Refresh Token으로 Access/Refresh 토큰 재발급")
+    @Operation(summary = "토큰 재발급", description = "쿠키의 Refresh Token을 DB와 비교 검증 후 Access Token만 재발급 (Refresh Token 로테이션 없음)")
     @SecurityRequirements()
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "재발급 성공"),
@@ -43,10 +43,10 @@ public interface AuthControllerDocs {
             HttpServletResponse response
     );
 
-    @Operation(summary = "로그아웃", description = "토큰 쿠키 삭제")
+    @Operation(summary = "로그아웃", description = "DB에서 Refresh Token 삭제 및 토큰 쿠키 만료 처리")
     @SecurityRequirements()
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "로그아웃 성공"),
     })
-    ResponseEntity<CustomResponse<Void>> logout(HttpServletResponse response);
+    ResponseEntity<CustomResponse<Void>> logout(HttpServletRequest request, HttpServletResponse response);
 }
