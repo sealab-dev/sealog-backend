@@ -1,0 +1,75 @@
+package com.sealog.backend.domain.feature.file.controller;
+
+import com.sealog.backend.global.response.CustomResponse;
+import com.sealog.backend.domain.feature.file.dto.FileUploadResponse;
+import com.sealog.backend.domain.feature.file.entity.FileMetadata;
+import com.sealog.backend.domain.feature.file.service.FileMetadataService;
+import com.sealog.backend.domain.feature.file.util.FileValidator;
+import com.sealog.backend.infra.storage.dto.FileUploadResult;
+import com.sealog.backend.infra.storage.service.FileStorageService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
+/**
+ * 파일 업로드 컨트롤러
+ * - 파일 검증 (크기, 확장자, MIME 타입)
+ * - S3 업로드 및 메타데이터 저장
+ */
+@Slf4j
+@RestController
+@RequestMapping("/api/files")
+@RequiredArgsConstructor
+public class FileUploadController implements FileUploadControllerDocs{
+
+    private final FileStorageService fileStorageService;
+    private final FileMetadataService fileMetadataService;
+
+    /**
+     * 파일 업로드
+     *
+     * 처리 흐름:
+     * 1. 파일 검증 (크기, 확장자, MIME 타입)
+     * 2. S3에 파일 업로드 (타입별 경로 자동 분류)
+     * 3. FileMetadata 생성 및 저장
+     * 4. 업로드 결과 반환
+     *
+     * @param file 업로드할 파일
+     * @return FileUploadResponse 업로드된 파일 정보 (ID, URL 등)
+     * @throws IOException 파일 처리 중 오류 발생 시
+     */
+    @Override
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Transactional
+    public ResponseEntity<CustomResponse<FileUploadResponse>> uploadFile(
+            @RequestPart("file") MultipartFile file
+    ) throws IOException {
+        log.info("파일 업로드 요청: filename={}, contentType={}, size={}bytes",
+                file.getOriginalFilename(), file.getContentType(), file.getSize());
+
+        // 1. 파일 검증
+        FileValidator.validateFile(file);
+        log.info("파일 검증 완료: filename={}", file.getOriginalFilename());
+
+        // 2. 업로드 (타입별 경로 자동 분류)
+        FileUploadResult uploadResult = fileStorageService.uploadFile(file);
+        log.info("업로드 완료: originalName={} path={} contentType={}",
+                uploadResult.originalName(), uploadResult.path(), uploadResult.contentType());
+
+        // 3. FileMetadata 저장
+        FileMetadata fileMetadata = fileMetadataService.saveFileMetadata(uploadResult);
+        log.info("파일 메타데이터 저장 완료: fileId={}", fileMetadata.getId());
+
+        // 4. 응답 반환
+        FileUploadResponse response = FileUploadResponse.from(fileMetadata);
+        log.info("파일 업로드 성공: fileId={}, path={}", response.id(), response.path());
+
+        return ResponseEntity.ok(CustomResponse.success(response, "파일이 업로드되었습니다"));
+    }
+}

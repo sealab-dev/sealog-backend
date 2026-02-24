@@ -1,6 +1,6 @@
 package com.sealog.backend.infra.ai.constant;
 
-import com.sealog.backend.global.core.constant.CoreRedisKey;
+import com.sealog.backend.global.constant.CoreRedisKey;
 import lombok.experimental.UtilityClass;
 
 /**
