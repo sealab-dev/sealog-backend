@@ -1,6 +1,6 @@
 package com.sealog.backend.infra.storage.util;
 
-import com.sealog.backend.global.file.constant.FileTypeConstants;
+import com.sealog.backend.domain.feature.file.constant.FileTypeConstants;
 import com.sealog.backend.infra.storage.constant.StoragePath;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
