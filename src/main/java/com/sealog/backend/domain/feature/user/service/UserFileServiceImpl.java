@@ -38,7 +38,7 @@ public class UserFileServiceImpl implements UserFileService {
 
     @Override
     @Transactional
-    public void deleteExisting(Long userId) {
+    public void deleteProfile(Long userId) {
         Optional<UserFile> existingProfile = userFileRepository
                 .findByUserIdAndFileType(userId, UserFileType.PROFILE);
 
