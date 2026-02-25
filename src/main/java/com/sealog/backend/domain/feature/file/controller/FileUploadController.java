@@ -63,7 +63,7 @@ public class FileUploadController implements FileUploadControllerDocs{
                 uploadResult.originalName(), uploadResult.path(), uploadResult.contentType());
 
         // 3. FileMetadata 저장
-        FileMetadata fileMetadata = fileMetadataService.saveFileMetadata(uploadResult);
+        FileMetadata fileMetadata = fileMetadataService.upload(uploadResult);
         log.info("파일 메타데이터 저장 완료: fileId={}", fileMetadata.getId());
 
         // 4. 응답 반환
