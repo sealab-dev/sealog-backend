@@ -76,6 +76,12 @@ dependencies {
 
 	// === spring ai ===//
 	implementation "org.springframework.ai:spring-ai-starter-model-openai"
+
+	// === jsoup ===//
+	implementation("org.jsoup:jsoup:1.21.2")
+
+	// === tika (file validation) ===//
+	implementation 'org.apache.tika:tika-core:2.9.1'
 }
 
 dependencyManagement {
