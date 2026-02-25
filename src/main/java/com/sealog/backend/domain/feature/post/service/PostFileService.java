@@ -1,6 +1,6 @@
 package com.sealog.backend.domain.feature.post.service;
 
-import com.sealog.backend.domain.feature.file.collector.FileUsageCollector;
+import com.sealog.backend.domain.feature.file.support.FileUsageCollector;
 
 import java.util.List;
 import java.util.Set;
