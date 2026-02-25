@@ -69,7 +69,7 @@ public class PostCleanupScheduler {
 
                 // 1. 모든 파일 매핑 삭제 (중간테이블만)
                 log.info("게시글 영구 삭제 - 파일 매핑 삭제 시작: postId={}", post.getId());
-                postFileService.deleteAllMappingsByPostId(post.getId());
+                postFileService.deleteAllMappings(post.getId());
                 log.info("게시글 영구 삭제 - 파일 매핑 삭제 완료: postId={}", post.getId());
 
                 // 2. 스택 관계 초기화

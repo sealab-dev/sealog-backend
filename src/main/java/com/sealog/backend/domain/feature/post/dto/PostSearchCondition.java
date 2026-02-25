@@ -1,6 +1,6 @@
 package com.sealog.backend.domain.feature.post.dto;
 
-import com.sealog.backend.domain.feature.post.entity.PostType;
+import com.sealog.backend.domain.feature.post.enums.PostType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;

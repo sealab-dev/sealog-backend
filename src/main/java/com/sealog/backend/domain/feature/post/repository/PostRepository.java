@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.post.repository;
 
 import com.sealog.backend.domain.feature.post.entity.Post;
-import com.sealog.backend.domain.feature.post.entity.PostType;
+import com.sealog.backend.domain.feature.post.enums.PostType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;

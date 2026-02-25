@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.post.service;
 
 import com.sealog.backend.domain.feature.post.entity.PostFile;
-import com.sealog.backend.domain.feature.post.entity.PostFileType;
+import com.sealog.backend.domain.feature.post.enums.PostFileType;
 import com.sealog.backend.domain.feature.post.repository.PostFileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ public class PostFileServiceImpl implements PostFileService {
 
     @Override
     @Transactional
-    public void saveThumbnailMapping(Long postId, Long fileId) {
+    public void saveThumbnail(Long postId, Long fileId) {
         PostFile thumbnailMapping = PostFile.ofThumbnail(postId, fileId);
         postFileRepository.save(thumbnailMapping);
         log.info("썸네일 매핑 저장 완료: postId={}, fileId={}", postId, fileId);
@@ -34,7 +34,7 @@ public class PostFileServiceImpl implements PostFileService {
 
     @Override
     @Transactional
-    public void saveContentFileMappings(Long postId, List<Long> fileIds) {
+    public void saveContentFiles(Long postId, List<Long> fileIds) {
         if (fileIds == null || fileIds.isEmpty()) {
             log.info("저장할 본문 파일이 없음: postId={}", postId);
             return;
@@ -50,7 +50,7 @@ public class PostFileServiceImpl implements PostFileService {
 
     @Override
     @Transactional
-    public void deleteExistingThumbnail(Long postId) {
+    public void deleteThumbnail(Long postId) {
         Optional<PostFile> existingThumbnail = postFileRepository
                 .findTopByPostIdAndFileType(postId, PostFileType.THUMBNAIL);
 
@@ -65,7 +65,7 @@ public class PostFileServiceImpl implements PostFileService {
 
     @Override
     @Transactional
-    public void deleteContentFileMappings(Long postId, List<Long> fileIds) {
+    public void deleteContentFiles(Long postId, List<Long> fileIds) {
         if (fileIds == null || fileIds.isEmpty()) {
             log.info("삭제할 본문 파일이 없음: postId={}", postId);
             return;
@@ -89,10 +89,9 @@ public class PostFileServiceImpl implements PostFileService {
 
     @Override
     @Transactional
-    public int deleteAllMappingsByPostId(Long postId) {
+    public void deleteAllMappings(Long postId) {
         int deletedCount = postFileRepository.deleteByPostId(postId);
         log.info("게시글의 모든 파일 매핑 삭제 완료: postId={}, deletedCount={}", postId, deletedCount);
-        return deletedCount;
     }
 
     @Override

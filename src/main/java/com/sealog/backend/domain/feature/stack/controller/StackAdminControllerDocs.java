@@ -16,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Admin - Stack", description = "스택 관리 API (어드민 전용)")
 @SecurityRequirement(name = "bearerAuth")
-public interface AdminStackControllerDocs {
+public interface StackAdminControllerDocs {
 
     @Operation(summary = "스택 생성", description = "새로운 스택을 생성합니다. 어드민 권한이 필요합니다.")
     @ApiResponses({

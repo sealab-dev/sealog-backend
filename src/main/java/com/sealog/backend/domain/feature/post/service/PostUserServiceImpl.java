@@ -4,12 +4,12 @@ import com.sealog.backend.domain.feature.post.dto.PostRequest;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.post.dto.PostSearchCondition;
 import com.sealog.backend.domain.feature.post.entity.Post;
-import com.sealog.backend.domain.feature.post.entity.PostStatus;
+import com.sealog.backend.domain.feature.post.enums.PostStatus;
 import com.sealog.backend.domain.feature.post.repository.PostRepository;
 import com.sealog.backend.domain.feature.post.repository.PostSpecification;
-import com.sealog.backend.domain.feature.post.util.MarkdownFileParser;
-import com.sealog.backend.domain.feature.post.util.SlugGenerator;
-import com.sealog.backend.domain.feature.post.util.ValidateMarkdown;
+import com.sealog.backend.domain.feature.post.util.PostMarkdownFileParser;
+import com.sealog.backend.domain.feature.post.util.PostSlugGenerator;
+import com.sealog.backend.domain.feature.post.util.PostValidateMarkdown;
 import com.sealog.backend.domain.feature.stack.entity.Stack;
 import com.sealog.backend.domain.feature.stack.repository.StackRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class MyPostServiceImpl implements MyPostService{
+public class PostUserServiceImpl implements PostUserService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
@@ -45,11 +45,11 @@ public class MyPostServiceImpl implements MyPostService{
 
     @Override
     @Transactional
-    public PostResponse.Detail createPost(User user, PostRequest.Create request) {
+    public PostResponse.Detail create(User user, PostRequest.Create request) {
         validateTitleForCreate(request.getTitle());
 
         // 본문 마크다운 형식 검증
-        ValidateMarkdown.validate(request.getContent());
+        PostValidateMarkdown.validate(request.getContent());
 
         // Slug 생성 (중복 처리 포함)
         String slug = generateUniqueSlug(request.getTitle());
@@ -91,7 +91,7 @@ public class MyPostServiceImpl implements MyPostService{
     }
 
     @Override
-    public PostResponse.Edit getPostForEdit(Long userId, String slug) {
+    public PostResponse.Edit getEdit(Long userId, String slug) {
         // 본인 게시글은 상태 무관하게 조회
         Post post = postRepository.findBySlugAndUserId(slug, userId)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
@@ -122,12 +122,12 @@ public class MyPostServiceImpl implements MyPostService{
 
     @Override
     @Transactional
-    public PostResponse.Detail updatePost(Long userId, String slug, PostRequest.Update request) {
+    public PostResponse.Detail update(Long userId, String slug, PostRequest.Update request) {
         Post post = postRepository.findBySlugAndUserId(slug, userId)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
         // 본문 마크다운 형식 검증
-        ValidateMarkdown.validate(request.getContent());
+        PostValidateMarkdown.validate(request.getContent());
 
         // 제목이 변경될 경우에만 중복 체크 및 slug 재생성
         String newSlug = post.getSlug();
@@ -168,7 +168,7 @@ public class MyPostServiceImpl implements MyPostService{
 
     @Override
     @Transactional
-    public void deletePost(Long userId, String slug) {
+    public void delete(Long userId, String slug) {
         Post post = postRepository.findBySlugAndUserId(slug, userId)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
@@ -181,7 +181,7 @@ public class MyPostServiceImpl implements MyPostService{
 
     @Override
     @Transactional
-    public void restorePost(Long userId, String slug) {
+    public void restore(Long userId, String slug) {
         Post post = postRepository.findBySlugAndUserId(slug, userId)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
@@ -199,7 +199,7 @@ public class MyPostServiceImpl implements MyPostService{
     // ========== 조회 ========== //
 
     @Override
-    public Page<PostResponse.PostItems> searchMyPosts(Long userId, PostSearchCondition condition, Pageable pageable) {
+    public Page<PostResponse.PostItems> search(Long userId, PostSearchCondition condition, Pageable pageable) {
 
         PostSearchCondition nonDeletedCondition = PostSearchCondition.builder()
                 .postType(condition.getPostType())
@@ -214,7 +214,7 @@ public class MyPostServiceImpl implements MyPostService{
     }
 
     @Override
-    public Page<PostResponse.PostItems> getDeletedPosts(Long userId, Pageable pageable) {
+    public Page<PostResponse.PostItems> getDeleted(Long userId, Pageable pageable) {
         return postRepository.findDeletedPostsByUserId(userId, pageable)
                 .map(this::buildPostItemsResponse);
     }
@@ -287,7 +287,7 @@ public class MyPostServiceImpl implements MyPostService{
     // ========== 파일 처리 ========== //
 
     private void handleContentFilesFromMarkdown(Long postId, String content) {
-        Set<Long> fileIds = MarkdownFileParser.extractFileIds(content);
+        Set<Long> fileIds = PostMarkdownFileParser.extractFileIds(content);
 
         if (fileIds.isEmpty()) {
             log.info("게시글 생성 - 본문에 파일 참조 없음: postId={}", postId);
@@ -297,14 +297,14 @@ public class MyPostServiceImpl implements MyPostService{
         log.info("게시글 생성 - 본문 파일 매핑 시작: postId={}, fileCount={}", postId, fileIds.size());
 
         fileMetadataService.validateFilesExist(new ArrayList<>(fileIds));
-        postFileService.saveContentFileMappings(postId, new ArrayList<>(fileIds));
+        postFileService.saveContentFiles(postId, new ArrayList<>(fileIds));
 
         log.info("게시글 생성 - 본문 파일 매핑 완료: postId={}", postId);
     }
 
     private void handleContentFilesUpdate(Long postId, String newContent) {
         Set<Long> oldFileIds = postFileService.getContentFileIds(postId);
-        Set<Long> newFileIds = MarkdownFileParser.extractFileIds(newContent);
+        Set<Long> newFileIds = PostMarkdownFileParser.extractFileIds(newContent);
 
         Set<Long> fileIdsToDelete = new HashSet<>(oldFileIds);
         fileIdsToDelete.removeAll(newFileIds);
@@ -317,12 +317,12 @@ public class MyPostServiceImpl implements MyPostService{
                 fileIdsToDelete.size(), fileIdsToAdd.size());
 
         if (!fileIdsToDelete.isEmpty()) {
-            postFileService.deleteContentFileMappings(postId, new ArrayList<>(fileIdsToDelete));
+            postFileService.deleteContentFiles(postId, new ArrayList<>(fileIdsToDelete));
         }
 
         if (!fileIdsToAdd.isEmpty()) {
             fileMetadataService.validateFilesExist(new ArrayList<>(fileIdsToAdd));
-            postFileService.saveContentFileMappings(postId, new ArrayList<>(fileIdsToAdd));
+            postFileService.saveContentFiles(postId, new ArrayList<>(fileIdsToAdd));
         }
     }
 
@@ -330,7 +330,7 @@ public class MyPostServiceImpl implements MyPostService{
         log.info("게시글 생성 - 썸네일 처리 시작: postId={}, fileId={}", post.getId(), thumbnailFileId);
 
         fileMetadataService.validateFilesExist(List.of(thumbnailFileId));
-        postFileService.saveThumbnailMapping(post.getId(), thumbnailFileId);
+        postFileService.saveThumbnail(post.getId(), thumbnailFileId);
         post.updateThumbnailUrl(thumbnailUrl);
 
         log.info("게시글 생성 - 썸네일 처리 완료: postId={}, path={}", post.getId(), thumbnailUrl);
@@ -339,14 +339,14 @@ public class MyPostServiceImpl implements MyPostService{
     private void handleThumbnailUpdate(Post post, PostRequest.Update request) {
         if (request.getThumbnailFileId() != null) {
             fileMetadataService.validateFilesExist(List.of(request.getThumbnailFileId()));
-            postFileService.deleteExistingThumbnail(post.getId());
-            postFileService.saveThumbnailMapping(post.getId(), request.getThumbnailFileId());
+            postFileService.deleteThumbnail(post.getId());
+            postFileService.saveThumbnail(post.getId(), request.getThumbnailFileId());
             post.updateThumbnailUrl(request.getThumbnailPath());
             return;
         }
 
         if (Boolean.TRUE.equals(request.getRemoveThumbnail())) {
-            postFileService.deleteExistingThumbnail(post.getId());
+            postFileService.deleteThumbnail(post.getId());
             post.removeThumbnail();
         }
     }
@@ -354,14 +354,14 @@ public class MyPostServiceImpl implements MyPostService{
     // ========== Slug 생성 로직 ========== //
 
     private String generateUniqueSlug(String title) {
-        String baseSlug = SlugGenerator.generate(title);
+        String baseSlug = PostSlugGenerator.generate(title);
 
         if (!postRepository.existsBySlug(baseSlug)) {
             return baseSlug;
         }
 
         for (int i = 2; i <= 100; i++) {
-            String candidateSlug = SlugGenerator.generateWithSuffix(baseSlug, i);
+            String candidateSlug = PostSlugGenerator.generateWithSuffix(baseSlug, i);
             if (!postRepository.existsBySlug(candidateSlug)) {
                 log.info("Slug 중복으로 번호 추가: baseSlug={}, finalSlug={}", baseSlug, candidateSlug);
                 return candidateSlug;

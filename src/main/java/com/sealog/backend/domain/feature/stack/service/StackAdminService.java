@@ -9,7 +9,7 @@ import com.sealog.backend.global.exception.CustomException;
  *
  * 스택 생성, 수정, 삭제 관련 비즈니스 로직
  */
-public interface AdminStackService {
+public interface StackAdminService {
 
     /**
      * 스택 생성 (어드민 전용)

@@ -3,7 +3,7 @@ package com.sealog.backend.domain.feature.stack.service;
 import com.sealog.backend.domain.feature.stack.dto.StackResponse;
 import com.sealog.backend.domain.feature.stack.dto.StackRequest;
 import com.sealog.backend.domain.feature.stack.entity.Stack;
-import com.sealog.backend.domain.feature.stack.entity.StackGroup;
+import com.sealog.backend.domain.feature.stack.enums.StackGroup;
 import com.sealog.backend.domain.feature.stack.repository.StackRepository;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AdminStackServiceImpl implements AdminStackService {
+public class StackAdminServiceImpl implements StackAdminService {
 
     private final StackRepository stackRepository;
     private final UserRepository userRepository;

@@ -14,7 +14,7 @@ import java.util.List;
  * 인증 없이 접근 가능한 공개 게시글 관련 비즈니스 로직
  * - PUBLISHED 상태의 게시글만 처리
  */
-public interface PublicPostService {
+public interface PostGuestService {
 
     /**
      * 게시글 상세 조회 (Nickname + Slug 기반)
@@ -27,7 +27,7 @@ public interface PublicPostService {
      * @return 게시글 상세 정보 (관련 게시글 포함)
      * @throws CustomException 게시글을 찾을 수 없거나 작성자가 일치하지 않는 경우
      */
-    PostResponse.Detail getPostByNicknameAndSlug(String nickname, String slug);
+    PostResponse.Detail getDetail(String nickname, String slug);
 
     /**
      * 공개 게시글 복합 검색
@@ -38,7 +38,7 @@ public interface PublicPostService {
      * @param pageable 페이지네이션 정보
      * @return 검색된 게시글 목록
      */
-    Page<PostResponse.PostItems> searchPosts(PostSearchCondition condition, Pageable pageable);
+    Page<PostResponse.PostItems> search(PostSearchCondition condition, Pageable pageable);
 
     /**
      * 자동완성 검색

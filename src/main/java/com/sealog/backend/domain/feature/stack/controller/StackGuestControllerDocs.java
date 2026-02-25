@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 @Tag(name = "Stack", description = "스택 조회 API (인증 불필요)")
-public interface StackControllerDocs {
+public interface StackGuestControllerDocs {
 
     @Operation(summary = "전체 스택 목록 조회", description = "DB에 등록된 모든 스택을 반환합니다. 게시글 작성 시 사용됩니다.")
     @ApiResponses({
