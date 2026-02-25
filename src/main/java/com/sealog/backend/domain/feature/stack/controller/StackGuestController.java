@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.stack.controller;
 
 import com.sealog.backend.domain.feature.stack.dto.StackResponse;
-import com.sealog.backend.domain.feature.stack.service.StackService;
+import com.sealog.backend.domain.feature.stack.service.StackGuestService;
 import com.sealog.backend.global.response.CustomResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,22 +10,22 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/stacks")
+@RequestMapping("/api/guest/stack")
 @RequiredArgsConstructor
-public class StackController implements StackControllerDocs {
+public class StackGuestController implements StackGuestControllerDocs {
 
-    private final StackService stackService;
+    private final StackGuestService stackGuestService;
 
     @Override
     @GetMapping
     public ResponseEntity<CustomResponse<List<StackResponse.StackItem>>> getAllStacks() {
-        return ResponseEntity.ok(CustomResponse.success(stackService.getAllStacks()));
+        return ResponseEntity.ok(CustomResponse.success(stackGuestService.getAllStacks()));
     }
 
     @Override
     @GetMapping("/grouped")
     public ResponseEntity<CustomResponse<StackResponse.GroupedStacks>> getGroupedStacks() {
-        return ResponseEntity.ok(CustomResponse.success(stackService.getGroupedStacksWithPostCount()));
+        return ResponseEntity.ok(CustomResponse.success(stackGuestService.getGroupedStacksWithPostCount()));
     }
 
     @Override
@@ -33,7 +33,7 @@ public class StackController implements StackControllerDocs {
     public ResponseEntity<CustomResponse<StackResponse.GroupedStacks>> getGroupedStacksByUser(
             @PathVariable String nickname
     ) {
-        return ResponseEntity.ok(CustomResponse.success(stackService.getGroupedStacksWithPostCountByUser(nickname)));
+        return ResponseEntity.ok(CustomResponse.success(stackGuestService.getGroupedStacksWithPostCountByUser(nickname)));
     }
 
     @Override
@@ -41,7 +41,7 @@ public class StackController implements StackControllerDocs {
     public ResponseEntity<CustomResponse<List<StackResponse.PopularStack>>> getPopularStacks(
             @RequestParam(defaultValue = "5") int limit
     ) {
-        return ResponseEntity.ok(CustomResponse.success(stackService.getPopularStacks(limit)));
+        return ResponseEntity.ok(CustomResponse.success(stackGuestService.getPopularStacks(limit)));
     }
 
     @Override
@@ -49,6 +49,6 @@ public class StackController implements StackControllerDocs {
     public ResponseEntity<CustomResponse<List<StackResponse.StackItem>>> autocomplete(
             @RequestParam(required = false, defaultValue = "") String keyword
     ) {
-        return ResponseEntity.ok(CustomResponse.success(stackService.autocomplete(keyword)));
+        return ResponseEntity.ok(CustomResponse.success(stackGuestService.autocomplete(keyword)));
     }
 }

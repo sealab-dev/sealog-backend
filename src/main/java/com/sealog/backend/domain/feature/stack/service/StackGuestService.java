@@ -9,7 +9,7 @@ import java.util.List;
  *
  * 스택 조회 관련 비즈니스 로직 (인증 불필요)
  */
-public interface StackService {
+public interface StackGuestService {
 
     /**
      * 전체 스택 목록 조회 (게시글 작성용)

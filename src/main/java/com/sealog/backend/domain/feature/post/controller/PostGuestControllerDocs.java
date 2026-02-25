@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.post.controller;
 
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
-import com.sealog.backend.domain.feature.post.entity.PostType;
+import com.sealog.backend.domain.feature.post.enums.PostType;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +19,7 @@ import java.util.List;
 
 @Tag(name = "Post", description = "공개 게시글 API (인증 불필요)")
 @SecurityRequirements()
-public interface PublicPostControllerDocs {
+public interface PostGuestControllerDocs {
 
     @Operation(summary = "게시글 상세 조회", description = "Nickname + Slug로 공개 게시글 상세를 조회합니다.")
     @ApiResponses({

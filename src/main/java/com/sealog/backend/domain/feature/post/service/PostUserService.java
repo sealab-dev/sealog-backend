@@ -15,7 +15,7 @@ import org.springframework.data.domain.Pageable;
  * - 게시글 생성, 수정, 삭제, 복구
  * - 본인의 모든 상태 게시글 조회 가능
  */
-public interface MyPostService {
+public interface PostUserService {
 
     /**
      * 게시글 생성
@@ -28,19 +28,7 @@ public interface MyPostService {
      * @return PostResponse.Detail 생성된 게시글 상세 정보
      * @throws CustomException 제목 중복, 사용자 없음, 파일 없음 등
      */
-    PostResponse.Detail createPost(User user, PostRequest.Create request);
-
-    /**
-     * 게시글 수정용 데이터 조회
-     * - 본인 게시글은 상태 무관하게 조회 가능
-     * - relatedPosts 없이 가벼운 데이터 반환
-     *
-     * @param userId 조회 요청 사용자 ID
-     * @param slug 조회할 게시글의 slug
-     * @return PostResponse.Edit 게시글 수정용 데이터
-     * @throws CustomException 게시글을 찾을 수 없거나 권한이 없는 경우
-     */
-    PostResponse.Edit getPostForEdit(Long userId, String slug);
+    PostResponse.Detail create(User user, PostRequest.Create request);
 
     /**
      * 게시글 수정
@@ -54,7 +42,19 @@ public interface MyPostService {
      * @return PostResponse.Detail 수정된 게시글 상세 정보 (relatedPosts 포함)
      * @throws CustomException 게시글 없음, 권한 없음, 제목 중복 등
      */
-    PostResponse.Detail updatePost(Long userId, String slug, PostRequest.Update request);
+    PostResponse.Detail update(Long userId, String slug, PostRequest.Update request);
+
+    /**
+     * 게시글 수정용 데이터 조회
+     * - 본인 게시글은 상태 무관하게 조회 가능
+     * - relatedPosts 없이 가벼운 데이터 반환
+     *
+     * @param userId 조회 요청 사용자 ID
+     * @param slug 조회할 게시글의 slug
+     * @return PostResponse.Edit 게시글 수정용 데이터
+     * @throws CustomException 게시글을 찾을 수 없거나 권한이 없는 경우
+     */
+    PostResponse.Edit getEdit(Long userId, String slug);
 
     /**
      * 게시글 삭제 (소프트 삭제)
@@ -65,7 +65,7 @@ public interface MyPostService {
      * @param slug 삭제할 게시글의 slug
      * @throws CustomException 게시글 없음, 권한 없음
      */
-    void deletePost(Long userId, String slug);
+    void delete(Long userId, String slug);
 
     /**
      * 게시글 복구
@@ -76,7 +76,7 @@ public interface MyPostService {
      * @param slug 복구할 게시글의 slug
      * @throws CustomException 게시글 없음, 권한 없음, 이미 복구된 게시글
      */
-    void restorePost(Long userId, String slug);
+    void restore(Long userId, String slug);
 
     /**
      * 내 게시글 검색
@@ -88,7 +88,7 @@ public interface MyPostService {
      * @param pageable 페이지네이션 정보
      * @return 검색된 게시글 목록
      */
-    Page<PostResponse.PostItems> searchMyPosts(Long userId, PostSearchCondition condition, Pageable pageable);
+    Page<PostResponse.PostItems> search(Long userId, PostSearchCondition condition, Pageable pageable);
 
     /**
      * 삭제된 게시글 조회
@@ -99,5 +99,5 @@ public interface MyPostService {
      * @param pageable 페이지네이션 정보
      * @return Page<PostResponse.PostItems> 삭제된 게시글 목록
      */
-    Page<PostResponse.PostItems> getDeletedPosts(Long userId, Pageable pageable);
+    Page<PostResponse.PostItems> getDeleted(Long userId, Pageable pageable);
 }

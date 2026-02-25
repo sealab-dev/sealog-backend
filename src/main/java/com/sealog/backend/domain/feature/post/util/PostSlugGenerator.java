@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
  * - 최대 길이 제한 (150자)
  */
 @Slf4j
-public class SlugGenerator {
+public class PostSlugGenerator {
 
     private static final int MAX_SLUG_LENGTH = 150;
     private static final Pattern MULTIPLE_HYPHENS = Pattern.compile("-{2,}");

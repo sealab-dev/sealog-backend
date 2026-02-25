@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.stack.dto;
 
 import com.sealog.backend.domain.feature.stack.entity.Stack;
-import com.sealog.backend.domain.feature.stack.entity.StackGroup;
+import com.sealog.backend.domain.feature.stack.enums.StackGroup;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;

@@ -2,7 +2,7 @@ package com.sealog.backend.domain.feature.stack.service;
 
 import com.sealog.backend.domain.feature.stack.dto.StackResponse;
 import com.sealog.backend.domain.feature.stack.entity.Stack;
-import com.sealog.backend.domain.feature.stack.entity.StackGroup;
+import com.sealog.backend.domain.feature.stack.enums.StackGroup;
 import com.sealog.backend.domain.feature.stack.repository.StackRepository;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class StackServiceImpl implements StackService {
+public class StackGuestServiceImpl implements StackGuestService {
 
     private final StackRepository stackRepository;
     private final UserRepository userRepository;

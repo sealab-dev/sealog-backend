@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * - 중복 제거하여 Set 반환
  */
 @Slf4j
-public class MarkdownFileParser {
+public class PostMarkdownFileParser {
 
     /**
      * 마크다운 파일 참조 패턴

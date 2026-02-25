@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.post.dto;
 
-import com.sealog.backend.domain.feature.post.entity.PostType;
-import com.sealog.backend.domain.feature.post.entity.PostStatus;
+import com.sealog.backend.domain.feature.post.enums.PostType;
+import com.sealog.backend.domain.feature.post.enums.PostStatus;
 import lombok.Builder;
 import lombok.Getter;
 

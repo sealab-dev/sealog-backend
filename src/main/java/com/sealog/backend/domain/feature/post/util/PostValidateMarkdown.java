@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  * - 기타: br, hr, iframe, script, style
  */
 @Slf4j
-public class ValidateMarkdown {
+public class PostValidateMarkdown {
 
     /**
      * 검증 대상 HTML 태그 패턴

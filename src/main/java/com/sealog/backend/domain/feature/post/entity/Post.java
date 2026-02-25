@@ -1,5 +1,7 @@
 package com.sealog.backend.domain.feature.post.entity;
 
+import com.sealog.backend.domain.feature.post.enums.PostStatus;
+import com.sealog.backend.domain.feature.post.enums.PostType;
 import com.sealog.backend.domain.feature.stack.entity.Stack;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;

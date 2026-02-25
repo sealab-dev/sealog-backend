@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class PublicPostServiceImpl implements PublicPostService {
+public class PostGuestServiceImpl implements PostGuestService {
 
     private final PostRepository postRepository;
     private final PostSearchStrategy postSearchStrategy;
@@ -39,7 +39,7 @@ public class PublicPostServiceImpl implements PublicPostService {
      * 게시글 상세 조회 (Nickname + Slug 기반)
      */
     @Override
-    public PostResponse.Detail getPostByNicknameAndSlug(String nickname, String slug) {
+    public PostResponse.Detail getDetail(String nickname, String slug) {
         Post post = postRepository.findBySlugWithStacks(slug)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
@@ -55,7 +55,7 @@ public class PublicPostServiceImpl implements PublicPostService {
      * 공개 게시글 복합 검색
      */
     @Override
-    public Page<PostResponse.PostItems> searchPosts(PostSearchCondition condition, Pageable pageable) {
+    public Page<PostResponse.PostItems> search(PostSearchCondition condition, Pageable pageable) {
         return postRepository.findAll(PostSpecification.withCondition(condition), pageable)
                 .map(this::buildPostItemsResponse);
     }

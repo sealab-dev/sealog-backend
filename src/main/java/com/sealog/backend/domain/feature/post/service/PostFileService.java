@@ -21,7 +21,7 @@ public interface PostFileService extends FileUsageCollector {
      * @param postId 게시글 ID
      * @param fileId 파일 ID
      */
-    void saveThumbnailMapping(Long postId, Long fileId);
+    void saveThumbnail(Long postId, Long fileId);
 
     /**
      * 본문 파일 매핑 생성 (여러 개)
@@ -29,14 +29,14 @@ public interface PostFileService extends FileUsageCollector {
      * @param postId 게시글 ID
      * @param fileIds 파일 ID 목록
      */
-    void saveContentFileMappings(Long postId, List<Long> fileIds);
+    void saveContentFiles(Long postId, List<Long> fileIds);
 
     /**
      * 게시글의 기존 썸네일 매핑 삭제
      *
      * @param postId 게시글 ID
      */
-    void deleteExistingThumbnail(Long postId);
+    void deleteThumbnail(Long postId);
 
     /**
      * 게시글의 특정 본문 파일 매핑들 삭제
@@ -44,15 +44,14 @@ public interface PostFileService extends FileUsageCollector {
      * @param postId 게시글 ID
      * @param fileIds 삭제할 파일 ID 목록
      */
-    void deleteContentFileMappings(Long postId, List<Long> fileIds);
+    void deleteContentFiles(Long postId, List<Long> fileIds);
 
     /**
      * 게시글의 모든 파일 매핑 삭제 (게시글 삭제 시)
      *
      * @param postId 게시글 ID
-     * @return 삭제된 매핑 개수
      */
-    int deleteAllMappingsByPostId(Long postId);
+    void deleteAllMappings(Long postId);
 
     /**
      * 게시글이 현재 사용 중인 본문 파일 ID 목록 조회

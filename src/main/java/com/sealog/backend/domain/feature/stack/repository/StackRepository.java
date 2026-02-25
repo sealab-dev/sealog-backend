@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.stack.repository;
 
 import com.sealog.backend.domain.feature.stack.entity.Stack;
-import com.sealog.backend.domain.feature.stack.entity.StackGroup;
+import com.sealog.backend.domain.feature.stack.enums.StackGroup;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

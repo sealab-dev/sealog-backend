@@ -2,7 +2,7 @@ package com.sealog.backend.domain.feature.post.repository;
 
 import com.sealog.backend.domain.feature.post.dto.PostSearchCondition;
 import com.sealog.backend.domain.feature.post.entity.Post;
-import com.sealog.backend.domain.feature.post.entity.PostStatus;
+import com.sealog.backend.domain.feature.post.enums.PostStatus;
 import com.sealog.backend.domain.feature.stack.entity.Stack;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;

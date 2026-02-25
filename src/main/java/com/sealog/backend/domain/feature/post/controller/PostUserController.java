@@ -3,8 +3,8 @@ package com.sealog.backend.domain.feature.post.controller;
 import com.sealog.backend.domain.feature.post.dto.PostRequest;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.post.dto.PostSearchCondition;
-import com.sealog.backend.domain.feature.post.entity.PostType;
-import com.sealog.backend.domain.feature.post.service.MyPostService;
+import com.sealog.backend.domain.feature.post.enums.PostType;
+import com.sealog.backend.domain.feature.post.service.PostUserService;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
 import com.sealog.backend.security.auth.CustomUserDetails;
@@ -26,27 +26,27 @@ import org.springframework.web.bind.annotation.*;
  */
 
 @RestController
-@RequestMapping("/api/my/posts")
+@RequestMapping("/api/user/post")
 @RequiredArgsConstructor
-public class MyPostController implements MyPostControllerDocs{
+public class PostUserController implements PostUserControllerDocs {
 
-    private final MyPostService myPostService;
+    private final PostUserService postUserService;
 
     // ========== CRUD ========== //
 
     /**
      * 게시글 생성
-     * POST /api/my/posts
+     * POST /api/user/post
      *
      * @param request 게시글 데이터 (thumbnailFileId, thumbnailUrl 포함)
      */
     @Override
     @PostMapping
-    public ResponseEntity<CustomResponse<PostResponse.Detail>> createPost(
+    public ResponseEntity<CustomResponse<PostResponse.Detail>> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody @Valid PostRequest.Create request
     ) {
-        PostResponse.Detail response = myPostService.createPost(
+        PostResponse.Detail response = postUserService.create(
                 userDetails.getUser(),
                 request
         );
@@ -57,7 +57,7 @@ public class MyPostController implements MyPostControllerDocs{
 
     /**
      * 게시글 수정용 데이터 조회
-     * GET /api/my/posts/{slug}/edit
+     * GET /api/user/post/{slug}/edit
      */
     @Override
     @GetMapping("/{slug}/edit")
@@ -65,25 +65,25 @@ public class MyPostController implements MyPostControllerDocs{
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug
     ) {
-        PostResponse.Edit response = myPostService.getPostForEdit(userDetails.getUserId(), slug);
+        PostResponse.Edit response = postUserService.getEdit(userDetails.getUserId(), slug);
         return ResponseEntity.ok(CustomResponse.success(response));
     }
 
     /**
      * 게시글 수정
-     * PUT /api/my/posts/{slug}
+     * PUT /api/user/post/{slug}
      *
      * @param slug 수정할 게시글 slug
      * @param request 게시글 데이터 (thumbnailFileId, thumbnailUrl, removeThumbnail 포함)
      */
     @Override
     @PutMapping("/{slug}")
-    public ResponseEntity<CustomResponse<PostResponse.Detail>> updatePost(
+    public ResponseEntity<CustomResponse<PostResponse.Detail>> update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug,
             @RequestBody @Valid PostRequest.Update request
     ) {
-        PostResponse.Detail response = myPostService.updatePost(
+        PostResponse.Detail response = postUserService.update(
                 userDetails.getUserId(),
                 slug,
                 request
@@ -93,33 +93,33 @@ public class MyPostController implements MyPostControllerDocs{
 
     /**
      * 게시글 삭제 (소프트 삭제)
-     * DELETE /api/my/posts/{slug}
+     * DELETE /api/user/post/{slug}
      *
      * @param slug 삭제할 게시글 slug
      */
     @Override
     @DeleteMapping("/{slug}")
-    public ResponseEntity<CustomResponse<Void>> deletePost(
+    public ResponseEntity<CustomResponse<Void>> delete(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug
     ) {
-        myPostService.deletePost(userDetails.getUserId(), slug);
+        postUserService.delete(userDetails.getUserId(), slug);
         return ResponseEntity.ok(CustomResponse.success(null, "게시글이 삭제되었습니다"));
     }
 
     /**
      * 게시글 복구
-     * POST /api/my/posts/{slug}/restore
+     * POST /api/user/post/{slug}/restore
      *
      * @param slug 복구할 게시글 slug
      */
     @Override
     @PostMapping("/{slug}/restore")
-    public ResponseEntity<CustomResponse<Void>> restorePost(
+    public ResponseEntity<CustomResponse<Void>> restore(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug
     ) {
-        myPostService.restorePost(userDetails.getUserId(), slug);
+        postUserService.restore(userDetails.getUserId(), slug);
         return ResponseEntity.ok(CustomResponse.success(null, "게시글이 복구되었습니다"));
     }
 
@@ -127,13 +127,13 @@ public class MyPostController implements MyPostControllerDocs{
 
     /**
      * 내 게시글 검색 (복합 필터링)
-     * GET /api/my/posts
+     * GET /api/user/post
      *
      * - DELETED 상태 제외 (삭제된 게시글은 별도 엔드포인트)
      */
     @Override
     @GetMapping
-    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> searchMyPosts(
+    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> search(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false) PostType postType,
             @RequestParam(required = false) String stack,
@@ -141,7 +141,7 @@ public class MyPostController implements MyPostControllerDocs{
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         PostSearchCondition condition = PostSearchCondition.ofMine(postType, stack, keyword);
-        Page<PostResponse.PostItems> posts = myPostService.searchMyPosts(
+        Page<PostResponse.PostItems> posts = postUserService.search(
                 userDetails.getUserId(),
                 condition,
                 pageable
@@ -151,15 +151,15 @@ public class MyPostController implements MyPostControllerDocs{
 
     /**
      * 삭제된 게시글 목록 조회
-     * GET /api/my/posts/deleted
+     * GET /api/user/post/deleted
      */
     @Override
     @GetMapping("/deleted")
-    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getDeletedPosts(
+    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getDeleted(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 10, sort = "deletedAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<PostResponse.PostItems> posts = myPostService.getDeletedPosts(
+        Page<PostResponse.PostItems> posts = postUserService.getDeleted(
                 userDetails.getUserId(),
                 pageable
         );

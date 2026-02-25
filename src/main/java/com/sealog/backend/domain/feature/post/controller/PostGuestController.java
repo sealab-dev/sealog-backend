@@ -2,8 +2,8 @@ package com.sealog.backend.domain.feature.post.controller;
 
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.post.dto.PostSearchCondition;
-import com.sealog.backend.domain.feature.post.entity.PostType;
-import com.sealog.backend.domain.feature.post.service.PublicPostService;
+import com.sealog.backend.domain.feature.post.enums.PostType;
+import com.sealog.backend.domain.feature.post.service.PostGuestService;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
 import lombok.RequiredArgsConstructor;
@@ -23,33 +23,15 @@ import java.util.List;
  * - PUBLISHED 상태의 게시글만 조회 가능
  */
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping("/api/guest/post")
 @RequiredArgsConstructor
-public class PublicPostController implements PublicPostControllerDocs{
+public class PostGuestController implements PostGuestControllerDocs {
 
-    private final PublicPostService publicPostService;
-
-    /**
-     * 게시글 상세 조회 (Nickname + Slug 기반)
-     * GET /api/posts/{nickname}/{slug}
-     *
-     * @param nickname 작성자 닉네임
-     * @param slug 게시글 slug
-     * @return 게시글 상세 정보 (관련 게시글 포함)
-     */
-    @Override
-    @GetMapping("/{nickname}/{slug}")
-    public ResponseEntity<CustomResponse<PostResponse.Detail>> getPostByNicknameAndSlug(
-            @PathVariable String nickname,
-            @PathVariable String slug
-    ) {
-        PostResponse.Detail response = publicPostService.getPostByNicknameAndSlug(nickname, slug);
-        return ResponseEntity.ok(CustomResponse.success(response));
-    }
+    private final PostGuestService postGuestService;
 
     /**
      * 공개 게시글 검색 (복합 필터링)
-     * GET /api/posts
+     * GET /api/guest/post
      *
      * 쿼리 파라미터:
      * - postType: 게시글 타입 (선택)
@@ -68,13 +50,31 @@ public class PublicPostController implements PublicPostControllerDocs{
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         PostSearchCondition condition = PostSearchCondition.ofPublic(postType, stack, keyword);
-        Page<PostResponse.PostItems> posts = publicPostService.searchPosts(condition, pageable);
+        Page<PostResponse.PostItems> posts = postGuestService.search(condition, pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
     }
 
     /**
+     * 게시글 상세 조회 (Nickname + Slug 기반)
+     * GET /api/guest/post/{nickname}/{slug}
+     *
+     * @param nickname 작성자 닉네임
+     * @param slug 게시글 slug
+     * @return 게시글 상세 정보 (관련 게시글 포함)
+     */
+    @Override
+    @GetMapping("/{nickname}/{slug}")
+    public ResponseEntity<CustomResponse<PostResponse.Detail>> getPostByNicknameAndSlug(
+            @PathVariable String nickname,
+            @PathVariable String slug
+    ) {
+        PostResponse.Detail response = postGuestService.getDetail(nickname, slug);
+        return ResponseEntity.ok(CustomResponse.success(response));
+    }
+
+    /**
      * 특정 사용자의 공개된 게시글 조회 (복합 필터링)
-     * GET /api/posts/user/{nickname}
+     * GET /api/guest/post/{nickname}
      *
      * 쿼리 파라미터:
      * - postType: 게시글 타입 (선택)
@@ -95,13 +95,13 @@ public class PublicPostController implements PublicPostControllerDocs{
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         PostSearchCondition condition = PostSearchCondition.ofUser(nickname, postType, stack, keyword);
-        Page<PostResponse.PostItems> posts = publicPostService.searchPosts(condition, pageable);
+        Page<PostResponse.PostItems> posts = postGuestService.search(condition, pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
     }
 
     /**
      * 게시글 자동완성 검색
-     * GET /api/posts/autocomplete?keyword=검색어
+     * GET /api/guest/post/autocomplete?keyword=검색어
      *
      * - 제목 우선 매칭 후 부족하면 설명에서 추가
      * - PUBLISHED 상태만 검색
@@ -115,7 +115,7 @@ public class PublicPostController implements PublicPostControllerDocs{
     public ResponseEntity<CustomResponse<List<PostResponse.PostItems>>> autocomplete(
             @RequestParam(required = false, defaultValue = "") String keyword
     ) {
-        List<PostResponse.PostItems> results = publicPostService.autocomplete(keyword);
+        List<PostResponse.PostItems> results = postGuestService.autocomplete(keyword);
         return ResponseEntity.ok(CustomResponse.success(results));
     }
 }

@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.post.entity;
+package com.sealog.backend.domain.feature.post.enums;
 
 import com.sealog.backend.global.exception.CustomException;
 import lombok.Getter;

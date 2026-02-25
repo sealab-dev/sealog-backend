@@ -2,7 +2,7 @@ package com.sealog.backend.domain.feature.post.controller;
 
 import com.sealog.backend.domain.feature.post.dto.PostRequest;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
-import com.sealog.backend.domain.feature.post.entity.PostType;
+import com.sealog.backend.domain.feature.post.enums.PostType;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
 import com.sealog.backend.security.auth.CustomUserDetails;
@@ -19,7 +19,7 @@ import org.springframework.http.ResponseEntity;
 
 @Tag(name = "My - Post", description = "내 게시글 API (인증 필수)")
 @SecurityRequirement(name = "bearerAuth")
-public interface MyPostControllerDocs {
+public interface PostUserControllerDocs {
 
     @Operation(summary = "게시글 생성", description = "내 게시글을 생성합니다.")
     @ApiResponses({
@@ -29,7 +29,7 @@ public interface MyPostControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<PostResponse.Detail>> createPost(
+    ResponseEntity<CustomResponse<PostResponse.Detail>> create(
             CustomUserDetails userDetails,
             PostRequest.Create request
     );
@@ -57,7 +57,7 @@ public interface MyPostControllerDocs {
             @ApiResponse(responseCode = "404", description = "게시글 없음",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<PostResponse.Detail>> updatePost(
+    ResponseEntity<CustomResponse<PostResponse.Detail>> update(
             CustomUserDetails userDetails,
             @Parameter(description = "게시글 slug", example = "spring-boot-jpa") String slug,
             PostRequest.Update request
@@ -71,7 +71,7 @@ public interface MyPostControllerDocs {
             @ApiResponse(responseCode = "404", description = "게시글 없음",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<Void>> deletePost(
+    ResponseEntity<CustomResponse<Void>> delete(
             CustomUserDetails userDetails,
             @Parameter(description = "게시글 slug", example = "spring-boot-jpa") String slug
     );
@@ -84,7 +84,7 @@ public interface MyPostControllerDocs {
             @ApiResponse(responseCode = "404", description = "게시글 없음",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<Void>> restorePost(
+    ResponseEntity<CustomResponse<Void>> restore(
            CustomUserDetails userDetails,
            @Parameter(description = "게시글 slug", example = "spring-boot-jpa") String slug
     );
@@ -95,7 +95,7 @@ public interface MyPostControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> searchMyPosts(
+    ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> search(
             CustomUserDetails userDetails,
             @Parameter(description = "게시글 타입", example = "CORE") PostType postType,
             @Parameter(description = "스택명", example = "Spring Boot") String stack,
@@ -109,7 +109,7 @@ public interface MyPostControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getDeletedPosts(
+    ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getDeleted(
             CustomUserDetails userDetails,
             Pageable pageable
     );
