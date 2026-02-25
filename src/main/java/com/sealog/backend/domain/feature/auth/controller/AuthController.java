@@ -1,7 +1,7 @@
-package com.sealog.backend.domain.feature.user.controller;
+package com.sealog.backend.domain.feature.auth.controller;
 
-import com.sealog.backend.domain.feature.user.dto.AuthRequest;
-import com.sealog.backend.domain.feature.user.service.AuthService;
+import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
+import com.sealog.backend.domain.feature.auth.service.AuthService;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.exception.CustomException;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class AuthController implements AuthControllerDocs{
+public class AuthController implements AuthControllerDocs {
 
     private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
@@ -33,6 +33,7 @@ public class AuthController implements AuthControllerDocs{
     /**
      * 로그인
      * POST /api/auth/login
+     * guest
      */
     @Override
     @PostMapping("/login")
@@ -55,6 +56,7 @@ public class AuthController implements AuthControllerDocs{
      * 토큰 재발급
      * POST /api/auth/refresh
      * - Refresh Token은 쿠키에서 자동으로 추출
+     * guest
      * - 리프레시 토큰 로테이션 없음: 액세스 토큰만 재발급
      */
     @Override
@@ -92,6 +94,7 @@ public class AuthController implements AuthControllerDocs{
     /**
      * 로그아웃
      * POST /api/auth/logout
+     * user
      */
     @Override
     @PostMapping("/logout")

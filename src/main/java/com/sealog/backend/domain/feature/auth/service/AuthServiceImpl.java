@@ -1,11 +1,12 @@
-package com.sealog.backend.domain.feature.user.service;
+package com.sealog.backend.domain.feature.auth.service;
 
-import com.sealog.backend.domain.feature.user.dto.AuthRequest;
+import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.entity.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserFileRepository;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.domain.feature.file.repository.FileMetadataRepository;
+import com.sealog.backend.domain.feature.user.service.UserValidatorService;
 import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.infra.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
@@ -21,32 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
-    private final UserFileRepository userFileRepository;
-    private final FileMetadataRepository fileMetadataRepository;
     private final PasswordEncoder passwordEncoder;
-    private final FileStorageService fileStorageService;
-    private final UserValidatorService userValidatorService;
 
-    @Override
-    @Transactional
-    public User signUp(AuthRequest.SignUpRequest request) {
-        // 이메일 중복 검사
-        userValidatorService.validateDuplicateEmail(request.getEmail());
 
-        // 닉네임 중복 검사
-        userValidatorService.validateDuplicateNickname(request.getNickname());
-
-        // 비밀번호 암호화 및 User 생성
-        User user = User.builder()
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .name(request.getName())
-                .nickname(request.getNickname())
-                .role(UserRole.USER)
-                .build();
-
-        return userRepository.save(user);
-    }
 
     @Override
     public User login(AuthRequest.LoginRequest request) {
