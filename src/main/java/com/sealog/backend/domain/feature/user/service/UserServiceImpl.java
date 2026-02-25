@@ -1,8 +1,10 @@
 package com.sealog.backend.domain.feature.user.service;
 
+import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.user.dto.UserRequest;
 import com.sealog.backend.domain.feature.user.dto.UserResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
+import com.sealog.backend.domain.feature.user.entity.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserResponse.UserInfo getMe(Long userId) {
+    public UserResponse.UserInfo getMyInfo(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
 
@@ -128,7 +130,7 @@ public class UserServiceImpl implements UserService {
     private void handleProfileImage(User user, UserRequest.UpdateProfileRequest request) {
         // 1. 프로필 이미지 제거 요청
         if (Boolean.TRUE.equals(request.getRemoveProfileImage())) {
-            userFileService.deleteExistingProfile(user.getId());
+            userFileService.deleteProfile(user.getId());
             user.removeProfileImage();
             log.info("프로필 이미지 제거 완료: userId={}", user.getId());
             return;
@@ -137,10 +139,10 @@ public class UserServiceImpl implements UserService {
         // 2. 새 프로필 이미지로 교체
         if (request.getProfileImageId() != null) {
             // 기존 매핑 삭제
-            userFileService.deleteExistingProfile(user.getId());
+            userFileService.deleteProfile(user.getId());
 
             // 새 매핑 생성
-            userFileService.saveProfileMapping(user.getId(), request.getProfileImageId());
+            userFileService.saveProfile(user.getId(), request.getProfileImageId());
 
             // User 엔티티에 path 저장
             user.updateProfileImagePath(request.getProfileImagePath());
@@ -149,5 +151,26 @@ public class UserServiceImpl implements UserService {
         }
 
         // 3. 둘 다 없으면 프로필 이미지 변경 없음
+    }
+
+    @Override
+    @Transactional
+    public User signUp(AuthRequest.SignUpRequest request) {
+        // 이메일 중복 검사
+        userValidatorService.validateDuplicateEmail(request.getEmail());
+
+        // 닉네임 중복 검사
+        userValidatorService.validateDuplicateNickname(request.getNickname());
+
+        // 비밀번호 암호화 및 User 생성
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .name(request.getName())
+                .nickname(request.getNickname())
+                .role(UserRole.USER)
+                .build();
+
+        return userRepository.save(user);
     }
 }

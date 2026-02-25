@@ -18,14 +18,14 @@ public interface UserFileService extends FileUsageCollector {
      * @param userId 사용자 ID
      * @param fileId 파일 ID
      */
-    void saveProfileMapping(Long userId, Long fileId);
+    void saveProfile(Long userId, Long fileId);
 
     /**
      * 사용자의 기존 프로필 이미지 매핑 삭제
      *
      * @param userId 사용자 ID
      */
-    void deleteExistingProfile(Long userId);
+    void deleteProfile(Long userId);
 
     /**
      * 사용자의 프로필 이미지 파일 ID 조회

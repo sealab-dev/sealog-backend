@@ -43,6 +43,9 @@ public class User extends BaseTimeEntity {
     @Column(length = 1000)
     private String profileImagePath;
 
+    @Column(length = 512)
+    private String refreshToken;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Post> posts = new ArrayList<>();
 
@@ -77,5 +80,13 @@ public class User extends BaseTimeEntity {
 
     public void removeProfileImage() {
         this.profileImagePath = null;
+    }
+
+    public void updateRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public void clearRefreshToken() {
+        this.refreshToken = null;
     }
 }

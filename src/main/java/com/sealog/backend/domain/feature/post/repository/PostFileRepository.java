@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.post.repository;
 
 import com.sealog.backend.domain.feature.post.entity.PostFile;
-import com.sealog.backend.domain.feature.post.entity.PostFileType;
+import com.sealog.backend.domain.feature.post.enums.PostFileType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

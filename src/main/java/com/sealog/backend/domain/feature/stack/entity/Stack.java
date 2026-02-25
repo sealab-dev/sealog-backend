@@ -2,6 +2,7 @@ package com.sealog.backend.domain.feature.stack.entity;
 
 import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;
+import com.sealog.backend.domain.feature.stack.enums.StackGroup;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

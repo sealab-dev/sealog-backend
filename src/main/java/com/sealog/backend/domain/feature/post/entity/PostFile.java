@@ -1,6 +1,7 @@
 package com.sealog.backend.domain.feature.post.entity;
 
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;
+import com.sealog.backend.domain.feature.post.enums.PostFileType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

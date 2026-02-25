@@ -36,37 +36,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String accessToken = cookieUtil.getAccessToken(request).orElse(null);
-            String refreshToken = cookieUtil.getRefreshToken(request).orElse(null);
 
-            // Case 1: Access Token이 유효한 경우 → 정상 인증
+            // Access Token이 유효한 경우 → 정상 인증
             if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
                 setAuthentication(accessToken, request);
                 log.debug("Access Token 인증 성공");
             }
-            // Case 2: Access Token 없거나 만료, Refresh Token 유효 → 자동 재발급
-            else if (refreshToken != null && jwtTokenProvider.validateToken(refreshToken)) {
-                String email = jwtTokenProvider.getEmail(refreshToken);
-                Long userId = jwtTokenProvider.getUserId(refreshToken);
-
-                // 새 Access Token 발급
-                String newAccessToken = jwtTokenProvider.createAccessToken(userId, email);
-
-                // 쿠키에 새 Access Token 설정
-                cookieUtil.addAccessTokenCookie(response, newAccessToken);
-
-                // 인증 처리
-                setAuthentication(newAccessToken, request);
-
-                log.info("Access Token 자동 갱신 완료 - userId: {}, email: {}", userId, email);
-            }
-            // Case 3: 둘 다 없거나 만료 → 인증 없이 통과 (이후 401 처리됨)
+            // Access Token 없거나 만료 → 인증 없이 통과, 클라이언트가 /api/auth/refresh 호출 필요
             else {
-                log.debug("유효한 토큰 없음 - 인증 없이 진행");
+                log.debug("유효한 Access Token 없음 - 인증 없이 진행");
             }
 
         } catch (Exception e) {
             log.error("인증 처리 중 오류 발생: {}", e.getMessage());
-            // 예외 발생해도 필터 체인은 계속 진행 (인증 실패로 처리됨)
         }
 
         filterChain.doFilter(request, response);

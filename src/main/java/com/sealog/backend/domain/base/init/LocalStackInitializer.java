@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.base.init;
 
 import com.sealog.backend.domain.feature.stack.entity.Stack;
-import com.sealog.backend.domain.feature.stack.entity.StackGroup;
+import com.sealog.backend.domain.feature.stack.enums.StackGroup;
 import com.sealog.backend.domain.feature.stack.repository.StackRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
