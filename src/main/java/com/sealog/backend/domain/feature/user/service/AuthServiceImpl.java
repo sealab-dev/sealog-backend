@@ -68,4 +68,29 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> CustomException.unauthorized("사용자를 찾을 수 없습니다"));
     }
 
+    @Override
+    @Transactional
+    public void saveRefreshToken(Long userId, String refreshToken) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> CustomException.unauthorized("사용자를 찾을 수 없습니다"));
+        user.updateRefreshToken(refreshToken);
+    }
+
+    @Override
+    public void validateStoredRefreshToken(Long userId, String refreshToken) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> CustomException.unauthorized("사용자를 찾을 수 없습니다"));
+
+        String storedToken = user.getRefreshToken();
+        if (storedToken == null || !storedToken.equals(refreshToken)) {
+            throw CustomException.unauthorized("유효하지 않은 Refresh Token입니다");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteRefreshToken(Long userId) {
+        userRepository.findById(userId).ifPresent(User::clearRefreshToken);
+    }
+
 }
