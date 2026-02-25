@@ -25,7 +25,7 @@ public interface UserFileService extends FileUsageCollector {
      *
      * @param userId 사용자 ID
      */
-    void deleteExisting(Long userId);
+    void deleteProfile(Long userId);
 
     /**
      * 사용자의 프로필 이미지 파일 ID 조회

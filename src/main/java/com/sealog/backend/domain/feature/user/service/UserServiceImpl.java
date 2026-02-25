@@ -128,7 +128,7 @@ public class UserServiceImpl implements UserService {
     private void handleProfileImage(User user, UserRequest.UpdateProfileRequest request) {
         // 1. 프로필 이미지 제거 요청
         if (Boolean.TRUE.equals(request.getRemoveProfileImage())) {
-            userFileService.deleteExisting(user.getId());
+            userFileService.deleteProfile(user.getId());
             user.removeProfileImage();
             log.info("프로필 이미지 제거 완료: userId={}", user.getId());
             return;
@@ -137,7 +137,7 @@ public class UserServiceImpl implements UserService {
         // 2. 새 프로필 이미지로 교체
         if (request.getProfileImageId() != null) {
             // 기존 매핑 삭제
-            userFileService.deleteExisting(user.getId());
+            userFileService.deleteProfile(user.getId());
 
             // 새 매핑 생성
             userFileService.saveProfile(user.getId(), request.getProfileImageId());
