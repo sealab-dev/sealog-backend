@@ -13,15 +13,15 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/user/me")
 @RequiredArgsConstructor
-public class UserController implements UserControllerDocs {
+public class UserMeController implements UserMeControllerDocs {
 
     private final UserService userService;
 
     /**
      * 내 정보 조회
-     * GET /api/user
+     * GET /api/user/me
      * user
      */
     @Override
@@ -35,7 +35,7 @@ public class UserController implements UserControllerDocs {
 
     /**
      * 프로필 수정
-     * PATCH /api/user/profile
+     * PATCH /api/user/me/profile
      * - 닉네임 및/또는 프로필 이미지 수정
      * - MultipartFile과 JSON을 함께 전송하기 위해 @RequestPart 사용
      * user
@@ -60,7 +60,7 @@ public class UserController implements UserControllerDocs {
 
     /**
      * 비밀번호 변경
-     * PATCH /api/user/password
+     * PATCH /api/user/me/password
      * - 현재 비밀번호 확인 후 새 비밀번호로 변경
      * user
      */

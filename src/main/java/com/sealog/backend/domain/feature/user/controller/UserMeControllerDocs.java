@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 
 @Tag(name = "MyInfo", description = "내 정보 API")
 @SecurityRequirement(name = "bearerAuth")
-public interface UserControllerDocs {
+public interface UserMeControllerDocs {
 
     @Operation(summary = "내 정보 조회", description = "로그인한 사용자 정보를 조회합니다.")
     @ApiResponses({
