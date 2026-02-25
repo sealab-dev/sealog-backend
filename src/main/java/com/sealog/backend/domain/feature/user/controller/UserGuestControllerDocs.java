@@ -13,7 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "BlogUserInfo", description = "블로그 사용자 정보 API (인증 불필요)")
-public interface GuestUserControllerDocs {
+public interface UserGuestControllerDocs {
 
     @Operation(summary = "블로그 사용자 정보 조회", description = "닉네임으로 블로그 사용자 정보를 조회합니다.")
     @SecurityRequirements()

@@ -12,7 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Admin - SignUp", description = "어드민 회원가입 API")
-public interface AdminUserControllerDocs {
+public interface UserAdminControllerDocs {
 
     @Operation(summary = "어드민 회원가입", description = "회원가입 처리")
     @SecurityRequirements()
