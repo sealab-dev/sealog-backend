@@ -3,7 +3,7 @@ package com.sealog.backend.domain.feature.post.controller;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.post.dto.PostSearchCondition;
 import com.sealog.backend.domain.feature.post.enums.PostType;
-import com.sealog.backend.domain.feature.post.service.PostGuestService;
+import com.sealog.backend.domain.feature.post.service.PostService;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostGuestController implements PostGuestControllerDocs {
 
-    private final PostGuestService postGuestService;
+    private final PostService postService;
 
     /**
      * 공개 게시글 검색 (복합 필터링)
@@ -50,7 +50,7 @@ public class PostGuestController implements PostGuestControllerDocs {
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         PostSearchCondition condition = PostSearchCondition.ofPublic(postType, stack, keyword);
-        Page<PostResponse.PostItems> posts = postGuestService.search(condition, pageable);
+        Page<PostResponse.PostItems> posts = postService.search(condition, pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
     }
 
@@ -68,7 +68,7 @@ public class PostGuestController implements PostGuestControllerDocs {
             @PathVariable String nickname,
             @PathVariable String slug
     ) {
-        PostResponse.Detail response = postGuestService.getDetail(nickname, slug);
+        PostResponse.Detail response = postService.getDetail(nickname, slug);
         return ResponseEntity.ok(CustomResponse.success(response));
     }
 
@@ -95,7 +95,7 @@ public class PostGuestController implements PostGuestControllerDocs {
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         PostSearchCondition condition = PostSearchCondition.ofUser(nickname, postType, stack, keyword);
-        Page<PostResponse.PostItems> posts = postGuestService.search(condition, pageable);
+        Page<PostResponse.PostItems> posts = postService.search(condition, pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
     }
 
@@ -115,7 +115,7 @@ public class PostGuestController implements PostGuestControllerDocs {
     public ResponseEntity<CustomResponse<List<PostResponse.PostItems>>> autocomplete(
             @RequestParam(required = false, defaultValue = "") String keyword
     ) {
-        List<PostResponse.PostItems> results = postGuestService.autocomplete(keyword);
+        List<PostResponse.PostItems> results = postService.autocomplete(keyword);
         return ResponseEntity.ok(CustomResponse.success(results));
     }
 }

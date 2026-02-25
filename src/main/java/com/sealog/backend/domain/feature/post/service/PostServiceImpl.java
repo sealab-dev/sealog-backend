@@ -1,5 +1,6 @@
 package com.sealog.backend.domain.feature.post.service;
 
+import com.sealog.backend.domain.feature.file.service.FileMetadataService;
 import com.sealog.backend.domain.feature.post.dto.PostRequest;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.post.dto.PostSearchCondition;
@@ -7,18 +8,18 @@ import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
 import com.sealog.backend.domain.feature.post.repository.PostRepository;
 import com.sealog.backend.domain.feature.post.repository.PostSpecification;
+import com.sealog.backend.domain.feature.post.strategy.PostSearchStrategy;
 import com.sealog.backend.domain.feature.post.util.PostMarkdownFileParser;
 import com.sealog.backend.domain.feature.post.util.PostSlugGenerator;
 import com.sealog.backend.domain.feature.post.util.PostValidateMarkdown;
 import com.sealog.backend.domain.feature.stack.entity.Stack;
 import com.sealog.backend.domain.feature.stack.repository.StackRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
-import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
-import com.sealog.backend.domain.feature.file.service.FileMetadataService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,28 +34,49 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class PostUserServiceImpl implements PostUserService {
+public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
-    private final UserRepository userRepository;
     private final StackRepository stackRepository;
     private final PostFileService postFileService;
     private final FileMetadataService fileMetadataService;
+    private final PostSearchStrategy postSearchStrategy;
 
-    // ========== CRUD ========== //
+    // ========== Guest (공개) ========== //
+
+    @Override
+    public PostResponse.Detail getDetail(String nickname, String slug) {
+        Post post = postRepository.findBySlugWithStacks(slug)
+                .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
+
+        if (!post.getUser().getNickname().equals(nickname)) {
+            throw CustomException.notFound("해당 사용자의 게시글이 아닙니다");
+        }
+
+        return buildPostDetailResponse(post, true);
+    }
+
+    @Override
+    public Page<PostResponse.PostItems> search(PostSearchCondition condition, Pageable pageable) {
+        return postRepository.findAll(PostSpecification.withCondition(condition), pageable)
+                .map(this::buildPostItemsResponse);
+    }
+
+    @Override
+    public List<PostResponse.PostItems> autocomplete(String keyword) {
+        return postSearchStrategy.autocomplete(keyword, 5);
+    }
+
+    // ========== User (인증) ========== //
 
     @Override
     @Transactional
     public PostResponse.Detail create(User user, PostRequest.Create request) {
         validateTitleForCreate(request.getTitle());
-
-        // 본문 마크다운 형식 검증
         PostValidateMarkdown.validate(request.getContent());
 
-        // Slug 생성 (중복 처리 포함)
         String slug = generateUniqueSlug(request.getTitle());
 
-        // 게시글 기본 정보 저장
         Post post = Post.builder()
                 .user(user)
                 .postType(request.getPostType())
@@ -65,12 +87,10 @@ public class PostUserServiceImpl implements PostUserService {
                 .status(PostStatus.PUBLISHED)
                 .build();
 
-        // 자유 태그 처리
         if (request.getTags() != null && !request.getTags().isEmpty()) {
             post.updateTags(request.getTags());
         }
 
-        // 기술 스택 처리
         if (request.getStacks() != null && !request.getStacks().isEmpty()) {
             List<Stack> stacks = stackRepository.findByNameIn(request.getStacks());
             post.updateStacks(new HashSet<>(stacks));
@@ -79,20 +99,17 @@ public class PostUserServiceImpl implements PostUserService {
         Post savedPost = postRepository.save(post);
         log.info("게시글 생성 완료: postId={}, slug={}", savedPost.getId(), savedPost.getSlug());
 
-        // 썸네일 처리 (사전 업로드된 파일)
         if (request.getThumbnailFileId() != null) {
             handleThumbnailFromPreUpload(savedPost, request.getThumbnailFileId(), request.getThumbnailPath());
         }
 
-        // 본문 파일 매핑 생성 (본문에서 파싱)
         handleContentFilesFromMarkdown(savedPost.getId(), request.getContent());
 
-        return buildPostDetailResponse(savedPost);
+        return buildPostDetailResponse(savedPost, false);
     }
 
     @Override
     public PostResponse.Edit getEdit(Long userId, String slug) {
-        // 본인 게시글은 상태 무관하게 조회
         Post post = postRepository.findBySlugAndUserId(slug, userId)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
@@ -126,10 +143,8 @@ public class PostUserServiceImpl implements PostUserService {
         Post post = postRepository.findBySlugAndUserId(slug, userId)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
-        // 본문 마크다운 형식 검증
         PostValidateMarkdown.validate(request.getContent());
 
-        // 제목이 변경될 경우에만 중복 체크 및 slug 재생성
         String newSlug = post.getSlug();
         if (!post.getTitle().equals(request.getTitle())) {
             validateTitleForUpdate(post.getId(), request.getTitle());
@@ -146,24 +161,19 @@ public class PostUserServiceImpl implements PostUserService {
                 request.getContent()
         );
 
-        // 자유 태그 처리
         if (request.getTags() != null && !request.getTags().isEmpty()) {
             post.updateTags(request.getTags());
         }
 
-        // 기술 스택 처리
         if (request.getStacks() != null && !request.getStacks().isEmpty()) {
             List<Stack> stacks = stackRepository.findByNameIn(request.getStacks());
             post.updateStacks(new HashSet<>(stacks));
         }
 
-        // 썸네일 처리
         handleThumbnailUpdate(post, request);
-
-        // 본문 파일 매핑 처리 (차집합 기반)
         handleContentFilesUpdate(post.getId(), request.getContent());
 
-        return buildPostDetailResponse(post);
+        return buildPostDetailResponse(post, false);
     }
 
     @Override
@@ -172,7 +182,6 @@ public class PostUserServiceImpl implements PostUserService {
         Post post = postRepository.findBySlugAndUserId(slug, userId)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
-        // 소프트 삭제 처리
         post.softDelete();
 
         log.info("게시글 소프트 삭제 완료: postId={}, slug={}, deletedAt={}",
@@ -185,22 +194,17 @@ public class PostUserServiceImpl implements PostUserService {
         Post post = postRepository.findBySlugAndUserId(slug, userId)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
-        // 삭제된 상태가 아니면 복구 불가
         if (post.getStatus() != PostStatus.DELETED) {
             throw CustomException.badRequest("삭제되지 않은 게시글은 복구할 수 없습니다");
         }
 
-        // 복구 처리
         post.restoreFromDelete();
 
         log.info("게시글 복구 완료: postId={}, slug={}", post.getId(), post.getSlug());
     }
 
-    // ========== 조회 ========== //
-
     @Override
     public Page<PostResponse.PostItems> search(Long userId, PostSearchCondition condition, Pageable pageable) {
-
         PostSearchCondition nonDeletedCondition = PostSearchCondition.builder()
                 .postType(condition.getPostType())
                 .stackName(condition.getStackName())
@@ -230,7 +234,6 @@ public class PostUserServiceImpl implements PostUserService {
                 ? new ArrayList<>(post.getTags())
                 : new ArrayList<>();
 
-        // 작성자 정보 생성
         PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
                 post.getUser().getNickname(),
                 post.getUser().getProfileImagePath()
@@ -251,7 +254,7 @@ public class PostUserServiceImpl implements PostUserService {
         );
     }
 
-    private PostResponse.Detail buildPostDetailResponse(Post post) {
+    private PostResponse.Detail buildPostDetailResponse(Post post, boolean includeRelatedPosts) {
         List<String> stackNames = post.getStacks().stream()
                 .map(Stack::getName)
                 .collect(Collectors.toList());
@@ -260,11 +263,14 @@ public class PostUserServiceImpl implements PostUserService {
                 ? new ArrayList<>(post.getTags())
                 : new ArrayList<>();
 
-        // 작성자 정보 생성
         PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
                 post.getUser().getNickname(),
                 post.getUser().getProfileImagePath()
         );
+
+        List<PostResponse.PostItems> relatedPostItems = includeRelatedPosts
+                ? getRelatedPosts(post).stream().map(this::buildPostItemsResponse).collect(Collectors.toList())
+                : List.of();
 
         return PostResponse.Detail.of(
                 post.getId(),
@@ -278,10 +284,79 @@ public class PostUserServiceImpl implements PostUserService {
                 tags,
                 stackNames,
                 author,
-                List.of(), // 내 게시글 조회 시에는 관련 게시글 불필요
+                relatedPostItems,
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );
+    }
+
+    // ========== 관련 게시글 추천 로직 ========== //
+
+    private List<Post> getRelatedPosts(Post currentPost) {
+        List<Post> relatedPosts = new ArrayList<>();
+
+        List<String> stackNames = currentPost.getStacks().stream()
+                .map(Stack::getName)
+                .collect(Collectors.toList());
+
+        if (stackNames.isEmpty()) {
+            log.info("관련 게시글 조회 - Stack 없음, 최신 공개 게시글 조회: postId={}", currentPost.getId());
+            return postRepository.findLatestPublicPosts(
+                    currentPost.getId(),
+                    PageRequest.of(0, 3)
+            );
+        }
+
+        // 1순위: Stack 일치 + PostType 일치 (최대 2개)
+        List<Post> firstPriority = postRepository.findRelatedPostsByStackAndType(
+                currentPost.getId(),
+                stackNames,
+                currentPost.getPostType(),
+                PageRequest.of(0, 2)
+        );
+
+        relatedPosts.addAll(firstPriority);
+        log.info("관련 게시글 조회 - 1순위: postId={}, count={}", currentPost.getId(), firstPriority.size());
+
+        int remaining = 3 - relatedPosts.size();
+
+        // 2순위: Stack 일치 + PostType 다름
+        if (remaining > 0) {
+            List<Post> secondPriority = postRepository.findRelatedPostsByStackOnly(
+                    currentPost.getId(),
+                    stackNames,
+                    currentPost.getPostType(),
+                    PageRequest.of(0, remaining)
+            );
+
+            relatedPosts.addAll(secondPriority);
+            log.info("관련 게시글 조회 - 2순위: postId={}, count={}", currentPost.getId(), secondPriority.size());
+
+            remaining = 3 - relatedPosts.size();
+        }
+
+        // 3순위: 최신 공개 게시글
+        if (remaining > 0) {
+            List<Post> latestPosts = postRepository.findLatestPublicPosts(
+                    currentPost.getId(),
+                    PageRequest.of(0, remaining)
+            );
+
+            List<Long> existingIds = relatedPosts.stream()
+                    .map(Post::getId)
+                    .toList();
+
+            List<Post> filtered = latestPosts.stream()
+                    .filter(p -> !existingIds.contains(p.getId()))
+                    .limit(remaining)
+                    .toList();
+
+            relatedPosts.addAll(filtered);
+            log.info("관련 게시글 조회 - 3순위: postId={}, count={}", currentPost.getId(), filtered.size());
+        }
+
+        log.info("관련 게시글 조회 완료: postId={}, totalCount={}", currentPost.getId(), relatedPosts.size());
+        return relatedPosts;
     }
 
     // ========== 파일 처리 ========== //
@@ -295,10 +370,8 @@ public class PostUserServiceImpl implements PostUserService {
         }
 
         log.info("게시글 생성 - 본문 파일 매핑 시작: postId={}, fileCount={}", postId, fileIds.size());
-
         fileMetadataService.validateFilesExist(new ArrayList<>(fileIds));
         postFileService.saveContentFiles(postId, new ArrayList<>(fileIds));
-
         log.info("게시글 생성 - 본문 파일 매핑 완료: postId={}", postId);
     }
 
@@ -328,11 +401,9 @@ public class PostUserServiceImpl implements PostUserService {
 
     private void handleThumbnailFromPreUpload(Post post, Long thumbnailFileId, String thumbnailUrl) {
         log.info("게시글 생성 - 썸네일 처리 시작: postId={}, fileId={}", post.getId(), thumbnailFileId);
-
         fileMetadataService.validateFilesExist(List.of(thumbnailFileId));
         postFileService.saveThumbnail(post.getId(), thumbnailFileId);
         post.updateThumbnailUrl(thumbnailUrl);
-
         log.info("게시글 생성 - 썸네일 처리 완료: postId={}, path={}", post.getId(), thumbnailUrl);
     }
 
