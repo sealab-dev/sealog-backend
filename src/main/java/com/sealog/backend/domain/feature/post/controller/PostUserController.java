@@ -4,7 +4,7 @@ import com.sealog.backend.domain.feature.post.dto.PostRequest;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.post.dto.PostSearchCondition;
 import com.sealog.backend.domain.feature.post.enums.PostType;
-import com.sealog.backend.domain.feature.post.service.PostUserService;
+import com.sealog.backend.domain.feature.post.service.PostService;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
 import com.sealog.backend.security.auth.CustomUserDetails;
@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PostUserController implements PostUserControllerDocs {
 
-    private final PostUserService postUserService;
+    private final PostService postService;
 
     // ========== CRUD ========== //
 
@@ -46,7 +46,7 @@ public class PostUserController implements PostUserControllerDocs {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody @Valid PostRequest.Create request
     ) {
-        PostResponse.Detail response = postUserService.create(
+        PostResponse.Detail response = postService.create(
                 userDetails.getUser(),
                 request
         );
@@ -65,7 +65,7 @@ public class PostUserController implements PostUserControllerDocs {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug
     ) {
-        PostResponse.Edit response = postUserService.getEdit(userDetails.getUserId(), slug);
+        PostResponse.Edit response = postService.getEdit(userDetails.getUserId(), slug);
         return ResponseEntity.ok(CustomResponse.success(response));
     }
 
@@ -83,7 +83,7 @@ public class PostUserController implements PostUserControllerDocs {
             @PathVariable String slug,
             @RequestBody @Valid PostRequest.Update request
     ) {
-        PostResponse.Detail response = postUserService.update(
+        PostResponse.Detail response = postService.update(
                 userDetails.getUserId(),
                 slug,
                 request
@@ -103,7 +103,7 @@ public class PostUserController implements PostUserControllerDocs {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug
     ) {
-        postUserService.delete(userDetails.getUserId(), slug);
+        postService.delete(userDetails.getUserId(), slug);
         return ResponseEntity.ok(CustomResponse.success(null, "게시글이 삭제되었습니다"));
     }
 
@@ -119,7 +119,7 @@ public class PostUserController implements PostUserControllerDocs {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug
     ) {
-        postUserService.restore(userDetails.getUserId(), slug);
+        postService.restore(userDetails.getUserId(), slug);
         return ResponseEntity.ok(CustomResponse.success(null, "게시글이 복구되었습니다"));
     }
 
@@ -141,7 +141,7 @@ public class PostUserController implements PostUserControllerDocs {
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         PostSearchCondition condition = PostSearchCondition.ofMine(postType, stack, keyword);
-        Page<PostResponse.PostItems> posts = postUserService.search(
+        Page<PostResponse.PostItems> posts = postService.search(
                 userDetails.getUserId(),
                 condition,
                 pageable
@@ -159,7 +159,7 @@ public class PostUserController implements PostUserControllerDocs {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 10, sort = "deletedAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<PostResponse.PostItems> posts = postUserService.getDeleted(
+        Page<PostResponse.PostItems> posts = postService.getDeleted(
                 userDetails.getUserId(),
                 pageable
         );
