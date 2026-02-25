@@ -12,7 +12,7 @@ public interface UserService {
      * @return 사용자 정보
      * @throws CustomException 사용자를 찾을 수 없는 경우 (NOT_FOUND)
      */
-    UserResponse.UserInfo getMe(Long userId);
+    UserResponse.UserInfo getMyInfo(Long userId);
 
     /**
      * 프로필 정보 수정 (닉네임 및/또는 프로필 이미지)

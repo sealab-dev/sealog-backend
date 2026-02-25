@@ -13,7 +13,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
-@Tag(name = "Me", description = "내 정보 API")
+@Tag(name = "MyInfo", description = "내 정보 API")
 @SecurityRequirement(name = "bearerAuth")
 public interface UserControllerDocs {
 
@@ -23,7 +23,7 @@ public interface UserControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<UserResponse.UserInfo>> getMe(CustomUserDetails userDetails);
+    ResponseEntity<CustomResponse<UserResponse.UserInfo>> getMyInfo(CustomUserDetails userDetails);
 
     @Operation(summary = "프로필 수정", description = "닉네임/포지션/소개/프로필 이미지 정보를 수정합니다.")
     @ApiResponses({

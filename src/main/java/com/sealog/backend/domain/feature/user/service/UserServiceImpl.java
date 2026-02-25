@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserResponse.UserInfo getMe(Long userId) {
+    public UserResponse.UserInfo getMyInfo(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
 

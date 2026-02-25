@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/guest")
+@RequestMapping("/api/guest/user")
 @RequiredArgsConstructor
 public class GuestUserController implements GuestUserControllerDocs {
 
@@ -16,7 +16,7 @@ public class GuestUserController implements GuestUserControllerDocs {
 
     /**
      * 블로그 사용자 정보
-     * GET /api/guest/{nickname}
+     * GET /api/guest/user/{nickname}
      * 게스트
      */
     @Override
