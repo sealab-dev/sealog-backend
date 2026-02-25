@@ -26,10 +26,10 @@ public class UserController implements UserControllerDocs {
      */
     @Override
     @GetMapping
-    public ResponseEntity<CustomResponse<UserResponse.UserInfo>> getMe(
+    public ResponseEntity<CustomResponse<UserResponse.UserInfo>> getMyInfo(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        UserResponse.UserInfo response = userService.getMe(userDetails.getUserId());
+        UserResponse.UserInfo response = userService.getMyInfo(userDetails.getUserId());
         return ResponseEntity.ok(CustomResponse.success(response));
     }
 

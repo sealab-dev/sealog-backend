@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.auth.controller;
+package com.sealog.backend.domain.feature.user.controller;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.global.response.CustomResponse;
@@ -11,8 +11,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
-@Tag(name = "Admin - Auth", description = "어드민 인증 API")
-public interface AdminAuthControllerDocs {
+@Tag(name = "Admin - SignUp", description = "어드민 회원가입 API")
+public interface AdminUserControllerDocs {
 
     @Operation(summary = "어드민 회원가입", description = "회원가입 처리")
     @SecurityRequirements()

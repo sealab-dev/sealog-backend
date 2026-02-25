@@ -1,7 +1,8 @@
-package com.sealog.backend.domain.feature.auth.controller;
+package com.sealog.backend.domain.feature.user.controller;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.auth.service.AuthService;
+import com.sealog.backend.domain.feature.user.service.AdminUserService;
 import com.sealog.backend.global.response.CustomResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,15 +13,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/admin/auth")
+@RequestMapping("/api/admin/user")
 @RequiredArgsConstructor
-public class AdminAuthController implements AdminAuthControllerDocs {
+public class AdminUserController implements AdminUserControllerDocs {
 
-    private final AuthService authService;
+    private final AdminUserService adminUserService;
 
     /**
      * 회원가입
-     * POST /api/admin/auth/signup
+     * POST /api/admin/user/signup
      * admin
      */
     @Override
@@ -28,7 +29,7 @@ public class AdminAuthController implements AdminAuthControllerDocs {
     public ResponseEntity<CustomResponse<Void>> signUp(
             @Valid @RequestBody AuthRequest.SignUpRequest request
     ) {
-        authService.signUp(request);
+        adminUserService.signUp(request);
         return ResponseEntity.ok(CustomResponse.success(null, "회원가입이 성공적으로 완료되었습니다."));
     }
 }
