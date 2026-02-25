@@ -25,7 +25,7 @@ public class UserFileServiceImpl implements UserFileService {
 
     @Override
     @Transactional
-    public void saveProfileMapping(Long userId, Long fileId) {
+    public void saveProfile(Long userId, Long fileId) {
         UserFile profileMapping = UserFile.builder()
                 .userId(userId)
                 .fileId(fileId)
@@ -38,7 +38,7 @@ public class UserFileServiceImpl implements UserFileService {
 
     @Override
     @Transactional
-    public void deleteExistingProfile(Long userId) {
+    public void deleteExisting(Long userId) {
         Optional<UserFile> existingProfile = userFileRepository
                 .findByUserIdAndFileType(userId, UserFileType.PROFILE);
 
