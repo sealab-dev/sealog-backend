@@ -1,6 +1,6 @@
-package com.sealog.backend.domain.feature.user.service;
+package com.sealog.backend.domain.feature.auth.service;
 
-import com.sealog.backend.domain.feature.user.dto.AuthRequest;
+import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.global.exception.CustomException;
 

@@ -1,7 +1,7 @@
-package com.sealog.backend.domain.feature.user.controller;
+package com.sealog.backend.domain.feature.auth.controller;
 
-import com.sealog.backend.domain.feature.user.dto.AuthRequest;
-import com.sealog.backend.domain.feature.user.service.AuthService;
+import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
+import com.sealog.backend.domain.feature.auth.service.AuthService;
 import com.sealog.backend.global.response.CustomResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,13 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/admin/auth")
 @RequiredArgsConstructor
-public class AdminAuthController implements AdminAuthControllerDocs{
+public class AdminAuthController implements AdminAuthControllerDocs {
 
     private final AuthService authService;
 
     /**
      * 회원가입
      * POST /api/admin/auth/signup
+     * admin
      */
     @Override
     @PostMapping("/signup")
