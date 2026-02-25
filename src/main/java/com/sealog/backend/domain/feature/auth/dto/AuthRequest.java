@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.user.dto;
+package com.sealog.backend.domain.feature.auth.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;

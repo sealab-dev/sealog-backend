@@ -1,6 +1,6 @@
-package com.sealog.backend.domain.feature.user.controller;
+package com.sealog.backend.domain.feature.auth.controller;
 
-import com.sealog.backend.domain.feature.user.dto.AuthRequest;
+import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.global.response.CustomResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

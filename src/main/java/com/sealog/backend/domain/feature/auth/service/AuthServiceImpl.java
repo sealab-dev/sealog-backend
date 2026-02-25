@@ -1,11 +1,12 @@
-package com.sealog.backend.domain.feature.user.service;
+package com.sealog.backend.domain.feature.auth.service;
 
-import com.sealog.backend.domain.feature.user.dto.AuthRequest;
+import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.entity.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserFileRepository;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.domain.feature.file.repository.FileMetadataRepository;
+import com.sealog.backend.domain.feature.user.service.UserValidatorService;
 import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.infra.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
