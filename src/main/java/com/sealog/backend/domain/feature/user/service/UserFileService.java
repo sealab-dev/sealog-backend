@@ -1,6 +1,6 @@
 package com.sealog.backend.domain.feature.user.service;
 
-import com.sealog.backend.domain.feature.file.collector.FileUsageCollector;
+import com.sealog.backend.domain.feature.file.support.FileUsageCollector;
 
 /**
  * UserFile 중간 테이블 관리 서비스

@@ -17,9 +17,12 @@ import lombok.NoArgsConstructor;
  * 4. 조회 최적화: Post.content에 URL 직접 포함 (JOIN 불필요)
  */
 @Entity
-@Table(name = "storage_file", indexes = {
-        @Index(name = "idx_created_at", columnList = "created_at") // 고아 파일 정리용
-})
+@Table(
+        name = "storage_file",
+        indexes = {
+            @Index(name = "idx_created_at", columnList = "created_at") // 고아 파일 정리용
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FileMetadata extends BaseTimeEntity {

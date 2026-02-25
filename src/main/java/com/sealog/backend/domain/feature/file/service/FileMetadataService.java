@@ -5,7 +5,6 @@ import com.sealog.backend.infra.storage.dto.FileUploadResult;
 import com.sealog.backend.global.exception.CustomException;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * 파일 메타데이터 관리 서비스
@@ -23,7 +22,7 @@ public interface FileMetadataService {
      * @param uploadResult S3 업로드 결과
      * @return 저장된 FileMetadata
      */
-    FileMetadata saveFileMetadata(FileUploadResult uploadResult);
+    FileMetadata upload(FileUploadResult uploadResult);
 
     /**
      * 파일 메타데이터를 ID로 조회합니다.
@@ -31,7 +30,7 @@ public interface FileMetadataService {
      * @param fileId 파일 ID
      * @return 파일 메타데이터
      */
-    FileMetadata getFileMetadata(Long fileId);
+    FileMetadata getMetadata(Long fileId);
 
     /**
      * 여러 파일 메타데이터를 ID 목록으로 조회합니다.
@@ -39,14 +38,14 @@ public interface FileMetadataService {
      * @param fileIds 파일 ID 목록
      * @return 파일 메타데이터 목록
      */
-    List<FileMetadata> getFileMetadataList(List<Long> fileIds);
+    List<FileMetadata> getMetadataList(List<Long> fileIds);
 
     /**
      * 파일 메타데이터를 삭제합니다.
      *
      * @param fileId 파일 ID
      */
-    void deleteFileMetadata(Long fileId);
+    void remove(Long fileId);
 
     /**
      * 여러 파일 ID가 모두 존재하는지 검증합니다.
@@ -64,23 +63,4 @@ public interface FileMetadataService {
      */
     List<FileMetadata> findOrphanFiles(int hoursThreshold);
 
-    /**
-     * 사용되지 않는 파일을 조회합니다 (합집합-차집합 전략)
-     *
-     * 동작 방식:
-     * 1. 모든 도메인에서 수집한 "사용 중인 파일 ID" 합집합을 받음
-     * 2. 전체 파일 중 합집합에 포함되지 않은 파일 조회
-     *
-     * @param usedFileIds 사용 중인 파일 ID 집합 (빈 Set이면 안 됨)
-     * @param hoursThreshold 기준 시간 (예: 24시간)
-     * @return 사용되지 않는 파일 목록
-     */
-    List<FileMetadata> findUnusedFiles(Set<Long> usedFileIds, int hoursThreshold);
-
-    /**
-     * 여러 파일 메타데이터를 벌크로 삭제합니다.
-     *
-     * @param fileIds 삭제할 파일 ID 목록
-     */
-    void deleteFileMetadataByIds(List<Long> fileIds);
 }

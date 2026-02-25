@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.file.collector;
+package com.sealog.backend.domain.feature.file.support;
 
 import java.util.Set;
 
