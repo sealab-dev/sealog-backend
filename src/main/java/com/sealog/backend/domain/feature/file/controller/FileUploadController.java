@@ -24,7 +24,7 @@ import java.io.IOException;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/api/user/files")
 @RequiredArgsConstructor
 public class FileUploadController implements FileUploadControllerDocs{
 

@@ -14,7 +14,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
-@Tag(name = "Admin - Stack", description = "스택 관리 API (어드민 전용)")
+@Tag(name = "Stack", description = "스택 관리 API (어드민 전용)")
 @SecurityRequirement(name = "bearerAuth")
 public interface StackAdminControllerDocs {
 
@@ -28,7 +28,7 @@ public interface StackAdminControllerDocs {
         @ApiResponse(responseCode = "403", description = "권한 없음 (어드민 전용)",
             content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<StackResponse.StackItem>> createStack(
+    ResponseEntity<CustomResponse<StackResponse.StackItem>> create(
         StackRequest.Create request,
         CustomUserDetails userDetails
     );
@@ -45,7 +45,7 @@ public interface StackAdminControllerDocs {
         @ApiResponse(responseCode = "404", description = "스택 없음",
             content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<StackResponse.StackItem>> updateStack(
+    ResponseEntity<CustomResponse<StackResponse.StackItem>> update(
         @Parameter(description = "스택 ID", example = "1") Long stackId,
         StackRequest.Update request,
         CustomUserDetails userDetails
@@ -61,7 +61,7 @@ public interface StackAdminControllerDocs {
         @ApiResponse(responseCode = "404", description = "스택 없음",
             content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<Void>> deleteStack(
+    ResponseEntity<CustomResponse<Void>> delete(
         @Parameter(description = "스택 ID", example = "1") Long stackId,
         CustomUserDetails userDetails
     );

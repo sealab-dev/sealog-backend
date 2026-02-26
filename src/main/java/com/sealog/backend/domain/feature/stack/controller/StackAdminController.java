@@ -21,7 +21,7 @@ public class StackAdminController implements StackAdminControllerDocs {
 
     @Override
     @PostMapping
-    public ResponseEntity<CustomResponse<StackResponse.StackItem>> createStack(
+    public ResponseEntity<CustomResponse<StackResponse.StackItem>> create(
             @Valid @RequestBody StackRequest.Create request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
@@ -33,7 +33,7 @@ public class StackAdminController implements StackAdminControllerDocs {
 
     @Override
     @PutMapping("/{stackId}")
-    public ResponseEntity<CustomResponse<StackResponse.StackItem>> updateStack(
+    public ResponseEntity<CustomResponse<StackResponse.StackItem>> update(
             @PathVariable Long stackId,
             @Valid @RequestBody StackRequest.Update request,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -44,7 +44,7 @@ public class StackAdminController implements StackAdminControllerDocs {
 
     @Override
     @DeleteMapping("/{stackId}")
-    public ResponseEntity<CustomResponse<Void>> deleteStack(
+    public ResponseEntity<CustomResponse<Void>> delete(
             @PathVariable Long stackId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
