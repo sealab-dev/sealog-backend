@@ -18,13 +18,13 @@ public class StackGuestController implements StackGuestControllerDocs {
 
     @Override
     @GetMapping
-    public ResponseEntity<CustomResponse<List<StackResponse.StackItem>>> getAllStacks() {
+    public ResponseEntity<CustomResponse<List<StackResponse.StackItem>>> getAll() {
         return ResponseEntity.ok(CustomResponse.success(stackGuestService.getAllStacks()));
     }
 
     @Override
     @GetMapping("/grouped")
-    public ResponseEntity<CustomResponse<StackResponse.GroupedStacks>> getGroupedStacks() {
+    public ResponseEntity<CustomResponse<StackResponse.GroupedStacks>> getGrouped() {
         return ResponseEntity.ok(CustomResponse.success(stackGuestService.getGroupedStacksWithPostCount()));
     }
 
