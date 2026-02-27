@@ -22,7 +22,7 @@ public interface UserGuestControllerDocs {
             @ApiResponse(responseCode = "404", description = "사용자 없음",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<UserResponse.BlogUserInfo>> getBlogUserInfo(
+    ResponseEntity<CustomResponse<UserResponse.PublicProfile>> getBlogUserInfo(
             @Parameter(description = "사용자 닉네임", example = "테스터") String nickname
     );
 }

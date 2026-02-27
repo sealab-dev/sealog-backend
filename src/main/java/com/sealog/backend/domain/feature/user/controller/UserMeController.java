@@ -26,10 +26,10 @@ public class UserMeController implements UserMeControllerDocs {
      */
     @Override
     @GetMapping
-    public ResponseEntity<CustomResponse<UserResponse.UserInfo>> getMyInfo(
+    public ResponseEntity<CustomResponse<UserResponse.MyProfile>> getMyInfo(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        UserResponse.UserInfo response = userService.getMyInfo(userDetails.getUserId());
+        UserResponse.MyProfile response = userService.getMyInfo(userDetails.getUserId());
         return ResponseEntity.ok(CustomResponse.success(response));
     }
 
@@ -42,7 +42,7 @@ public class UserMeController implements UserMeControllerDocs {
      */
     @Override
     @PatchMapping("/profile")
-    public ResponseEntity<CustomResponse<UserResponse.UserInfo>> updateProfile(
+    public ResponseEntity<CustomResponse<UserResponse.MyProfile>> updateProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart(required = false) @Valid UserRequest.UpdateProfileRequest request
     ) {
@@ -50,7 +50,7 @@ public class UserMeController implements UserMeControllerDocs {
             throw CustomException.badRequest("수정할 정보를 입력해주세요");
         }
 
-        UserResponse.UserInfo response = userService.updateProfile(
+        UserResponse.MyProfile response = userService.updateProfile(
                 userDetails.getUserId(),
                 request
         );

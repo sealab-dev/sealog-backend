@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.user.repository;
 
 import com.sealog.backend.domain.feature.user.entity.UserFile;
-import com.sealog.backend.domain.feature.user.entity.UserFileType;
+import com.sealog.backend.domain.feature.user.enums.UserFileType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

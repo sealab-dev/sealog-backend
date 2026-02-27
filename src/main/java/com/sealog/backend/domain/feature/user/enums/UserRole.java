@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.user.entity;
+package com.sealog.backend.domain.feature.user.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

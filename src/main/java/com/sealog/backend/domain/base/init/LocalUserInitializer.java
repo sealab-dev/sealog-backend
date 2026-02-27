@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.base.init;
 
 import com.sealog.backend.domain.feature.user.entity.User;
-import com.sealog.backend.domain.feature.user.entity.UserRole;
+import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
