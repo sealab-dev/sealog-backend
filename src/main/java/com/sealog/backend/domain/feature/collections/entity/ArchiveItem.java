@@ -5,18 +5,18 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "collection_items")
+@Table(name = "archive_items")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CollectionItem {
+public class ArchiveItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "collection_id", nullable = false)
-    private Collections collection;
+    @JoinColumn(name = "archive_id", nullable = false)
+    private Archive archive;
 
     /**
      * 컬렉션 아이템 연결 대상 (post_id)
@@ -30,8 +30,8 @@ public class CollectionItem {
     private int sortOrder;
 
     @Builder
-    public CollectionItem(Collections collection, Post post, int sortOrder) {
-        this.collection = collection;
+    public ArchiveItem(Archive archive, Post post, int sortOrder) {
+        this.archive = archive;
         this.post = post;
         this.sortOrder = sortOrder;
     }

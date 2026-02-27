@@ -6,10 +6,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "collections")
+@Table(name = "archives")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Collections extends BaseTimeEntity {
+public class Archive extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,7 +35,7 @@ public class Collections extends BaseTimeEntity {
     private boolean isPublic;
 
     @Builder
-    public Collections(User user, String name, String slug, boolean isPublic) {
+    public Archive(User user, String name, String slug, boolean isPublic) {
         this.user = user;
         this.name = name;
         this.slug = slug;
