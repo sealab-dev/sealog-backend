@@ -43,7 +43,7 @@ public class PostGuestController implements PostGuestControllerDocs {
      */
     @Override
     @GetMapping
-    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> searchPosts(
+    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> search(
             @RequestParam(required = false) PostType postType,
             @RequestParam(required = false) String stack,
             @RequestParam(required = false) String keyword,

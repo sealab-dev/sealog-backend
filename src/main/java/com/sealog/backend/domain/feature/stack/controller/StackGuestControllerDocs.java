@@ -20,13 +20,13 @@ public interface StackGuestControllerDocs {
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "조회 성공"),
     })
-    ResponseEntity<CustomResponse<List<StackResponse.StackItem>>> getAllStacks();
+    ResponseEntity<CustomResponse<List<StackResponse.StackItem>>> getAll();
 
     @Operation(summary = "그룹별 스택 목록 조회 (전체)", description = "실제 사용 중인 스택을 그룹별로 반환합니다. 게시글 필터링 시 사용됩니다.")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "조회 성공"),
     })
-    ResponseEntity<CustomResponse<StackResponse.GroupedStacks>> getGroupedStacks();
+    ResponseEntity<CustomResponse<StackResponse.GroupedStacks>> getGrouped();
 
     @Operation(summary = "그룹별 스택 목록 조회 (사용자별)", description = "특정 사용자가 사용 중인 스택을 그룹별로 반환합니다.")
     @ApiResponses({

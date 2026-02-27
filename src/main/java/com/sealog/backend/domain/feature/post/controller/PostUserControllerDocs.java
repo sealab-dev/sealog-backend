@@ -17,7 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
-@Tag(name = "My - Post", description = "내 게시글 API (인증 필수)")
+@Tag(name = "Post", description = "내 게시글 API (인증 필수)")
 @SecurityRequirement(name = "bearerAuth")
 public interface PostUserControllerDocs {
 

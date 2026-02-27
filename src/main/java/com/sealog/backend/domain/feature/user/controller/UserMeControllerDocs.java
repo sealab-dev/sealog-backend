@@ -13,7 +13,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
-@Tag(name = "MyInfo", description = "내 정보 API")
+@Tag(name = "Me", description = "내 정보 API")
 @SecurityRequirement(name = "bearerAuth")
 public interface UserMeControllerDocs {
 

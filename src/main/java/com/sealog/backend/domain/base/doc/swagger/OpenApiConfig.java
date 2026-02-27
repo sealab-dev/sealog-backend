@@ -47,9 +47,8 @@ public class OpenApiConfig {
     @Bean
     public GroupedOpenApi usersApi() {
         return GroupedOpenApi.builder()
-                .group("users")
-                .pathsToMatch("/api/me/**","/api/my/**","/api/files/**")
-                .pathsToExclude("/api/admin/**","/api/auth/**","/api/user/**","/api/stack/**")
+                .group("user")
+                .pathsToMatch("/api/user/**")
                 .build();
     }
 
@@ -59,8 +58,7 @@ public class OpenApiConfig {
     public GroupedOpenApi guestApi() {
         return GroupedOpenApi.builder()
                 .group("guest")
-                .pathsToMatch("/api/**")
-                .pathsToExclude("/api/admin/**","/api/me/**","/api/my/**","/api/files/**")
+                .pathsToMatch("/api/guest/**", "/api/auth/**")
                 .build();
     }
 }

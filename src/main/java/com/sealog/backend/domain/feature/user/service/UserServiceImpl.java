@@ -152,25 +152,4 @@ public class UserServiceImpl implements UserService {
 
         // 3. 둘 다 없으면 프로필 이미지 변경 없음
     }
-
-    @Override
-    @Transactional
-    public User signUp(AuthRequest.SignUpRequest request) {
-        // 이메일 중복 검사
-        userValidatorService.validateDuplicateEmail(request.getEmail());
-
-        // 닉네임 중복 검사
-        userValidatorService.validateDuplicateNickname(request.getNickname());
-
-        // 비밀번호 암호화 및 User 생성
-        User user = User.builder()
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .name(request.getName())
-                .nickname(request.getNickname())
-                .role(UserRole.USER)
-                .build();
-
-        return userRepository.save(user);
-    }
 }
