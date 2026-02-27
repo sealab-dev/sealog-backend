@@ -6,7 +6,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "archives")
+@Table(
+    name = "archives",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_user_id_name", columnNames = {"user_id", "name"})
+    }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Archive extends BaseTimeEntity {
