@@ -3,7 +3,7 @@ package com.sealog.backend.domain.feature.user.service;
 import com.sealog.backend.domain.feature.user.dto.UserSocialLinkRequest;
 import com.sealog.backend.domain.feature.user.dto.UserSocialLinkResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
-import com.sealog.backend.domain.feature.user.entity.UserSocialLink;
+import com.sealog.backend.domain.feature.user.entity.UserSocial;
 import com.sealog.backend.domain.feature.user.enums.SocialType;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.domain.feature.user.repository.UserSocialLinkRepository;
@@ -15,13 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class UserSocialLinkServiceImpl implements UserSocialLinkService {
+public class UserSocialServiceImpl implements UserSocialService {
 
     private final UserSocialLinkRepository userSocialLinkRepository;
     private final UserRepository userRepository;
@@ -35,7 +34,7 @@ public class UserSocialLinkServiceImpl implements UserSocialLinkService {
 
     @Override
     @Transactional
-    public List<UserSocialLinkResponse.LinkInfo> upsertLinks(Long userId, UserSocialLinkRequest.UpsertRequest request) {
+    public List<UserSocialLinkResponse.LinkInfo> upsert(Long userId, UserSocialLinkRequest.UpsertRequest request) {
         log.info("소셜 링크 upsert 시작: userId={}, count={}", userId, request.getLinks().size());
 
         // 1. 사용자 조회
@@ -57,15 +56,15 @@ public class UserSocialLinkServiceImpl implements UserSocialLinkService {
         log.info("기존 소셜 링크 삭제 완료: userId={}", userId);
 
         // 4. 새 소셜 링크 저장
-        List<UserSocialLink> newLinks = request.getLinks().stream()
-                .map(item -> UserSocialLink.builder()
+        List<UserSocial> newLinks = request.getLinks().stream()
+                .map(item -> UserSocial.builder()
                         .user(user)
                         .socialType(item.getSocialType())
                         .url(item.getUrl())
                         .build())
                 .toList();
 
-        List<UserSocialLink> savedLinks = userSocialLinkRepository.saveAll(newLinks);
+        List<UserSocial> savedLinks = userSocialLinkRepository.saveAll(newLinks);
         log.info("소셜 링크 upsert 완료: userId={}, count={}", userId, savedLinks.size());
 
         return savedLinks.stream()
@@ -75,7 +74,7 @@ public class UserSocialLinkServiceImpl implements UserSocialLinkService {
 
     @Override
     public List<UserSocialLinkResponse.LinkInfo> getPublicLinks(String nickname) {
-        List<UserSocialLink> links = userSocialLinkRepository.findAllByUser_Nickname(nickname);
+        List<UserSocial> links = userSocialLinkRepository.findAllByUser_Nickname(nickname);
 
         if (links.isEmpty()) {
             log.info("소셜 링크 없음: nickname={}", nickname);

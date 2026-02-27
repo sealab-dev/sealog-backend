@@ -1,6 +1,6 @@
 package com.sealog.backend.domain.feature.user.dto;
 
-import com.sealog.backend.domain.feature.user.entity.UserSocialLink;
+import com.sealog.backend.domain.feature.user.entity.UserSocial;
 import com.sealog.backend.domain.feature.user.enums.SocialType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -25,7 +25,7 @@ public class UserSocialLinkResponse {
         @Schema(description = "소셜 링크 URL", example = "https://github.com/username")
         private String url;
 
-        public static LinkInfo from(UserSocialLink link) {
+        public static LinkInfo from(UserSocial link) {
             return LinkInfo.builder()
                     .id(link.getId())
                     .socialType(link.getSocialType())

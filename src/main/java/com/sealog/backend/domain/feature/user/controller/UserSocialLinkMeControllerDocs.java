@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
-@Tag(name = "Me - Social Link", description = "내 소셜 링크 API")
+@Tag(name = "Social", description = "내 소셜 링크 API")
 @SecurityRequirement(name = "bearerAuth")
 public interface UserSocialLinkMeControllerDocs {
 

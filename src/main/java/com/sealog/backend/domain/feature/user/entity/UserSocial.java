@@ -15,7 +15,7 @@ import lombok.*;
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserSocialLink extends BaseTimeEntity {
+public class UserSocial extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,7 +33,7 @@ public class UserSocialLink extends BaseTimeEntity {
     private String url;
 
     @Builder
-    public UserSocialLink(User user, SocialType socialType, String url) {
+    public UserSocial(User user, SocialType socialType, String url) {
         this.user = user;
         this.socialType = socialType;
         this.url = url;

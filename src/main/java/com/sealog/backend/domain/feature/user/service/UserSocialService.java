@@ -6,7 +6,7 @@ import com.sealog.backend.global.exception.CustomException;
 
 import java.util.List;
 
-public interface UserSocialLinkService {
+public interface UserSocialService {
 
     /**
      * 내 소셜 링크 목록 조회
@@ -25,7 +25,7 @@ public interface UserSocialLinkService {
      * @throws CustomException 사용자를 찾을 수 없는 경우 (NOT_FOUND)
      * @throws CustomException 동일한 소셜 타입이 중복된 경우 (BAD_REQUEST)
      */
-    List<UserSocialLinkResponse.LinkInfo> upsertLinks(Long userId, UserSocialLinkRequest.UpsertRequest request);
+    List<UserSocialLinkResponse.LinkInfo> upsert(Long userId, UserSocialLinkRequest.UpsertRequest request);
 
     /**
      * 특정 사용자의 소셜 링크 목록 조회 (게스트용)

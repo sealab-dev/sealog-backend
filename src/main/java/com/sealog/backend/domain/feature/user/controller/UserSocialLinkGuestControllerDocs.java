@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
-@Tag(name = "Guest - Social Link", description = "소셜 링크 공개 조회 API")
+@Tag(name = "Social", description = "소셜 링크 공개 조회 API")
 public interface UserSocialLinkGuestControllerDocs {
 
     @Operation(summary = "사용자 소셜 링크 조회", description = "특정 사용자의 소셜 링크 목록을 조회합니다.")
