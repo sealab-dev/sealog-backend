@@ -1,7 +1,6 @@
 package com.sealog.backend.domain.feature.post.controller;
 
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
-import com.sealog.backend.domain.feature.post.enums.PostType;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,7 +37,6 @@ public interface PostGuestControllerDocs {
     })
     ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getUserPublicPosts(
             @Parameter(description = "사용자 닉네임", example = "테스터") String nickname,
-            @Parameter(description = "게시글 타입", example = "CORE") PostType postType,
             @Parameter(description = "스택명", example = "Spring Boot") String stack,
             @Parameter(description = "검색 키워드(제목/요약)", example = "JPA") String keyword,
             Pageable pageable
@@ -49,7 +47,6 @@ public interface PostGuestControllerDocs {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
     })
     ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> search(
-            @Parameter(description = "게시글 타입", example = "CORE") PostType postType,
             @Parameter(description = "스택명", example = "Spring Boot") String stack,
             @Parameter(description = "검색 키워드(제목/요약)", example = "JPA") String keyword,
             Pageable pageable

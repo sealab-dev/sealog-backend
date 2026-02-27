@@ -95,7 +95,6 @@ public class MariaDbPostSearchStrategy implements PostSearchStrategy {
                 post.getSlug(),
                 post.getTitle(),
                 post.getExcerpt(),
-                post.getPostType(),
                 post.getStatus(),
                 post.getThumbnailPath(),
                 tags,

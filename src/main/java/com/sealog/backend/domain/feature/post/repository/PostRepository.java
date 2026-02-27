@@ -1,7 +1,6 @@
 package com.sealog.backend.domain.feature.post.repository;
 
 import com.sealog.backend.domain.feature.post.entity.Post;
-import com.sealog.backend.domain.feature.post.enums.PostType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -74,7 +73,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     // ========== 관련 게시글 조회 (PUBLISHED만) ========== //
 
     /**
-     * 1순위 관련 게시글 조회 (Stack 교집합 많음 + PostType 일치 + 최신순)
+     * 1순위 관련 게시글 조회 (Stack 교집합 많음 + 최신순)
      */
     @Query("SELECT DISTINCT p FROM Post p " +
             "LEFT JOIN FETCH p.stacks " +
@@ -82,19 +81,17 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
             "JOIN p.stacks s " +
             "WHERE p.id != :currentPostId " +
             "AND p.status = 'PUBLISHED' " +
-            "AND p.postType = :postType " +
             "AND s.name IN :stackNames " +
             "GROUP BY p.id " +
             "ORDER BY COUNT(s.id) DESC, p.createdAt DESC")
     List<Post> findRelatedPostsByStackAndType(
             @Param("currentPostId") Long currentPostId,
             @Param("stackNames") List<String> stackNames,
-            @Param("postType") PostType postType,
             Pageable pageable
     );
 
     /**
-     * 2순위 관련 게시글 조회 (Stack 교집합 많음 + PostType 다름 + 최신순)
+     * 2순위 관련 게시글 조회 (Stack 교집합 많음 + 최신순)
      */
     @Query("SELECT DISTINCT p FROM Post p " +
             "LEFT JOIN FETCH p.stacks " +
@@ -102,14 +99,12 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
             "JOIN p.stacks s " +
             "WHERE p.id != :currentPostId " +
             "AND p.status = 'PUBLISHED' " +
-            "AND p.postType != :postType " +
             "AND s.name IN :stackNames " +
             "GROUP BY p.id " +
             "ORDER BY COUNT(s.id) DESC, p.createdAt DESC")
     List<Post> findRelatedPostsByStackOnly(
             @Param("currentPostId") Long currentPostId,
             @Param("stackNames") List<String> stackNames,
-            @Param("postType") PostType postType,
             Pageable pageable
     );
 
