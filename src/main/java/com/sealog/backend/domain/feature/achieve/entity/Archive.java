@@ -49,15 +49,12 @@ public class Archive extends BaseTimeEntity {
 
     // === 비즈니스 로직 === //
 
-    public void updateName(String name) {
+    public void edit(String name, String slug) {
         this.name = name;
-    }
-
-    public void updateSlug(String slug) {
         this.slug = slug;
     }
 
-    public void updateVisibility(boolean isPublic) {
+    public void editIsPublic(boolean isPublic) {
         this.isPublic = isPublic;
     }
 
