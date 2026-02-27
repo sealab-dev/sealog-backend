@@ -1,9 +1,7 @@
 package com.sealog.backend.domain.base.util;
 
 import jakarta.validation.ConstraintValidatorContext;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.experimental.UtilityClass;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.safety.Safelist;
@@ -16,8 +14,7 @@ import java.util.Objects;
  * 검증기 기능에 활용하기 위한 유틸 클래스
  */
 
-@Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@UtilityClass
 public class ValidationUtils {
 
     /**
