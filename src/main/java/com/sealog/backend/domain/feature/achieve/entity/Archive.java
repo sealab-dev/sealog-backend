@@ -33,7 +33,7 @@ public class Archive extends BaseTimeEntity {
      * - UNIQUE 제약조건
      * - 조회 시 ID 대신 사용
      */
-    @Column(nullable = false, unique = true, length = 200)
+    @Column(nullable = false, length = 200)
     private String slug;
 
     @Column(name = "is_public", nullable = false)
