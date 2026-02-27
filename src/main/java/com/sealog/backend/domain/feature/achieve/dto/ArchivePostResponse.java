@@ -12,25 +12,25 @@ import lombok.experimental.UtilityClass;
 public class ArchivePostResponse {
 
     /**
-     * 아카이브 목록 응답
+     * 블로그 아카이브 목록 응답
      */
     @Getter
     @Builder
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     @Schema(description = "블로그 아카이브 목록 조회")
-    public static class ArchiveItemItems {
+    public static class ArchivePostItems {
 
         private Long id;
-        private String slug;
-        private String name;
+        private int sortOrder;
+        private String archiveName;
 
-        public static ArchiveItemItems of(Long id, String slug, String name) {
+        public static ArchivePostItems of(Long id, int sortOrder, String archiveName) {
 
-            return ArchiveItemItems.builder()
+            return ArchivePostItems.builder()
                     .id(id)
-                    .slug(slug)
-                    .name(name)
+                    .sortOrder(sortOrder)
+                    .archiveName(archiveName)
                     .build();
         }
     }
