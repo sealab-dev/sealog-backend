@@ -23,7 +23,7 @@ public interface ArchiveRepository extends JpaRepository<Archive, Long> {
     @Query("""
         SELECT COUNT(a) > 0
         FROM Archive a
-        WHERE a.name :name AND a.user.id :userId
+        WHERE a.name = :name AND a.user.id = :userId
     """)
     boolean existsByNameAndUserId(String name, Long userId);
 
