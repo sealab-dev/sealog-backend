@@ -1,6 +1,5 @@
 package com.sealog.backend.domain.feature.post.dto;
 
-import com.sealog.backend.domain.feature.post.enums.PostType;
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
 import lombok.Builder;
 import lombok.Getter;
@@ -38,7 +37,6 @@ public class PostResponse {
         private String slug;
         private String title;
         private String excerpt;
-        private PostType postType;
         private PostStatus status;
         private String thumbnailPath;
         private List<String> tags;
@@ -55,7 +53,6 @@ public class PostResponse {
                 String slug,
                 String title,
                 String excerpt,
-                PostType postType,
                 PostStatus status,
                 String thumbnailPath,
                 List<String> tags,
@@ -68,7 +65,6 @@ public class PostResponse {
                     .slug(slug)
                     .title(title)
                     .excerpt(excerpt)
-                    .postType(postType)
                     .status(status)
                     .thumbnailPath(thumbnailPath)
                     .tags(tags)
@@ -90,7 +86,6 @@ public class PostResponse {
         private String slug;
         private String title;
         private String excerpt;
-        private PostType postType;
         private String content;
         private PostStatus status;
         private String thumbnailPath;
@@ -110,7 +105,6 @@ public class PostResponse {
                 String slug,
                 String title,
                 String excerpt,
-                PostType postType,
                 String content,
                 PostStatus status,
                 String thumbnailPath,
@@ -126,7 +120,6 @@ public class PostResponse {
                     .slug(slug)
                     .title(title)
                     .excerpt(excerpt)
-                    .postType(postType)
                     .content(content)
                     .status(status)
                     .thumbnailPath(thumbnailPath)
@@ -153,7 +146,6 @@ public class PostResponse {
         private String slug;
         private String title;
         private String excerpt;
-        private PostType postType;
         private String content;
         private PostStatus status;
         private String thumbnailPath;
@@ -167,7 +159,6 @@ public class PostResponse {
                 String slug,
                 String title,
                 String excerpt,
-                PostType postType,
                 String content,
                 PostStatus status,
                 String thumbnailPath,
@@ -181,7 +172,6 @@ public class PostResponse {
                     .slug(slug)
                     .title(title)
                     .excerpt(excerpt)
-                    .postType(postType)
                     .content(content)
                     .status(status)
                     .thumbnailPath(thumbnailPath)

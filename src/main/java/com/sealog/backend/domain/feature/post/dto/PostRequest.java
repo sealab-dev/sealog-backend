@@ -1,6 +1,5 @@
 package com.sealog.backend.domain.feature.post.dto;
 
-import com.sealog.backend.domain.feature.post.enums.PostType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -35,10 +34,6 @@ public class PostRequest {
         @Size(max = 200, message = "요약은 200자 이내로 입력해주세요")
         @Schema(description = "요약", example = "Spring Boot 핵심 개념을 정리합니다.", maxLength = 200)
         private String excerpt;
-
-        @NotNull(message = "타입을 선택해주세요")
-        @Schema(description = "게시글 타입", example = "CORE")
-        private PostType postType;
 
         @NotBlank(message = "내용을 입력해주세요")
         @Size(max = 50000, message = "본문은 50000자 이내로 입력해주세요")
@@ -78,10 +73,6 @@ public class PostRequest {
         @Size(max = 200, message = "요약은 200자 이내로 입력해주세요")
         @Schema(description = "요약", example = "Spring Boot 핵심 개념을 정리합니다.", maxLength = 200)
         private String excerpt;
-
-        @NotNull(message = "타입을 선택해주세요")
-        @Schema(description = "게시글 타입", example = "CORE")
-        private PostType postType;
 
         @NotBlank(message = "내용을 입력해주세요")
         @Size(max = 50000, message = "본문은 50000자 이내로 입력해주세요")

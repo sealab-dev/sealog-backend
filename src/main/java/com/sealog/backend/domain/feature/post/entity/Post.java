@@ -1,7 +1,6 @@
 package com.sealog.backend.domain.feature.post.entity;
 
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
-import com.sealog.backend.domain.feature.post.enums.PostType;
 import com.sealog.backend.domain.feature.stack.entity.Stack;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;
@@ -27,10 +26,6 @@ public class Post extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "post_type", nullable = false, length = 30)
-    private PostType postType;
 
     @Column(nullable = false, unique = true, length = 100)
     private String title;
@@ -84,10 +79,9 @@ public class Post extends BaseTimeEntity {
 
     // === 생성자 === //
     @Builder
-    public Post(User user, PostType postType, String title, String slug, String excerpt,
+    public Post(User user, String title, String slug, String excerpt,
                 String content, PostStatus status, String thumbnailPath) {
         this.user = user;
-        this.postType = postType;
         this.title = title;
         this.slug = slug;
         this.excerpt = excerpt;
@@ -101,8 +95,7 @@ public class Post extends BaseTimeEntity {
     /**
      * 게시글 수정
      */
-    public void update(PostType category, String title, String slug, String excerpt, String content) {
-        this.postType = category;
+    public void update(String title, String slug, String excerpt, String content) {
         this.title = title;
         this.slug = slug;
         this.excerpt = excerpt;

@@ -34,7 +34,7 @@ public interface PostService {
      * 공개 게시글 복합 검색
      * - PUBLISHED 상태만 검색
      *
-     * @param condition 검색 조건 (nickname, postType, stackName, keyword)
+     * @param condition 검색 조건 (nickname, stackName, keyword)
      * @param pageable 페이지네이션 정보
      * @return 검색된 게시글 목록
      */
@@ -106,7 +106,7 @@ public interface PostService {
      * 내 게시글 검색
      *
      * @param userId 조회 요청 사용자 ID
-     * @param condition 검색 조건 (postType, stackName, keyword)
+     * @param condition 검색 조건 (stackName, keyword)
      * @param pageable 페이지네이션 정보
      * @return 검색된 게시글 목록
      */
