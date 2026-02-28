@@ -6,7 +6,7 @@ import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.entity.UserSocial;
 import com.sealog.backend.domain.feature.user.enums.SocialType;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
-import com.sealog.backend.domain.feature.user.repository.UserSocialLinkRepository;
+import com.sealog.backend.domain.feature.user.repository.UserSocialRepository;
 import com.sealog.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,12 +22,12 @@ import java.util.Set;
 @Transactional(readOnly = true)
 public class UserSocialServiceImpl implements UserSocialService {
 
-    private final UserSocialLinkRepository userSocialLinkRepository;
+    private final UserSocialRepository userSocialRepository;
     private final UserRepository userRepository;
 
     @Override
     public List<UserSocialLinkResponse.LinkInfo> getMyLinks(Long userId) {
-        return userSocialLinkRepository.findAllByUserId(userId).stream()
+        return userSocialRepository.findAllByUserId(userId).stream()
                 .map(UserSocialLinkResponse.LinkInfo::from)
                 .toList();
     }
@@ -52,7 +52,7 @@ public class UserSocialServiceImpl implements UserSocialService {
         }
 
         // 3. 기존 소셜 링크 전체 삭제
-        userSocialLinkRepository.deleteAllByUserId(userId);
+        userSocialRepository.deleteAllByUserId(userId);
         log.info("기존 소셜 링크 삭제 완료: userId={}", userId);
 
         // 4. 새 소셜 링크 저장
@@ -64,7 +64,7 @@ public class UserSocialServiceImpl implements UserSocialService {
                         .build())
                 .toList();
 
-        List<UserSocial> savedLinks = userSocialLinkRepository.saveAll(newLinks);
+        List<UserSocial> savedLinks = userSocialRepository.saveAll(newLinks);
         log.info("소셜 링크 upsert 완료: userId={}, count={}", userId, savedLinks.size());
 
         return savedLinks.stream()
@@ -74,7 +74,7 @@ public class UserSocialServiceImpl implements UserSocialService {
 
     @Override
     public List<UserSocialLinkResponse.LinkInfo> getPublicLinks(String nickname) {
-        List<UserSocial> links = userSocialLinkRepository.findAllByUser_Nickname(nickname);
+        List<UserSocial> links = userSocialRepository.findAllByUser_Nickname(nickname);
 
         if (links.isEmpty()) {
             log.info("소셜 링크 없음: nickname={}", nickname);

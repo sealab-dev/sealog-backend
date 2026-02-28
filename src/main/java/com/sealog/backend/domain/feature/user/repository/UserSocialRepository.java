@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface UserSocialLinkRepository extends JpaRepository<UserSocial, Long> {
+public interface UserSocialRepository extends JpaRepository<UserSocial, Long> {
 
     /**
      * 사용자 ID로 소셜 링크 전체 조회
@@ -32,6 +32,6 @@ public interface UserSocialLinkRepository extends JpaRepository<UserSocial, Long
      * @param userId 사용자 ID
      */
     @Modifying
-    @Query("DELETE FROM UserSocialLink u WHERE u.user.id = :userId")
+    @Query("DELETE FROM UserSocial u WHERE u.user.id = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
 }

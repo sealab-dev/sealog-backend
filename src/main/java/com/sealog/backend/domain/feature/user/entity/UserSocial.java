@@ -7,7 +7,7 @@ import lombok.*;
 
 @Entity
 @Table(
-        name = "user_social_links",
+        name = "user_social",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_user_social_type",
                 columnNames = {"user_id", "social_type"}
