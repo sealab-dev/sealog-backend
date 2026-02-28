@@ -1,14 +1,14 @@
-package com.sealog.backend.domain.feature.collections.entity;
+package com.sealog.backend.domain.feature.achieve.entity;
 
 import com.sealog.backend.domain.feature.post.entity.Post;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "archive_items")
+@Table(name = "archive_posts")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ArchiveItem {
+public class ArchivePost {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +30,7 @@ public class ArchiveItem {
     private int sortOrder;
 
     @Builder
-    public ArchiveItem(Archive archive, Post post, int sortOrder) {
+    public ArchivePost(Archive archive, Post post, int sortOrder) {
         this.archive = archive;
         this.post = post;
         this.sortOrder = sortOrder;

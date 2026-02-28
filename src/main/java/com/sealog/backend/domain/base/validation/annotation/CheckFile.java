@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.base.validation.annotation;
 
 import com.sealog.backend.domain.base.validation.enums.AllowedFileType;
-import com.sealog.backend.domain.base.validation.validator.FileValidator;
+import com.sealog.backend.domain.base.validation.validator.CheckFileValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -13,8 +13,8 @@ import java.lang.annotation.*;
 
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = FileValidator.class)
-public @interface File {
+@Constraint(validatedBy = CheckFileValidator.class)
+public @interface CheckFile {
     AllowedFileType[] allowed() default {AllowedFileType.ALL};  // 허용 MIME 타입
     double maxSizeMB() default 5.0;     // 기본 5MB
     boolean nullable() default false;   // null 불허
