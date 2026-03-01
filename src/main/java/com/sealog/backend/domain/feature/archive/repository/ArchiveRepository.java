@@ -1,12 +1,11 @@
-package com.sealog.backend.domain.feature.achieve.repository;
+package com.sealog.backend.domain.feature.archive.repository;
 
-import com.sealog.backend.domain.feature.achieve.entity.Archive;
+import com.sealog.backend.domain.feature.archive.entity.Archive;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import java.util.List;
 import java.util.Optional;
 
 
@@ -42,7 +41,18 @@ public interface ArchiveRepository extends JpaRepository<Archive, Long> {
 
 
     /**
-     * 특정 블로그 글의 아카이브 목록 조회
+     * 특정 사용자(nickname)의 공개 아카이브 페이징 목록 조회
+     */
+    @Query("""
+        SELECT a
+        FROM Archive a
+        WHERE a.user.nickname = :nickname AND a.isPublic = true
+    """)
+    Page<Archive> findPublicByUserNickname(String nickname, Pageable pageable);
+
+
+    /**
+     * nickname + slug 기준 아카이브 단건 조회
      */
     @Query("""
         SELECT a

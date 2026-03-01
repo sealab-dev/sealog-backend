@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.achieve.entity;
+package com.sealog.backend.domain.feature.archive.entity;
 
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;
 import com.sealog.backend.domain.feature.user.entity.User;

@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.achieve.dto;
+package com.sealog.backend.domain.feature.archive.dto;
 
 import com.sealog.backend.domain.base.validation.annotation.CheckStringSize;
 import io.swagger.v3.oas.annotations.media.Schema;

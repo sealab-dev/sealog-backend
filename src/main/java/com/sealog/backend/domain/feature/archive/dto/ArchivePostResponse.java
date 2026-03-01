@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.achieve.dto;
+package com.sealog.backend.domain.feature.archive.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;

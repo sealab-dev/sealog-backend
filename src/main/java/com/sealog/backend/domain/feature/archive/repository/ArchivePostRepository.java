@@ -1,6 +1,6 @@
-package com.sealog.backend.domain.feature.achieve.repository;
+package com.sealog.backend.domain.feature.archive.repository;
 
-import com.sealog.backend.domain.feature.achieve.entity.ArchivePost;
+import com.sealog.backend.domain.feature.archive.entity.ArchivePost;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

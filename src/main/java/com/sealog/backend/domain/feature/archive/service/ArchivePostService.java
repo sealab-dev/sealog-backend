@@ -1,7 +1,7 @@
-package com.sealog.backend.domain.feature.achieve.service;
+package com.sealog.backend.domain.feature.archive.service;
 
-import com.sealog.backend.domain.feature.achieve.dto.ArchivePostRequest;
-import com.sealog.backend.domain.feature.achieve.dto.ArchivePostResponse;
+import com.sealog.backend.domain.feature.archive.dto.ArchivePostRequest;
+import com.sealog.backend.domain.feature.archive.dto.ArchivePostResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

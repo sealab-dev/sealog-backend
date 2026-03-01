@@ -1,10 +1,10 @@
-package com.sealog.backend.domain.feature.achieve.service;
+package com.sealog.backend.domain.feature.archive.service;
 
 import com.sealog.backend.domain.base.util.SlugUtils;
-import com.sealog.backend.domain.feature.achieve.dto.ArchiveRequest;
-import com.sealog.backend.domain.feature.achieve.dto.ArchiveResponse;
-import com.sealog.backend.domain.feature.achieve.entity.Archive;
-import com.sealog.backend.domain.feature.achieve.repository.ArchiveRepository;
+import com.sealog.backend.domain.feature.archive.dto.ArchiveRequest;
+import com.sealog.backend.domain.feature.archive.dto.ArchiveResponse;
+import com.sealog.backend.domain.feature.archive.entity.Archive;
+import com.sealog.backend.domain.feature.archive.repository.ArchiveRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
@@ -32,10 +32,10 @@ public class ArchiveServiceImpl implements ArchiveService {
     private final UserRepository userRepository;
 
     @Override
-    public Page<ArchiveResponse.ArchiveItems> getPagedItems(Pageable pageable) {
+    public Page<ArchiveResponse.ArchiveItems> getPagedPublicItemsByNickname(String nickname, Pageable pageable) {
 
         return archiveRepository
-                .findByIsPublic(true, pageable)
+                .findPublicByUserNickname(nickname, pageable)
                 .map(this::toItems);
     }
 
