@@ -1,11 +1,11 @@
-package com.sealog.backend.domain.feature.achieve.service;
+package com.sealog.backend.domain.feature.archive.service;
 
-import com.sealog.backend.domain.feature.achieve.dto.ArchivePostRequest;
-import com.sealog.backend.domain.feature.achieve.dto.ArchivePostResponse;
-import com.sealog.backend.domain.feature.achieve.entity.Archive;
-import com.sealog.backend.domain.feature.achieve.entity.ArchivePost;
-import com.sealog.backend.domain.feature.achieve.repository.ArchivePostRepository;
-import com.sealog.backend.domain.feature.achieve.repository.ArchiveRepository;
+import com.sealog.backend.domain.feature.archive.dto.ArchivePostRequest;
+import com.sealog.backend.domain.feature.archive.dto.ArchivePostResponse;
+import com.sealog.backend.domain.feature.archive.entity.Archive;
+import com.sealog.backend.domain.feature.archive.entity.ArchivePost;
+import com.sealog.backend.domain.feature.archive.repository.ArchivePostRepository;
+import com.sealog.backend.domain.feature.archive.repository.ArchiveRepository;
 import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.feature.post.repository.PostRepository;
 import com.sealog.backend.global.exception.CustomException;
@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * ArchiveService 구현 클래스

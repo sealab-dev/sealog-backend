@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.achieve.entity;
+package com.sealog.backend.domain.feature.archive.entity;
 
 import com.sealog.backend.domain.feature.post.entity.Post;
 import jakarta.persistence.*;

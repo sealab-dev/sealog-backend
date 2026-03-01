@@ -1,7 +1,7 @@
-package com.sealog.backend.domain.feature.achieve.service;
+package com.sealog.backend.domain.feature.archive.service;
 
-import com.sealog.backend.domain.feature.achieve.dto.ArchiveRequest;
-import com.sealog.backend.domain.feature.achieve.dto.ArchiveResponse;
+import com.sealog.backend.domain.feature.archive.dto.ArchiveRequest;
+import com.sealog.backend.domain.feature.archive.dto.ArchiveResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,7 +12,7 @@ public interface ArchiveService {
 
     // ========== Guest (공개) ========== //
 
-    Page<ArchiveResponse.ArchiveItems> getPagedItems(Pageable pageable);
+    Page<ArchiveResponse.ArchiveItems> getPagedPublicItemsByNickname(String nickname, Pageable pageable);
 
     // ========== User (인증) ========== //
 
