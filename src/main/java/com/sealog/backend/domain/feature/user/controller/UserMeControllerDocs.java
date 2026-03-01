@@ -23,7 +23,7 @@ public interface UserMeControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<UserResponse.UserInfo>> getMyInfo(CustomUserDetails userDetails);
+    ResponseEntity<CustomResponse<UserResponse.MyProfile>> getMyInfo(CustomUserDetails userDetails);
 
     @Operation(summary = "프로필 수정", description = "닉네임/포지션/소개/프로필 이미지 정보를 수정합니다.")
     @ApiResponses({
@@ -33,7 +33,7 @@ public interface UserMeControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<UserResponse.UserInfo>> updateProfile(
+    ResponseEntity<CustomResponse<UserResponse.MyProfile>> updateProfile(
             CustomUserDetails userDetails,
             UserRequest.UpdateProfileRequest request
     );

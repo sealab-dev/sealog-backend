@@ -1,9 +1,7 @@
 package com.sealog.backend.domain.feature.user.service;
 
-import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.user.dto.UserRequest;
 import com.sealog.backend.domain.feature.user.dto.UserResponse;
-import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.global.exception.CustomException;
 
 public interface UserService {
@@ -14,7 +12,7 @@ public interface UserService {
      * @return 사용자 정보
      * @throws CustomException 사용자를 찾을 수 없는 경우 (NOT_FOUND)
      */
-    UserResponse.UserInfo getMyInfo(Long userId);
+    UserResponse.MyProfile getMyInfo(Long userId);
 
     /**
      * 프로필 정보 수정 (닉네임 및/또는 프로필 이미지)
@@ -25,7 +23,7 @@ public interface UserService {
      * @throws CustomException 닉네임이 이미 존재하는 경우 (CONFLICT)
      * @throws CustomException 파일 업로드 실패 시 (INTERNAL_SERVER_ERROR)
      */
-    UserResponse.UserInfo updateProfile(
+    UserResponse.MyProfile updateProfile(
             Long userId,
             UserRequest.UpdateProfileRequest request
     );
@@ -46,7 +44,7 @@ public interface UserService {
      * @return 닉네임, 프로필 이미지
      * @throws CustomException 사용자를 찾을 수 없는 경우 (NOT_FOUND)
      */
-    UserResponse.BlogUserInfo getBlogUser(String nickname);
+    UserResponse.PublicProfile getBlogUser(String nickname);
 
 
 }

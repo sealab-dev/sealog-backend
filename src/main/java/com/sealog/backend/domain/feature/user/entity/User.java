@@ -2,6 +2,7 @@ package com.sealog.backend.domain.feature.user.entity;
 
 import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;
+import com.sealog.backend.domain.feature.user.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 

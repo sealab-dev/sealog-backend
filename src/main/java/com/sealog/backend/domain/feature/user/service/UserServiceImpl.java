@@ -1,10 +1,8 @@
 package com.sealog.backend.domain.feature.user.service;
 
-import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.user.dto.UserRequest;
 import com.sealog.backend.domain.feature.user.dto.UserResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
-import com.sealog.backend.domain.feature.user.entity.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -25,16 +23,16 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserResponse.UserInfo getMyInfo(Long userId) {
+    public UserResponse.MyProfile getMyInfo(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
 
-        return UserResponse.UserInfo.from(user);
+        return UserResponse.MyProfile.from(user);
     }
 
     @Override
     @Transactional
-    public UserResponse.UserInfo updateProfile(
+    public UserResponse.MyProfile updateProfile(
             Long userId,
             UserRequest.UpdateProfileRequest request
     ) {
@@ -72,7 +70,7 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
         log.info("프로필 수정 완료: userId={}", userId);
 
-        return UserResponse.UserInfo.from(savedUser);
+        return UserResponse.MyProfile.from(savedUser);
     }
 
     @Override
@@ -110,11 +108,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse.BlogUserInfo getBlogUser(String nickname) {
+    public UserResponse.PublicProfile getBlogUser(String nickname) {
         User user = userRepository.findByNickname(nickname)
                 .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
 
-        return UserResponse.BlogUserInfo.from(user);
+        return UserResponse.PublicProfile.from(user);
     }
 
     // ========== Private Methods ========== //

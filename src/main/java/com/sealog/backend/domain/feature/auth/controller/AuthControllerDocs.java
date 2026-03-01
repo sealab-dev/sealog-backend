@@ -26,7 +26,7 @@ public interface AuthControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<UserResponse.UserInfo>> login(
+    ResponseEntity<CustomResponse<UserResponse.MyProfile>> login(
             AuthRequest.LoginRequest request,
             HttpServletResponse response
     );
@@ -38,7 +38,7 @@ public interface AuthControllerDocs {
             @ApiResponse(responseCode = "401", description = "Refresh Token 없음/유효하지 않음",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<UserResponse.UserInfo>> refresh(
+    ResponseEntity<CustomResponse<UserResponse.MyProfile>> refresh(
             HttpServletRequest request,
             HttpServletResponse response
     );

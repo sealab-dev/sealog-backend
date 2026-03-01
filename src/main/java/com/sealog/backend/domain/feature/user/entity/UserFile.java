@@ -1,6 +1,7 @@
 package com.sealog.backend.domain.feature.user.entity;
 
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;
+import com.sealog.backend.domain.feature.user.enums.UserFileType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
