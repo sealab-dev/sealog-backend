@@ -1,6 +1,9 @@
 package com.sealog.backend.domain.feature.auth.service;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
+import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
+import com.sealog.backend.domain.feature.auth.dto.TokenResponse;
+import com.sealog.backend.security.jwt.JwtTokenProvider;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
@@ -21,9 +24,11 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserValidatorService userValidatorService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    public User login(AuthRequest.LoginRequest request) {
+    @Transactional
+    public TokenResponse login(AuthRequest.LoginRequest request) {
         // 이메일로 사용자 조회
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> CustomException.unauthorized("이메일 또는 비밀번호가 일치하지 않습니다"));
@@ -33,38 +38,51 @@ public class AuthServiceImpl implements AuthService {
             throw CustomException.unauthorized("이메일 또는 비밀번호가 일치하지 않습니다");
         }
 
-        return user;
-    }
+        // 토큰 생성
+        String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId(), user.getEmail());
 
-    @Override
-    public User getUserForRefresh(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> CustomException.unauthorized("사용자를 찾을 수 없습니다"));
-    }
-
-    @Override
-    @Transactional
-    public void saveRefreshToken(Long userId, String refreshToken) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> CustomException.unauthorized("사용자를 찾을 수 없습니다"));
+        //  Refresh Token DB 저장
         user.updateRefreshToken(refreshToken);
+
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .profile(AuthResponse.Profile.from(user))
+                .build();
     }
 
     @Override
-    public void validateStoredRefreshToken(Long userId, String refreshToken) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> CustomException.unauthorized("사용자를 찾을 수 없습니다"));
-
-        String storedToken = user.getRefreshToken();
-        if (storedToken == null || !storedToken.equals(refreshToken)) {
+    public TokenResponse refresh(String refreshToken) {
+        // JWT 서명 및 만료 검증
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw CustomException.unauthorized("유효하지 않은 Refresh Token입니다");
         }
+
+        // userId 추출
+        Long userId = jwtTokenProvider.getUserId(refreshToken);
+        User user = getUserById(userId);
+
+        // DB 저장 토큰과 비교
+        validateStoredRefreshToken(user, refreshToken);
+
+        // 새 Access Token 생성
+        String newAccessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
+
+        return TokenResponse.builder()
+                .accessToken(newAccessToken)
+                .profile(AuthResponse.Profile.from(user))
+                .build();
     }
 
     @Override
     @Transactional
-    public void deleteRefreshToken(Long userId) {
-        userRepository.findById(userId).ifPresent(User::clearRefreshToken);
+    public void logout(String refreshToken) {
+        // 유효한 경우에만 userId 추출 → DB에서 삭제
+        if (jwtTokenProvider.validateToken(refreshToken)) {
+            Long userId = jwtTokenProvider.getUserId(refreshToken);
+            userRepository.findById(userId).ifPresent(User::clearRefreshToken);
+        }
     }
 
     @Override
@@ -88,4 +106,15 @@ public class AuthServiceImpl implements AuthService {
         return userRepository.save(user);
     }
 
+    private User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> CustomException.unauthorized("사용자를 찾을 수 없습니다"));
+    }
+
+    private void validateStoredRefreshToken(User user, String refreshToken) {
+        String storedToken = user.getRefreshToken();
+        if (storedToken == null || !storedToken.equals(refreshToken)) {
+            throw CustomException.unauthorized("유효하지 않은 Refresh Token입니다");
+        }
+    }
 }
