@@ -37,7 +37,7 @@ public class AuthController implements AuthControllerDocs {
      */
     @Override
     @PostMapping("/login")
-    public ResponseEntity<CustomResponse<UserResponse.UserInfo>> login(
+    public ResponseEntity<CustomResponse<UserResponse.MyProfile>> login(
             @Valid @RequestBody AuthRequest.LoginRequest request,
             HttpServletResponse response
     ) {
@@ -49,7 +49,7 @@ public class AuthController implements AuthControllerDocs {
 
         log.info("[Auth] Login success - UserID: {}", user.getId());
 
-        return ResponseEntity.ok(CustomResponse.success(UserResponse.UserInfo.from(user), "로그인 성공"));
+        return ResponseEntity.ok(CustomResponse.success(UserResponse.MyProfile.from(user), "로그인 성공"));
     }
 
     /**
@@ -61,7 +61,7 @@ public class AuthController implements AuthControllerDocs {
      */
     @Override
     @PostMapping("/refresh")
-    public ResponseEntity<CustomResponse<UserResponse.UserInfo>> refresh(
+    public ResponseEntity<CustomResponse<UserResponse.MyProfile>> refresh(
             HttpServletRequest request,
             HttpServletResponse response
     ) {
@@ -88,7 +88,7 @@ public class AuthController implements AuthControllerDocs {
         String newAccessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
         cookieUtil.addAccessTokenCookie(response, newAccessToken);
 
-        return ResponseEntity.ok(CustomResponse.success(UserResponse.UserInfo.from(user), "토큰이 재발급되었습니다"));
+        return ResponseEntity.ok(CustomResponse.success(UserResponse.MyProfile.from(user), "토큰이 재발급되었습니다"));
     }
 
     /**

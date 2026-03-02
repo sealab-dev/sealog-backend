@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.collections.entity;
+package com.sealog.backend.domain.feature.archive.entity;
 
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;
 import com.sealog.backend.domain.feature.user.entity.User;
@@ -6,7 +6,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "archives")
+@Table(
+    name = "archives",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_user_id_name", columnNames = {"user_id", "name"})
+    }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Archive extends BaseTimeEntity {
@@ -28,7 +33,7 @@ public class Archive extends BaseTimeEntity {
      * - UNIQUE 제약조건
      * - 조회 시 ID 대신 사용
      */
-    @Column(nullable = false, unique = true, length = 200)
+    @Column(nullable = false, length = 200)
     private String slug;
 
     @Column(name = "is_public", nullable = false)
@@ -44,15 +49,12 @@ public class Archive extends BaseTimeEntity {
 
     // === 비즈니스 로직 === //
 
-    public void updateName(String name) {
+    public void edit(String name, String slug) {
         this.name = name;
-    }
-
-    public void updateSlug(String slug) {
         this.slug = slug;
     }
 
-    public void updateVisibility(boolean isPublic) {
+    public void editIsPublic(boolean isPublic) {
         this.isPublic = isPublic;
     }
 

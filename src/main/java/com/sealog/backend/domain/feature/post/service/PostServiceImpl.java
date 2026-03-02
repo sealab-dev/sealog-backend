@@ -79,7 +79,6 @@ public class PostServiceImpl implements PostService {
 
         Post post = Post.builder()
                 .user(user)
-                .postType(request.getPostType())
                 .title(request.getTitle())
                 .slug(slug)
                 .excerpt(request.getExcerpt())
@@ -126,7 +125,6 @@ public class PostServiceImpl implements PostService {
                 post.getSlug(),
                 post.getTitle(),
                 post.getExcerpt(),
-                post.getPostType(),
                 post.getContent(),
                 post.getStatus(),
                 post.getThumbnailPath(),
@@ -154,7 +152,6 @@ public class PostServiceImpl implements PostService {
         }
 
         post.update(
-                request.getPostType(),
                 request.getTitle(),
                 newSlug,
                 request.getExcerpt(),
@@ -206,7 +203,6 @@ public class PostServiceImpl implements PostService {
     @Override
     public Page<PostResponse.PostItems> search(Long userId, PostSearchCondition condition, Pageable pageable) {
         PostSearchCondition nonDeletedCondition = PostSearchCondition.builder()
-                .postType(condition.getPostType())
                 .stackName(condition.getStackName())
                 .keyword(condition.getKeyword())
                 .build();
@@ -244,7 +240,6 @@ public class PostServiceImpl implements PostService {
                 post.getSlug(),
                 post.getTitle(),
                 post.getExcerpt(),
-                post.getPostType(),
                 post.getStatus(),
                 post.getThumbnailPath(),
                 tags,
@@ -277,7 +272,6 @@ public class PostServiceImpl implements PostService {
                 post.getSlug(),
                 post.getTitle(),
                 post.getExcerpt(),
-                post.getPostType(),
                 post.getContent(),
                 post.getStatus(),
                 post.getThumbnailPath(),
@@ -307,11 +301,10 @@ public class PostServiceImpl implements PostService {
             );
         }
 
-        // 1순위: Stack 일치 + PostType 일치 (최대 2개)
+        // 1순위: Stack 일치
         List<Post> firstPriority = postRepository.findRelatedPostsByStackAndType(
                 currentPost.getId(),
                 stackNames,
-                currentPost.getPostType(),
                 PageRequest.of(0, 2)
         );
 
@@ -320,12 +313,11 @@ public class PostServiceImpl implements PostService {
 
         int remaining = 3 - relatedPosts.size();
 
-        // 2순위: Stack 일치 + PostType 다름
+        // 2순위: Stack 일치
         if (remaining > 0) {
             List<Post> secondPriority = postRepository.findRelatedPostsByStackOnly(
                     currentPost.getId(),
                     stackNames,
-                    currentPost.getPostType(),
                     PageRequest.of(0, remaining)
             );
 

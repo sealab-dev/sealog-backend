@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.user.service;
 
 import com.sealog.backend.domain.feature.user.entity.UserFile;
-import com.sealog.backend.domain.feature.user.entity.UserFileType;
+import com.sealog.backend.domain.feature.user.enums.UserFileType;
 import com.sealog.backend.domain.feature.user.repository.UserFileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

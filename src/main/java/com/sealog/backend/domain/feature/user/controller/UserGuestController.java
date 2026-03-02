@@ -15,16 +15,15 @@ public class UserGuestController implements UserGuestControllerDocs {
     private final UserService userService;
 
     /**
-     * 블로그 사용자 정보
+     * 특정 사용자 정보 조회
      * GET /api/guest/user/{nickname}
-     * 게스트
      */
     @Override
     @GetMapping("/{nickname}")
-    public ResponseEntity<CustomResponse<UserResponse.BlogUserInfo>> getBlogUserInfo(
+    public ResponseEntity<CustomResponse<UserResponse.PublicProfile>> getBlogUserInfo(
             @PathVariable String nickname
     ) {
-        UserResponse.BlogUserInfo blogUser = userService.getBlogUser(nickname);
+        UserResponse.PublicProfile blogUser = userService.getBlogUser(nickname);
         return ResponseEntity.ok(CustomResponse.success(blogUser, "정보 조회가 성공적으로 완료되었습니다."));
     }
 }

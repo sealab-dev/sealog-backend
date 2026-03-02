@@ -2,7 +2,6 @@ package com.sealog.backend.domain.feature.post.controller;
 
 import com.sealog.backend.domain.feature.post.dto.PostRequest;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
-import com.sealog.backend.domain.feature.post.enums.PostType;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
 import com.sealog.backend.security.auth.CustomUserDetails;
@@ -97,7 +96,6 @@ public interface PostUserControllerDocs {
     })
     ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> search(
             CustomUserDetails userDetails,
-            @Parameter(description = "게시글 타입", example = "CORE") PostType postType,
             @Parameter(description = "스택명", example = "Spring Boot") String stack,
             @Parameter(description = "검색 키워드(제목/요약)", example = "JPA") String keyword,
             Pageable pageable

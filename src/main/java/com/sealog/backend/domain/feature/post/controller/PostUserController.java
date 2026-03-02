@@ -3,7 +3,6 @@ package com.sealog.backend.domain.feature.post.controller;
 import com.sealog.backend.domain.feature.post.dto.PostRequest;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.post.dto.PostSearchCondition;
-import com.sealog.backend.domain.feature.post.enums.PostType;
 import com.sealog.backend.domain.feature.post.service.PostService;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
@@ -135,12 +134,11 @@ public class PostUserController implements PostUserControllerDocs {
     @GetMapping
     public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> search(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam(required = false) PostType postType,
             @RequestParam(required = false) String stack,
             @RequestParam(required = false) String keyword,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        PostSearchCondition condition = PostSearchCondition.ofMine(postType, stack, keyword);
+        PostSearchCondition condition = PostSearchCondition.ofMine(stack, keyword);
         Page<PostResponse.PostItems> posts = postService.search(
                 userDetails.getUserId(),
                 condition,

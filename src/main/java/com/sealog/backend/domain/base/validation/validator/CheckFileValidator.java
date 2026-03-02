@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.base.validation.validator;
 
 import com.sealog.backend.domain.base.util.ValidationUtils;
-import com.sealog.backend.domain.base.validation.annotation.File;
+import com.sealog.backend.domain.base.validation.annotation.CheckFile;
 import com.sealog.backend.domain.base.validation.constant.AllowedFileConstant;
 import com.sealog.backend.domain.base.validation.enums.AllowedFileType;
 import jakarta.validation.ConstraintValidator;
@@ -18,22 +18,29 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * {@code @File} 검증 클래스
+ * {@code @CheckFile} 검증 클래스
  */
 
 @Slf4j
-public class FileValidator implements ConstraintValidator<File, MultipartFile> {
-
-    // 사용 상수
-    private final Tika tika = new Tika();
+public class CheckFileValidator implements ConstraintValidator<CheckFile, MultipartFile> {
 
     // 어노테이션 정보
     private AllowedFileType[] allowed;
     private double maxSizeMB;
     private boolean nullable;
 
+    // 사용 상수
+    private static final Tika TIKA = new Tika();
+
+    // 검증 오류 메세지 상수
+    private static final String MESSAGE_EMPTY = "파일을 선택해 주세요";
+    private static final String MESSAGE_MAX = "파일 크기는 %.1fMB 이하여야 합니다. (현재: %.2fMB)";
+    private static final String MESSAGE_NAME = "올바른 파일명을 가진 파일을 업로드 해 주세요";
+    private static final String MESSAGE_EXT = "%s는 허용되지 않는 확장자입니다";
+    private static final String MESSAGE_MIME = "허용되지 않는 파일 타입 입니다";
+
     @Override
-    public void initialize(File annotation) {
+    public void initialize(CheckFile annotation) {
         allowed = annotation.allowed();
         maxSizeMB = annotation.maxSizeMB();
         nullable = annotation.nullable();
@@ -47,7 +54,7 @@ public class FileValidator implements ConstraintValidator<File, MultipartFile> {
 
         // 2. 파일 존재 검증
         if (Objects.isNull(value) || value.isEmpty()) {
-            ValidationUtils.addViolation(context, "파일을 선택해 주세요.");
+            ValidationUtils.addViolation(context, MESSAGE_EMPTY);
             return false;
         }
 
@@ -55,7 +62,7 @@ public class FileValidator implements ConstraintValidator<File, MultipartFile> {
         long maxBytes = (long) (maxSizeMB * 1024 * 1024);  // MB를 Bytes로 변환
         if (value.getSize() > maxBytes) {
             double curMBSize = value.getSize() / 1024.0 / 1024.0;
-            String message = "파일 크기는 %.1fMB 이하여야 합니다. (현재: %.2fMB)".formatted(maxSizeMB, curMBSize);
+            String message = MESSAGE_MAX.formatted(maxSizeMB, curMBSize);
             ValidationUtils.addViolation(context, message);
             return false;
         }
@@ -64,7 +71,7 @@ public class FileValidator implements ConstraintValidator<File, MultipartFile> {
         // 파일명 검증 (파일명이 없는 경우)
         String originalFilename = value.getOriginalFilename();
         if (!StringUtils.hasText(originalFilename)) {
-            ValidationUtils.addViolation(context, "올바른 파일명을 가진 파일을 업로드 해 주세요.");
+            ValidationUtils.addViolation(context, MESSAGE_NAME);
             return false;
         }
 
@@ -72,17 +79,17 @@ public class FileValidator implements ConstraintValidator<File, MultipartFile> {
         String ext = getFileExt(value.getOriginalFilename());
         Set<String> allowedExts = getExts();
         if (!allowedExts.contains(ext)) {
-            ValidationUtils.addViolation(context, "허용되지 않는 확장자입니다.");
+            ValidationUtils.addViolation(context, MESSAGE_EXT.formatted(ext));
             return false;
         }
 
         // MEME 검증
         try {
             Set<String> allowedMimes = getMimeTypes();
-            String detectedType = tika.detect(value.getInputStream(), value.getOriginalFilename());
+            String detectedType = TIKA.detect(value.getInputStream(), value.getOriginalFilename());
 
             if (!allowedMimes.contains(detectedType)) {
-                ValidationUtils.addViolation(context, "허용되지 않는 파일 타입 입니다.");
+                ValidationUtils.addViolation(context, MESSAGE_MIME);
                 return false;
             }
 

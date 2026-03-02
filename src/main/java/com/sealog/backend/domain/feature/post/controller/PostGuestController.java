@@ -2,7 +2,6 @@ package com.sealog.backend.domain.feature.post.controller;
 
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.post.dto.PostSearchCondition;
-import com.sealog.backend.domain.feature.post.enums.PostType;
 import com.sealog.backend.domain.feature.post.service.PostService;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
@@ -44,12 +43,11 @@ public class PostGuestController implements PostGuestControllerDocs {
     @Override
     @GetMapping
     public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> search(
-            @RequestParam(required = false) PostType postType,
             @RequestParam(required = false) String stack,
             @RequestParam(required = false) String keyword,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        PostSearchCondition condition = PostSearchCondition.ofPublic(postType, stack, keyword);
+        PostSearchCondition condition = PostSearchCondition.ofPublic(stack, keyword);
         Page<PostResponse.PostItems> posts = postService.search(condition, pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
     }
@@ -89,12 +87,11 @@ public class PostGuestController implements PostGuestControllerDocs {
     @GetMapping("/user/{nickname}")
     public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getUserPublicPosts(
             @PathVariable String nickname,
-            @RequestParam(required = false) PostType postType,
             @RequestParam(required = false) String stack,
             @RequestParam(required = false) String keyword,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        PostSearchCondition condition = PostSearchCondition.ofUser(nickname, postType, stack, keyword);
+        PostSearchCondition condition = PostSearchCondition.ofUser(nickname, stack, keyword);
         Page<PostResponse.PostItems> posts = postService.search(condition, pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
     }
