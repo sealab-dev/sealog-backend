@@ -1,6 +1,7 @@
 package com.sealog.backend.domain.feature.auth.controller;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
+import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
 import com.sealog.backend.domain.feature.user.dto.UserResponse;
 import com.sealog.backend.global.response.CustomResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +27,7 @@ public interface AuthControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<UserResponse.MyProfile>> login(
+    ResponseEntity<CustomResponse<AuthResponse.Profile>>  login(
             AuthRequest.LoginRequest request,
             HttpServletResponse response
     );
@@ -38,7 +39,7 @@ public interface AuthControllerDocs {
             @ApiResponse(responseCode = "401", description = "Refresh Token 없음/유효하지 않음",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<UserResponse.MyProfile>> refresh(
+    ResponseEntity<CustomResponse<AuthResponse.Profile>> refresh(
             HttpServletRequest request,
             HttpServletResponse response
     );
