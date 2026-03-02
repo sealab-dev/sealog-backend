@@ -1,7 +1,4 @@
 spring:
-    profiles:
-        include: local
-
     application:
         name: sealog-backend
 

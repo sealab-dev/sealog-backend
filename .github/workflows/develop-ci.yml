@@ -35,7 +35,7 @@ jobs:
       - name: Build and Test
         env:
           # Spring Profile
-          SPRING_PROFILES_ACTIVE: test
+          SPRING_PROFILES_ACTIVE: test,local
 
           # Database
           DATABASE_URL: jdbc:mariadb://localhost:3306/sealog_test
