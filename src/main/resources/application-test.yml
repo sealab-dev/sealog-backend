@@ -1,0 +1,99 @@
+spring:
+    profiles:
+        include: local
+
+    application:
+        name: sealog-backend
+
+    data:
+        rest:
+            base-path: /api
+
+    datasource:
+        url: jdbc:mariadb://localhost:3306/sealog_test
+        username: root
+        password: root
+        driver-class-name: org.mariadb.jdbc.Driver
+        hikari:
+            maximum-pool-size: 5
+            minimum-idle: 2
+            connection-timeout: 30000
+            connection-init-sql: SET time_zone = '+09:00'
+
+    jpa:
+        show-sql: true
+        hibernate:
+            ddl-auto: create-drop
+        properties:
+            hibernate:
+                format_sql: true
+                use_sql_comments: true
+                jdbc:
+                    batch_size: 20
+        open-in-view: false
+
+    task:
+        scheduling:
+            enabled: false
+
+    servlet:
+        multipart:
+            enabled: true
+            max-file-size: 100MB
+            max-request-size: 100MB
+
+    cloud:
+        aws:
+            credentials:
+                access-key: ${AWS_ACCESS_KEY:}
+                secret-key: ${AWS_SECRET_KEY:}
+            region:
+                static: ap-northeast-2
+            s3:
+                bucket: ${AWS_BUCKET:}
+            cloudfront:
+                domain: ${AWS_DOMAIN:}
+                distribution-id: ${AWS_DISTRIBUTION_ID:}
+
+    ai:
+        openai:
+            api-key: ${OPENAI_API_KEY:}
+            chat:
+                options:
+                    model: gpt-4o-mini
+            embedding:
+                options:
+                    model: text-embedding-3-small
+
+server:
+    port: 8080
+
+app:
+    origin:
+        frontend: http://localhost:5173
+    cookie:
+        secure: false
+        sameSite: Lax
+
+jwt:
+    secret: dGVzdC1zZWNyZXQta2V5LWZvci1qdW5pdC10ZXN0aW5n
+    access-token-validity: 3600000
+    refresh-token-validity: 86400000
+
+file:
+    local:
+        upload-dir: ./uploads
+        base-url: http://localhost:8080/files
+
+logging:
+    logback:
+        rollingpolicy:
+            max-file-size: 10MB
+            max-history: 30
+    level:
+        com.sealog.backend: DEBUG
+        org.hibernate.SQL: DEBUG
+
+springdoc:
+    swagger-ui:
+        path: /docs
