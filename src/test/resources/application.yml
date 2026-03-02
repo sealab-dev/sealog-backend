@@ -10,9 +10,9 @@ spring:
             base-path: /api
 
     datasource:
-        url: jdbc:mariadb://localhost:3306/devdb
-        username: devuser
-        password: devpass
+        url: jdbc:mariadb://localhost:3306/testdb
+        username: root
+        password: testpass
         driver-class-name: org.mariadb.jdbc.Driver
         hikari:
             maximum-pool-size: 10
