@@ -30,7 +30,7 @@ import static com.sealog.backend.infra.storage.util.FileTypeResolver.*;
  */
 @Slf4j
 @Service
-@Profile("local")
+@Profile({"local", "test"})
 @RequiredArgsConstructor
 public class LocalFileStorageService implements FileStorageService {
 

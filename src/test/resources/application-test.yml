@@ -1,0 +1,80 @@
+spring:
+  # ── Datasource ──────────────────────────────────────────────────────────
+  # URL / username / password 는 AbstractContainerTest 의 @DynamicPropertySource가 런타임에 주입
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 30000
+      connection-init-sql: SET time_zone = '+09:00'
+
+  # ── JPA ──────────────────────────────────────────────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+
+  # ── Redis ─────────────────────────────────────────────────────────────────
+  # host / port 는 AbstractContainerTest 의 @DynamicPropertySource가 런타임에 주입
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  # ── 스케줄러 비활성화 ──────────────────────────────────────────────────────
+  task:
+    scheduling:
+      enabled: false
+
+  # ── AWS (더미값 — 테스트에서 S3/CloudFront 미사용) ────────────────────────
+  cloud:
+    aws:
+      credentials:
+        access-key: test-access-key
+        secret-key: test-secret-key
+      region:
+        static: ap-northeast-2
+      s3:
+        bucket: test-bucket
+      cloudfront:
+        domain: test.cloudfront.net
+        distribution-id: TESTDISTRIBUTIONID
+
+  # ── OpenAI (더미값) ─────────────────────────────────────────────────────
+  ai:
+    openai:
+      api-key: test-openai-key
+      chat:
+        options:
+          model: gpt-4o-mini
+      embedding:
+        options:
+          model: text-embedding-3-small
+
+# ── JWT ────────────────────────────────────────────────────────────────────
+jwt:
+  secret: dGVzdC1zZWNyZXQta2V5LWZvci1qdW5pdC10ZXN0aW5n
+  access-token-validity: 3600000
+  refresh-token-validity: 86400000
+
+# ── App ────────────────────────────────────────────────────────────────────
+app:
+  origin:
+    frontend: http://localhost:5173
+  cookie:
+    secure: false
+    sameSite: Lax
+
+# ── File ───────────────────────────────────────────────────────────────────
+file:
+  local:
+    upload-dir: ./test-uploads
+    base-url: http://localhost:8080/files

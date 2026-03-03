@@ -5,22 +5,11 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-
-    services:
-      mariadb:
-        image: mariadb:11.4.8
-        env:
-          MARIADB_ROOT_PASSWORD: root
-          MARIADB_DATABASE: testdb
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="healthcheck.sh --connect --innodb_initialized"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+    # ubuntu-latest에 Docker가 기본 설치되어 있어 Testcontainers가 바로 동작한다.
+    # MariaDB / Redis 컨테이너는 Testcontainers(AbstractContainerTest)가 직접 기동하므로
+    # GitHub Actions services 블록이 필요없다.
 
     steps:
       - name: Checkout
@@ -32,30 +21,20 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build and Test
-        env:
-          # Database
-          DATABASE_URL: jdbc:mariadb://localhost:3306/testdb
-          DATABASE_USER: root
-          DATABASE_PASSWORD: root
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
-          # JPA
-          JPA_SHOW_SQL: false
-          JPA_HIBERNATE_DDL: create-drop
-
-          # AWS (더미값)
-          AWS_ACCESS_KEY: test-key
-          AWS_SECRET_KEY: test-secret
-          AWS_BUCKET: test-bucket
-          AWS_DOMAIN: test.cloudfront.net
-          AWS_DISTRIBUTION_ID: TEST123
-
-          # JWT
-          JWT_KEY: bG9jYWwtZGV2LWp3dC1zZWNyZXQta2V5LTEyMzQ1Njc4OTAtYWJjZGVm
-
-          # Spring AI (더미값)
-          OPENAI_API_KEY: EXAMPLE123
-
+      - name: Build
         run: |
           chmod +x gradlew
-          ./gradlew build
+          ./gradlew build -x test --no-daemon
+
+      - name: Integration Test
+        run: ./gradlew integrationTest --no-daemon
