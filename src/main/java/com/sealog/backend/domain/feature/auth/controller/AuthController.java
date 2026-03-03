@@ -1,13 +1,12 @@
 package com.sealog.backend.domain.feature.auth.controller;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
+import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
+import com.sealog.backend.domain.feature.auth.dto.TokenResponse;
 import com.sealog.backend.domain.feature.auth.service.AuthService;
-import com.sealog.backend.domain.feature.user.entity.User;
-import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.exception.CustomException;
+import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.security.util.CookieUtil;
-import com.sealog.backend.security.jwt.JwtTokenProvider;
-import com.sealog.backend.domain.feature.user.dto.UserResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -27,7 +26,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController implements AuthControllerDocs {
 
     private final AuthService authService;
-    private final JwtTokenProvider jwtTokenProvider;
     private final CookieUtil cookieUtil;
 
     /**
@@ -37,19 +35,19 @@ public class AuthController implements AuthControllerDocs {
      */
     @Override
     @PostMapping("/login")
-    public ResponseEntity<CustomResponse<UserResponse.MyProfile>> login(
+    public ResponseEntity<CustomResponse<AuthResponse.Profile>> login(
             @Valid @RequestBody AuthRequest.LoginRequest request,
             HttpServletResponse response
     ) {
         log.info("[Auth] Login attempt - Email: {}", request.getEmail());
-        User user = authService.login(request);
+        TokenResponse tokenResponse = authService.login(request);
 
-        String refreshToken = setTokenCookies(response, user);
-        authService.saveRefreshToken(user.getId(), refreshToken);
+        cookieUtil.addAccessTokenCookie(response, tokenResponse.getAccessToken());
+        cookieUtil.addRefreshTokenCookie(response, tokenResponse.getRefreshToken());
 
-        log.info("[Auth] Login success - UserID: {}", user.getId());
+        log.info("[Auth] Login success - UserID: {}", tokenResponse.getProfile().getId());
 
-        return ResponseEntity.ok(CustomResponse.success(UserResponse.MyProfile.from(user), "로그인 성공"));
+        return ResponseEntity.ok(CustomResponse.success(tokenResponse.getProfile(), "로그인 성공"));
     }
 
     /**
@@ -61,34 +59,21 @@ public class AuthController implements AuthControllerDocs {
      */
     @Override
     @PostMapping("/refresh")
-    public ResponseEntity<CustomResponse<UserResponse.MyProfile>> refresh(
+    public ResponseEntity<CustomResponse<AuthResponse.Profile>> refresh(
             HttpServletRequest request,
             HttpServletResponse response
     ) {
         log.debug("[Auth] Token refresh request received");
-        // 쿠키에서 Refresh Token 추출
         String refreshToken = cookieUtil.getRefreshToken(request)
                 .orElseThrow(() -> CustomException.unauthorized("Refresh Token이 없습니다"));
 
-        // JWT 서명 및 만료 검증
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
-            cookieUtil.deleteTokenCookies(response);
-            throw CustomException.unauthorized("유효하지 않은 Refresh Token입니다");
-        }
+        TokenResponse tokenResponse = authService.refresh(refreshToken);
 
-        // DB에 저장된 Refresh Token과 비교 검증
-        Long userId = jwtTokenProvider.getUserId(refreshToken);
+        log.info("[Auth] Refreshing token for UserID: {}", tokenResponse.getProfile().getId());
 
-        log.info("[Auth] Refreshing token for UserID: {}", userId);
+        cookieUtil.addAccessTokenCookie(response, tokenResponse.getAccessToken());
 
-        authService.validateStoredRefreshToken(userId, refreshToken);
-
-        // 사용자 조회 및 액세스 토큰만 재발급
-        User user = authService.getUserForRefresh(userId);
-        String newAccessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
-        cookieUtil.addAccessTokenCookie(response, newAccessToken);
-
-        return ResponseEntity.ok(CustomResponse.success(UserResponse.MyProfile.from(user), "토큰이 재발급되었습니다"));
+        return ResponseEntity.ok(CustomResponse.success(tokenResponse.getProfile(), "토큰이 재발급되었습니다"));
     }
 
     /**
@@ -102,29 +87,9 @@ public class AuthController implements AuthControllerDocs {
             HttpServletRequest request,
             HttpServletResponse response
     ) {
-        // Refresh Token이 유효한 경우 DB에서 삭제
-        cookieUtil.getRefreshToken(request).ifPresent(refreshToken -> {
-            if (jwtTokenProvider.validateToken(refreshToken)) {
-                Long userId = jwtTokenProvider.getUserId(refreshToken);
-                authService.deleteRefreshToken(userId);
-            }
-        });
+        cookieUtil.getRefreshToken(request).ifPresent(authService::logout);
 
         cookieUtil.deleteTokenCookies(response);
         return ResponseEntity.ok(CustomResponse.success(null, "로그아웃 되었습니다"));
-    }
-
-    /**
-     * 액세스 + 리프레시 토큰 생성 및 쿠키 설정
-     * @return 생성된 Refresh Token (DB 저장용)
-     */
-    private String setTokenCookies(HttpServletResponse response, User user) {
-        String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
-        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId(), user.getEmail());
-
-        cookieUtil.addAccessTokenCookie(response, accessToken);
-        cookieUtil.addRefreshTokenCookie(response, refreshToken);
-
-        return refreshToken;
     }
 }

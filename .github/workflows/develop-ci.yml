@@ -13,7 +13,7 @@ jobs:
         image: mariadb:11.4.8
         env:
           MARIADB_ROOT_PASSWORD: root
-          MARIADB_DATABASE: testdb
+          MARIADB_DATABASE: sealog_test
         ports:
           - 3306:3306
         options: >-
@@ -34,8 +34,11 @@ jobs:
 
       - name: Build and Test
         env:
+          # Spring Profile
+          SPRING_PROFILES_ACTIVE: test,local
+
           # Database
-          DATABASE_URL: jdbc:mariadb://localhost:3306/testdb
+          DATABASE_URL: jdbc:mariadb://localhost:3306/sealog_test
           DATABASE_USER: root
           DATABASE_PASSWORD: root
           
