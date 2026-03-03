@@ -95,9 +95,9 @@ logging:
             max-file-size: 10MB
             max-history: 30  # 파일 생성 후 30일까지 존재
     level:
-        com.blog.backend: ${LOG_LEVEL_APP:DEBUG}
-        com.blog.backend.feature.file: ${LOG_LEVEL_FILE:DEBUG}
-        com.blog.backend.infra.storage: ${LOG_LEVEL_STORAGE:DEBUG}
+        com.blog.backend: ${LOG_LEVEL_APP:INFO}
+        com.blog.backend.feature.file: ${LOG_LEVEL_FILE:INFO}
+        com.blog.backend.infra.storage: ${LOG_LEVEL_STORAGE:INFO}
         software.amazon.awssdk: ${LOG_LEVEL_AWS:INFO}
         org.hibernate.SQL: ${LOG_LEVEL_HIBERNATE:ERROR}
 

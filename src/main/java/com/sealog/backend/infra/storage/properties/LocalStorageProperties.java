@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Getter
 @Setter
 @Component
-@Profile("local")
+@Profile({"local", "test"})
 @ConfigurationProperties(prefix = "file.local")
 public class LocalStorageProperties {
 

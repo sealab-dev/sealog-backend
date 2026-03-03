@@ -15,7 +15,7 @@ import java.nio.file.Paths;
  * /files/** 경로로 로컬 파일 접근 가능하도록 ResourceHandler 등록
  */
 @Configuration
-@Profile("local")
+@Profile({"local", "test"})
 @RequiredArgsConstructor
 public class LocalStorageConfig implements WebMvcConfigurer {
 
