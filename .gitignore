@@ -40,3 +40,6 @@ out/
 
 ### Local Upload Files ###
 /uploads
+
+### Claude Code ###
+CLAUDE.md
