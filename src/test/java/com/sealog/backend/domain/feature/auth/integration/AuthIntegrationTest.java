@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.auth.service;
+package com.sealog.backend.domain.feature.auth.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
@@ -6,22 +6,13 @@ import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
-import com.sealog.backend.support.AbstractContainerTest;
-import com.sealog.backend.support.ExecutionTimeExtension;
+import com.sealog.backend.support.base.TestIntegrationBase;
+import com.sealog.backend.support.component.TestDataFactory;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,47 +22,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Auth 통합 테스트
- *
- * Controller → Service → Repository 전체 레이어를 관통하는 통합 테스트.
- * AbstractContainerTest를 통해 MariaDB / Redis Testcontainer를 사용한다.
- * 각 테스트는 @Transactional로 격리되며 종료 시 자동 롤백된다.
- *
- * ┌──────────────────────────────────────────────────────────────────┐
- * │  주의: AWS S3/CloudFront 빈 생성에 실패하는 경우               │
- * │  해당 StorageService를 @MockBean으로 추가해주세요.              │
- * └──────────────────────────────────────────────────────────────────┘
  */
-@Tag("integration")
-@ExtendWith(ExecutionTimeExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
-@Transactional
 @DisplayName("Auth 통합 테스트 (Controller → Service → Repository)")
-class AuthServiceTest extends AbstractContainerTest {
+class AuthIntegrationTest extends TestIntegrationBase {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
     @Autowired UserRepository userRepository;
-    @Autowired PasswordEncoder passwordEncoder;
     @Autowired JwtTokenProvider jwtTokenProvider;
+    @Autowired TestDataFactory testDataFactory;
 
     private User testUser;
 
-    private static final String TEST_EMAIL    = "flow-test@local.com";
-    private static final String TEST_PASSWORD = "test1234";
-
     @BeforeEach
     void setUp() {
-        testUser = userRepository.save(
-                User.builder()
-                        .email(TEST_EMAIL)
-                        .password(passwordEncoder.encode(TEST_PASSWORD))
-                        .name("통합테스터")
-                        .nickname("flowtester")
-                        .role(UserRole.USER)
-                        .build()
-        );
+        testUser = testDataFactory.createUser(UserRole.USER);
+    }
+
+    @Test
+    @Order(0)
+    void warmUp() {
+        // 아무것도 안 함, JVM 웜업용
     }
 
     // =====================================================================
@@ -85,7 +56,9 @@ class AuthServiceTest extends AbstractContainerTest {
         @DisplayName("성공 - 올바른 이메일/비밀번호 → 200, access/refresh 쿠키 발급, 프로필 반환")
         void 성공() throws Exception {
             AuthRequest.LoginRequest request = AuthRequest.LoginRequest.builder()
-                    .email(TEST_EMAIL).password(TEST_PASSWORD).build();
+                    .email(testUser.getEmail())
+                    .password("password")  // TestDataFactory 기본 패스워드
+                    .build();
 
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -96,7 +69,7 @@ class AuthServiceTest extends AbstractContainerTest {
                     .andExpect(cookie().httpOnly("access_token", true))
                     .andExpect(cookie().httpOnly("refresh_token", true))
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.email").value(TEST_EMAIL))
+                    .andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
                     .andExpect(jsonPath("$.message").value("로그인 성공"));
         }
 
@@ -104,7 +77,9 @@ class AuthServiceTest extends AbstractContainerTest {
         @DisplayName("실패 - 존재하지 않는 이메일 → 401")
         void 이메일_없음() throws Exception {
             AuthRequest.LoginRequest request = AuthRequest.LoginRequest.builder()
-                    .email("nobody@local.com").password(TEST_PASSWORD).build();
+                    .email("nobody@local.com")
+                    .password("password")
+                    .build();
 
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -116,7 +91,9 @@ class AuthServiceTest extends AbstractContainerTest {
         @DisplayName("실패 - 잘못된 비밀번호 → 401")
         void 비밀번호_불일치() throws Exception {
             AuthRequest.LoginRequest request = AuthRequest.LoginRequest.builder()
-                    .email(TEST_EMAIL).password("wrongPassword1").build();
+                    .email(testUser.getEmail())
+                    .password("pass")
+                    .build();
 
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -128,7 +105,9 @@ class AuthServiceTest extends AbstractContainerTest {
         @DisplayName("실패 - 유효하지 않은 이메일 형식 → 400")
         void 이메일_형식_오류() throws Exception {
             AuthRequest.LoginRequest request = AuthRequest.LoginRequest.builder()
-                    .email("not-an-email").password(TEST_PASSWORD).build();
+                    .email("not-an-email")
+                    .password("password")
+                    .build();
 
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -148,15 +127,16 @@ class AuthServiceTest extends AbstractContainerTest {
         @DisplayName("성공 - 유효한 refresh_token 쿠키 → 200, 새 access_token 쿠키 발급")
         void 성공() throws Exception {
             // 실제 JWT 리프레시 토큰 생성 후 DB에 저장
-            String refreshToken = jwtTokenProvider.createRefreshToken(testUser.getId(), TEST_EMAIL);
+            String refreshToken = jwtTokenProvider.createRefreshToken(testUser.getId(), testUser.getEmail());
             testUser.updateRefreshToken(refreshToken);
+            userRepository.save(testUser);
 
             mockMvc.perform(post("/api/auth/refresh")
                             .cookie(new Cookie("refresh_token", refreshToken)))
                     .andExpect(status().isOk())
                     .andExpect(cookie().exists("access_token"))
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.email").value(TEST_EMAIL));
+                    .andExpect(jsonPath("$.data.email").value(testUser.getEmail()));
         }
 
         @Test
@@ -175,7 +155,7 @@ class AuthServiceTest extends AbstractContainerTest {
             testUser.updateRefreshToken("stale-token-already-in-db");
 
             // 유효한 JWT이지만 DB에 저장된 값과 다름
-            String freshToken = jwtTokenProvider.createRefreshToken(testUser.getId(), TEST_EMAIL);
+            String freshToken = jwtTokenProvider.createRefreshToken(testUser.getId(), testUser.getEmail());
 
             mockMvc.perform(post("/api/auth/refresh")
                             .cookie(new Cookie("refresh_token", freshToken)))
@@ -193,7 +173,7 @@ class AuthServiceTest extends AbstractContainerTest {
         @Test
         @DisplayName("성공 - 유효한 refresh_token 쿠키로 로그아웃 → 200, 쿠키 삭제, DB 토큰 제거")
         void 성공() throws Exception {
-            String refreshToken = jwtTokenProvider.createRefreshToken(testUser.getId(), TEST_EMAIL);
+            String refreshToken = jwtTokenProvider.createRefreshToken(testUser.getId(), testUser.getEmail());
             testUser.updateRefreshToken(refreshToken);
 
             mockMvc.perform(post("/api/auth/logout")
@@ -204,8 +184,8 @@ class AuthServiceTest extends AbstractContainerTest {
                     .andExpect(jsonPath("$.success").value(true));
 
             // DB에서 리프레시 토큰이 제거되었는지 확인
-            User updated = userRepository.findByEmail(TEST_EMAIL).orElseThrow();
-            assertThat(updated.getRefreshToken()).isNull();
+            User updateUser = userRepository.findById(testUser.getId()).orElseThrow();
+            assertThat(updateUser.getRefreshToken()).isNull();
         }
 
         @Test
@@ -229,7 +209,7 @@ class AuthServiceTest extends AbstractContainerTest {
         void 성공() throws Exception {
             AuthRequest.SignUpRequest request = AuthRequest.SignUpRequest.builder()
                     .email("newuser@local.com")
-                    .password("newpassword1")
+                    .password("password")
                     .name("새유저")
                     .nickname("newuser")
                     .build();
@@ -249,8 +229,8 @@ class AuthServiceTest extends AbstractContainerTest {
         void 이메일_중복() throws Exception {
             // setUp()에서 TEST_EMAIL 사용자가 이미 저장되어 있음
             AuthRequest.SignUpRequest request = AuthRequest.SignUpRequest.builder()
-                    .email(TEST_EMAIL)
-                    .password("password1234")
+                    .email(testUser.getEmail())
+                    .password("password")
                     .name("중복유저")
                     .nickname("duplicateUser")
                     .build();
@@ -267,7 +247,7 @@ class AuthServiceTest extends AbstractContainerTest {
         void 권한_없음() throws Exception {
             AuthRequest.SignUpRequest request = AuthRequest.SignUpRequest.builder()
                     .email("someone@local.com")
-                    .password("password1234")
+                    .password("password")
                     .name("유저")
                     .nickname("someone")
                     .build();
