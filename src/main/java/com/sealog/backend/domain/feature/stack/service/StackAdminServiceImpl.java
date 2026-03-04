@@ -1,11 +1,11 @@
 package com.sealog.backend.domain.feature.stack.service;
 
+import com.sealog.backend.domain.feature.post.repository.PostStackRepository;
 import com.sealog.backend.domain.feature.stack.dto.StackResponse;
 import com.sealog.backend.domain.feature.stack.dto.StackRequest;
 import com.sealog.backend.domain.feature.stack.entity.Stack;
 import com.sealog.backend.domain.feature.stack.enums.StackGroup;
 import com.sealog.backend.domain.feature.stack.repository.StackRepository;
-import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class StackAdminServiceImpl implements StackAdminService {
 
     private final StackRepository stackRepository;
-    private final UserRepository userRepository;
+    private final PostStackRepository postStackRepository;
 
     /**
      * 스택 생성 (어드민 전용)
@@ -63,11 +63,13 @@ public class StackAdminServiceImpl implements StackAdminService {
 
     /**
      * 스택 삭제 (어드민 전용)
+     * - 연결된 PostStack 매핑을 먼저 삭제 후 스택 삭제
      */
     @Override
     @Transactional
     public void deleteStack(Long stackId, Long userId) {
         Stack stack = findStackById(stackId);
+        postStackRepository.deleteAllByStackId(stackId);
         stackRepository.delete(stack);
     }
 

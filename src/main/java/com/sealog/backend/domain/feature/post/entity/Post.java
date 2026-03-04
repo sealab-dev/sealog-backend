@@ -1,17 +1,10 @@
 package com.sealog.backend.domain.feature.post.entity;
 
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
-import com.sealog.backend.domain.feature.stack.entity.Stack;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.BatchSize;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "posts")
@@ -59,23 +52,6 @@ public class Post extends BaseTimeEntity {
      */
     @Column(name = "thumbnail_path", length = 1000)
     private String thumbnailPath;
-
-    @BatchSize(size = 100)
-    @ManyToMany
-    @JoinTable(
-            name = "post_stack",
-            joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "stack_id")
-    )
-    @OrderBy("name ASC")
-    private Set<Stack> stacks = new HashSet<>();
-
-    @BatchSize(size = 100)
-    @ElementCollection
-    @CollectionTable(name = "post_tag", joinColumns = @JoinColumn(name = "post_id"))
-    @Column(name = "tag")
-    @OrderColumn(name = "order_idx")
-    private List<String> tags = new ArrayList<>();
 
     // === 생성자 === //
     @Builder
@@ -148,27 +124,6 @@ public class Post extends BaseTimeEntity {
      */
     public boolean isWrittenBy(Long userId) {
         return this.user.getId().equals(userId);
-    }
-
-    // === 자유 태그 / 스택 업데이트 ===
-    public void updateTags(List<String> newTags) {
-        this.tags.clear();
-        this.tags.addAll(newTags);
-    }
-
-    /**
-     * 스택 전체 초기화
-     */
-    public void clearStack() {
-        this.stacks.clear();
-    }
-
-    /**
-     * 스택 전체 교체
-     */
-    public void updateStacks(Set<Stack> newStacks) {
-        this.stacks.clear();
-        this.stacks.addAll(newStacks);
     }
 
     // === 썸네일 관리 === //
