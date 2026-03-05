@@ -5,6 +5,9 @@ import com.sealog.backend.domain.feature.archive.dto.ArchiveRequest;
 import com.sealog.backend.domain.feature.archive.dto.ArchiveResponse;
 import com.sealog.backend.domain.feature.archive.entity.Archive;
 import com.sealog.backend.domain.feature.archive.repository.ArchiveRepository;
+import com.sealog.backend.domain.feature.post.entity.Post;
+import com.sealog.backend.domain.feature.post.enums.PostStatus;
+import com.sealog.backend.domain.feature.post.repository.PostRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
@@ -29,6 +32,7 @@ public class ArchiveServiceImpl implements ArchiveService {
 
     // 사용 의존성
     private final ArchiveRepository archiveRepository;
+    private final PostRepository postRepository;
     private final UserRepository userRepository;
 
     @Override
@@ -40,11 +44,27 @@ public class ArchiveServiceImpl implements ArchiveService {
     }
 
     @Override
+    public Page<ArchiveResponse.PostItems> getPagedPostItemsByArchiveIdForGuest(Long archiveId, Pageable pageable) {
+
+        return postRepository
+                .findByArchiveIdAndStatus(archiveId, PostStatus.PUBLISHED, pageable)
+                .map(this::toPostItems);
+    }
+
+    @Override
     public Page<ArchiveResponse.ArchiveItems> getPagedItemsForUser(Long userId, Pageable pageable) {
 
         return archiveRepository
                 .findByUserId(userId, pageable)
                 .map(this::toItems);
+    }
+
+    @Override
+    public Page<ArchiveResponse.PostItems> getPagedPostItemsByUserIdAndArchiveIdForUser(Long userId, Long archiveId, Pageable pageable) {
+
+        return postRepository
+                .findByUserIdAndArchiveId(userId, archiveId, pageable)
+                .map(this::toPostItems);
     }
 
     @Transactional
@@ -144,10 +164,14 @@ public class ArchiveServiceImpl implements ArchiveService {
 
 
     /**
-     * ItemsDTO (목록 DTO) 변환
+     * Entity -> DTO 변환 메소드
      */
     private ArchiveResponse.ArchiveItems toItems(Archive entity) {
         return ArchiveResponse.ArchiveItems.of(entity.getId(), entity.getSlug(), entity.getName());
+    }
+
+    private ArchiveResponse.PostItems toPostItems(Post entity) {
+        return ArchiveResponse.PostItems.of(entity.getId(), entity.getTitle(), entity.getSlug(), entity.getThumbnailPath());
     }
 
 

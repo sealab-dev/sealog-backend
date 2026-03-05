@@ -14,9 +14,13 @@ public interface ArchiveService {
 
     Page<ArchiveResponse.ArchiveItems> getPagedPublicItemsByNickname(String nickname, Pageable pageable);
 
+    Page<ArchiveResponse.PostItems> getPagedPostItemsByArchiveIdForGuest(Long archiveId, Pageable pageable);
+
     // ========== User (인증) ========== //
 
     Page<ArchiveResponse.ArchiveItems> getPagedItemsForUser(Long userId, Pageable pageable);
+
+    Page<ArchiveResponse.PostItems> getPagedPostItemsByUserIdAndArchiveIdForUser(Long userId, Long archiveId, Pageable pageable);
 
     void add(Long userId, ArchiveRequest.Add request);
 
