@@ -8,16 +8,13 @@ import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.domain.feature.user.service.UserValidatorService;
 import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
-import com.sealog.backend.support.ExecutionTimeExtension;
+import com.sealog.backend.support.base.TestUnitBase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -29,10 +26,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-@Tag("unit")
-@ExtendWith({MockitoExtension.class, ExecutionTimeExtension.class})
 @DisplayName("AuthService 단위 테스트")
-class AuthServiveUnitTest {
+class AuthServiveUnitTest extends TestUnitBase {
 
     @Mock UserRepository userRepository;
     @Mock PasswordEncoder passwordEncoder;
