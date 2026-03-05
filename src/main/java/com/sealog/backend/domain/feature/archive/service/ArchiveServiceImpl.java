@@ -38,7 +38,7 @@ public class ArchiveServiceImpl implements ArchiveService {
     public Page<ArchiveResponse.ArchiveItems> getPagedItemsByNicknameForGuest(String nickname, Pageable pageable) {
 
         return archiveRepository
-                .findPublicByUserNickname(nickname, pageable)
+                .findByUserNicknameAndIsPublic(nickname, true, pageable)
                 .map(this::toItems);
     }
 
