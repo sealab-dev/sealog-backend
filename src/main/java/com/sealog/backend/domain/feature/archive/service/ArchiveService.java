@@ -31,4 +31,7 @@ public interface ArchiveService {
     void hide(Long userId, String nickname, String slug);
 
     void remove(Long userId, String nickname, String slug);
+
+    void changePostArchive(Long userId, Long archiveId, Long postId);
+
 }

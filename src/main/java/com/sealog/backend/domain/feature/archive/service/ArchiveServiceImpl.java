@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,7 +73,7 @@ public class ArchiveServiceImpl implements ArchiveService {
         // 1. 회원 엔티티 조회
         User user = userRepository
                 .findById(userId)
-                .orElseThrow(() -> new CustomException("존재하지 않거나 탈퇴한 사용자의 아카이브를 생성할 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR));
+                .orElseThrow(() -> CustomException.notFound("존재하지 않거나 탈퇴한 사용자의 아카이브를 생성할 수 없습니다."));
 
         // 2. 검증
         String name = request.getName().trim();
@@ -82,7 +81,7 @@ public class ArchiveServiceImpl implements ArchiveService {
 
         // 같은 이름 생성 시도 차단
         if (archiveRepository.existsByNameAndUserId(name, userId))
-            throw new CustomException("이미 같은 이름의 아카이브가 존재합니다.", HttpStatus.BAD_REQUEST);
+            throw CustomException.badRequest("이미 같은 이름의 아카이브가 존재합니다.");
 
         // 3. entity 생성
         Archive archive = Archive.builder()
@@ -101,7 +100,7 @@ public class ArchiveServiceImpl implements ArchiveService {
     public void edit(Long userId, String nickname, String slug, ArchiveRequest.Edit request) {
 
         // 1. entity 조회
-        Archive archive = findEntityByNicknameAndSlug(nickname, slug);
+        Archive archive = findArchiveByNicknameAndSlug(nickname, slug);
 
         // 2. 검증
         String prevName = archive.getName();
@@ -112,7 +111,7 @@ public class ArchiveServiceImpl implements ArchiveService {
 
         // 동일 이름으로 수정 차단
         if (Objects.equals(prevName, editName))
-            throw new CustomException("같은 이름으로 변경할 수 없습니다.", HttpStatus.BAD_REQUEST);
+            throw CustomException.badRequest("같은 이름으로 변경할 수 없습니다.");
 
         // 3. 연관관계 메소드 기반 갱신
         archive.edit(editName, SlugUtils.generate(editName));
@@ -123,7 +122,7 @@ public class ArchiveServiceImpl implements ArchiveService {
     public void show(Long userId, String nickname, String slug) {
 
         // 1. 조회
-        Archive archive = findEntityByNicknameAndSlug(nickname, slug);
+        Archive archive = findArchiveByNicknameAndSlug(nickname, slug);
 
         // 2. 검증
         verifyOwner(archive, userId); // 타인 정보 수정 차단
@@ -138,7 +137,7 @@ public class ArchiveServiceImpl implements ArchiveService {
     public void hide(Long userId, String nickname, String slug) {
 
         // 1. 조회
-        Archive archive = findEntityByNicknameAndSlug(nickname, slug);
+        Archive archive = findArchiveByNicknameAndSlug(nickname, slug);
 
         // 2. 검증
         verifyOwner(archive, userId); // 타인 정보 수정 차단
@@ -153,13 +152,39 @@ public class ArchiveServiceImpl implements ArchiveService {
     public void remove(Long userId, String nickname, String slug) {
 
         // 1. 조회
-        Archive archive = findEntityByNicknameAndSlug(nickname, slug);
+        Archive archive = findArchiveByNicknameAndSlug(nickname, slug);
 
         // 2. 검증
         verifyOwner(archive, userId); // 타인 정보 수정 차단
 
         // 3. 삭제 수행
         archiveRepository.delete(archive);
+    }
+
+    @Override
+    public void changePostArchive(Long userId, Long archiveId, Long postId) {
+
+        // 1. Post 조회
+        Post post = findPostById(postId);
+
+        // 2. Post 검증
+        if (!post.isWrittenBy(userId))
+            throw CustomException.forbidden("다른 사용자의 게시글에 추가할 수 없습니다");
+
+        // 3. 변경 수행
+        if (Objects.isNull(archiveId)) { // "없는 상태"로 변경하는 경우
+            post.removeFromArchive();
+
+        } else {
+            // Archive 조회
+            Archive archive = findArchiveById(archiveId);
+
+            // Archive 검증
+            if (Objects.nonNull(archive)) verifyOwner(archive, userId);
+
+            // 변경
+            post.addToArchive(archive);
+        }
     }
 
 
@@ -176,13 +201,30 @@ public class ArchiveServiceImpl implements ArchiveService {
 
 
     /**
-     * nickname, userId slug 아카이브 조회
+     * Archive 아카이브 조회
      */
-    private Archive findEntityByNicknameAndSlug(String nickname, String slug) {
+    private Archive findArchiveByNicknameAndSlug(String nickname, String slug) {
 
         return archiveRepository
                 .findByNicknameAndSlug(nickname, slug)
-                .orElseThrow(() -> new CustomException("존재하지 않거나 이미 삭제된 아카이브입니다.", HttpStatus.INTERNAL_SERVER_ERROR));
+                .orElseThrow(() -> CustomException.notFound("존재하지 않거나 이미 삭제된 아카이브입니다."));
+    }
+
+    private Archive findArchiveById(Long id) {
+
+        return archiveRepository
+                .findById(id)
+                .orElseThrow(() -> CustomException.notFound("존재하지 않거나 이미 삭제된 아카이브입니다."));
+    }
+
+    /**
+     * post 조회
+     */
+    private Post findPostById(Long postId) {
+
+        return postRepository
+                .findById(postId)
+                .orElseThrow(() -> CustomException.notFound("이미 삭제되었거나 존재하지 않는 게시글입니다."));
     }
 
     /**
@@ -191,7 +233,7 @@ public class ArchiveServiceImpl implements ArchiveService {
     private void verifyOwner(Archive archive, Long requestUserId) {
 
         if (!archive.isOwnedBy(requestUserId))
-            throw new CustomException("다른 사용자의 아카이브를 변경할 수 없습니다.", HttpStatus.FORBIDDEN);
+            throw CustomException.forbidden("다른 사용자의 아카이브를 변경할 수 없습니다.");
     }
 
 }
