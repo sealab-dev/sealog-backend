@@ -12,7 +12,7 @@ public interface ArchiveService {
 
     // ========== Guest (공개) ========== //
 
-    Page<ArchiveResponse.ArchiveItems> getPagedPublicItemsByNickname(String nickname, Pageable pageable);
+    Page<ArchiveResponse.ArchiveItems> getPagedItemsByNicknameForGuest(String nickname, Pageable pageable);
 
     Page<ArchiveResponse.PostItems> getPagedPostItemsByArchiveIdForGuest(Long archiveId, Pageable pageable);
 

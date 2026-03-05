@@ -35,7 +35,7 @@ public class ArchiveServiceImpl implements ArchiveService {
     private final UserRepository userRepository;
 
     @Override
-    public Page<ArchiveResponse.ArchiveItems> getPagedPublicItemsByNickname(String nickname, Pageable pageable) {
+    public Page<ArchiveResponse.ArchiveItems> getPagedItemsByNicknameForGuest(String nickname, Pageable pageable) {
 
         return archiveRepository
                 .findPublicByUserNickname(nickname, pageable)

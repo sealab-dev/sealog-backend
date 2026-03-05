@@ -38,7 +38,7 @@ public class ArchiveGuestController implements ArchiveGuestControllerDocs {
             @PathVariable String nickname,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ArchiveResponse.ArchiveItems> result = archiveService.getPagedPublicItemsByNickname(nickname, pageable);
+        Page<ArchiveResponse.ArchiveItems> result = archiveService.getPagedItemsByNicknameForGuest(nickname, pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
     }
 
