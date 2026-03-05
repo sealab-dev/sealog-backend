@@ -8,6 +8,9 @@ import com.sealog.backend.domain.feature.archive.repository.ArchiveRepository;
 import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
 import com.sealog.backend.domain.feature.post.repository.PostRepository;
+import com.sealog.backend.domain.feature.stack.entity.Stack;
+import com.sealog.backend.domain.feature.stack.enums.StackGroup;
+import com.sealog.backend.domain.feature.stack.repository.StackRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
@@ -16,6 +19,7 @@ import com.sealog.backend.support.constant.TestSql;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.context.TestComponent;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,24 +37,124 @@ import java.util.stream.LongStream;
 @RequiredArgsConstructor
 public class TestDataFactory {
 
-    // 의존성
-    private final JdbcTemplate jdbcTemplate; // 대용량 삽입
-    private final PasswordEncoder passwordEncoder;
+    private final JdbcTemplate jdbcTemplate;
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final ArchiveRepository archiveRepository;
     private final ArchivePostRepository archivePostRepository;
+    private final StackRepository stackRepository;
+
+    // 패스워드 인코더 직접 주입(스프링 의존성 제거)
+    private final PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+
+    // =========================================================
+    // 단일 생성
+    // =========================================================
+
+    /**
+     * User 단일 생성
+     * @param role 회원 권한
+     * @return 저장된 User 엔티티 (ID 포함)
+     */
+    public User createUser(UserRole role) {
+        long idx = userRepository.count() + 1;
+        return userRepository.save(
+                User.builder()
+                        .email("test%06d@test.com".formatted(idx))
+                        .password(passwordEncoder.encode("password"))
+                        .name("테스트%06d".formatted(idx))
+                        .nickname("테스트%06d".formatted(idx))
+                        .role(role)
+                        .build()
+        );
+    }
+
+    /**
+     * Post 단일 생성
+     * @param user   작성자
+     * @param status 게시글 상태
+     * @return 저장된 Post 엔티티 (ID 포함)
+     */
+    public Post createPost(User user, PostStatus status) {
+        long idx = postRepository.count() + 1;
+        return postRepository.save(
+                Post.builder()
+                        .user(user)
+                        .title("제목%06d".formatted(idx))
+                        .slug("post-%06d".formatted(idx))
+                        .excerpt("요약%06d".formatted(idx))
+                        .content("내용%06d".formatted(idx))
+                        .status(status)
+                        .build()
+        );
+    }
+
+    /**
+     * Archive 단일 생성
+     * @param user     소유자
+     * @param isPublic 공개 여부
+     * @return 저장된 Archive 엔티티 (ID 포함)
+     */
+    public Archive createArchive(User user, boolean isPublic) {
+        long idx = archiveRepository.count() + 1;
+        return archiveRepository.save(
+                Archive.builder()
+                        .user(user)
+                        .name("아카이브%06d".formatted(idx))
+                        .slug("archive-%06d".formatted(idx))
+                        .isPublic(isPublic)
+                        .build()
+        );
+    }
+
+    /**
+     * Stack 단일 생성
+     * @param stackGroup 스택 그룹
+     * @return 저장된 Stack 엔티티 (ID 포함)
+     */
+    public Stack createStack(StackGroup stackGroup) {
+        long idx = stackRepository.count() + 1;
+        return stackRepository.save(
+                Stack.builder()
+                        .name("스택%06d".formatted(idx))
+                        .stackGroup(stackGroup)
+                        .build()
+        );
+    }
+
+
+    // =========================================================
+    // 대량 생성
+    // =========================================================
+
+    /*
+     * todo : [대용량 데이터 생성 방식 비교: JPA vs JDBC batchUpdate]
+     * JPA saveAll()
+     * - 엔티티를 영속성 컨텍스트에 등록하고 스냅샷(변경 감지용 원본 복사본)을 생성
+     * - batch_size 설정으로 묶어서 전송하더라도 영속성 컨텍스트에 엔티티가 쌓이는 구조
+     * - 대용량 데이터 생성 시 메모리 부하 발생 → 대용량에 부적합
+     *
+     * JDBC batchUpdate()
+     * - 영속성 컨텍스트 없이 SQL + 파라미터 배열을 DB에 직접 전송
+     * - 스냅샷 생성 없음 → 메모리 부하 없음
+     * - 대용량 데이터 생성에 적합
+     *
+     * 결론
+     * - 수백건 이하 → JPA saveAll() 충분
+     * - 수만건 이상 → JDBC batchUpdate() 권장
+     * - 두 방식을 비교해보는 것은 의미가 있을 듯
+     */
 
     /**
      * TEST User 생성
-     * amount = 10 -> 테스트000~테스트009까지 생성
+     * amount = 10 -> 테스트000000~테스트000009까지 생성
      * @param amount 생성 수량
      * @param role   회원 권한
      */
     public void createTestUsers(int amount, UserRole role) {
 
         // 1. 사용 패스워드 조회
-        String password = passwordEncoder.encode("test");
+        String password = passwordEncoder.encode("password");
 
         // 2. User 생성
         // JPA 방식
@@ -88,8 +192,8 @@ public class TestDataFactory {
     }
 
     /**
-     * TEST User 생성
-     * amount = 10 -> 제목000~제목009까지 생성
+     * TEST Post 생성
+     * amount = 10 -> 제목000000~제목000009까지 생성
      * @param amount 생성 수량
      * @param status 블로그 게시글 상태
      * @param user   블로그 작성자 회원 엔티티
@@ -136,7 +240,7 @@ public class TestDataFactory {
 
     /**
      * TEST Archive 생성
-     * amount = 10 -> 아카이브000~아카이브009까지 생성
+     * amount = 10 -> 아카이브000000~아카이브000009까지 생성
      * @param amount    생성 수량
      * @param isPublic  공개 여부
      * @param user      아카이브 생성 사용자 엔티티
@@ -156,7 +260,6 @@ public class TestDataFactory {
                         .build()
         );
 
-
         // JDBC 방식
 //        List<Object[]> archives = createEntities(
 //                amount,
@@ -168,7 +271,6 @@ public class TestDataFactory {
 //                        isPublic
 //                }
 //        );
-
 
         // 2. 삽입 수행 (시간 측정)
         // JPA 방식
@@ -209,7 +311,6 @@ public class TestDataFactory {
         //                idx.intValue()
         //        }
         //);
-
 
         // 2. 삽입 수행 (시간 측정)
         // JPA 방식

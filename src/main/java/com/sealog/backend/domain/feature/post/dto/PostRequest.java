@@ -2,7 +2,6 @@ package com.sealog.backend.domain.feature.post.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,7 +9,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.Set;
 
 public class PostRequest {
 
@@ -49,8 +47,9 @@ public class PostRequest {
         @Schema(description = "태그 목록", example = "[\"spring\", \"jwt\"]")
         private List<String> tags;
 
-        @Schema(description = "스택 목록", example = "[\"Spring Boot\", \"JPA\"]")
-        private Set<String> stacks;
+        @Size(max = 5, message = "스택은 최대 5개까지 등록할 수 있습니다")
+        @Schema(description = "스택 ID 목록", example = "[1, 3, 5]")
+        private List<Long> stackIds;
 
     }
 
@@ -91,8 +90,9 @@ public class PostRequest {
         @Schema(description = "태그 목록", example = "[\"spring\", \"jwt\"]")
         private List<String> tags;
 
-        @Schema(description = "스택 목록", example = "[\"Spring Boot\", \"JPA\"]")
-        private Set<String> stacks;
+        @Size(max = 5, message = "스택은 최대 5개까지 등록할 수 있습니다")
+        @Schema(description = "스택 ID 목록", example = "[1, 3, 5]")
+        private List<Long> stackIds;
 
     }
 }

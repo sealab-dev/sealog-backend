@@ -1,6 +1,6 @@
 spring:
   # ── Datasource ──────────────────────────────────────────────────────────
-  # URL / username / password 는 AbstractContainerTest 의 @DynamicPropertySource가 런타임에 주입
+  # URL / username / password 는 @ServiceConnection이 런타임에 자동 주입
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
     hikari:
@@ -12,7 +12,7 @@ spring:
   # ── JPA ──────────────────────────────────────────────────────────────────
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: create
     show-sql: false
     open-in-view: false
     properties:
@@ -23,11 +23,10 @@ spring:
           batch_size: 20
 
   # ── Redis ─────────────────────────────────────────────────────────────────
-  # host / port 는 AbstractContainerTest 의 @DynamicPropertySource가 런타임에 주입
+  # host / port 는 @ServiceConnection이 런타임에 자동 주입 (하드코딩 제거)
   data:
     redis:
-      host: localhost
-      port: 6379
+      timeout: 2000
 
   # ── 스케줄러 비활성화 ──────────────────────────────────────────────────────
   task:

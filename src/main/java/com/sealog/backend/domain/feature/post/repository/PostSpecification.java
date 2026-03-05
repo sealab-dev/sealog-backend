@@ -2,11 +2,11 @@ package com.sealog.backend.domain.feature.post.repository;
 
 import com.sealog.backend.domain.feature.post.dto.PostSearchCondition;
 import com.sealog.backend.domain.feature.post.entity.Post;
+import com.sealog.backend.domain.feature.post.entity.PostStack;
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
-import com.sealog.backend.domain.feature.stack.entity.Stack;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
@@ -38,10 +38,16 @@ public class PostSpecification {
                 predicates.add(cb.equal(root.get("user").get("nickname"), condition.getNickname()));
             }
 
-            // 스택 필터
+            // 스택 필터 (서브쿼리: Post → PostStack → Stack)
             if (condition.getStackName() != null && !condition.getStackName().isBlank()) {
-                Join<Post, Stack> stackJoin = root.join("stacks", JoinType.INNER);
-                predicates.add(cb.equal(stackJoin.get("name"), condition.getStackName()));
+                Subquery<Long> subquery = query.subquery(Long.class);
+                Root<PostStack> ps = subquery.from(PostStack.class);
+                subquery.select(ps.get("post").get("id"))
+                        .where(cb.and(
+                                cb.equal(ps.get("post"), root),
+                                cb.equal(ps.get("stack").get("name"), condition.getStackName())
+                        ));
+                predicates.add(cb.exists(subquery));
             }
 
             // 키워드 검색 - 제목, 요약에서 검색
@@ -53,7 +59,6 @@ public class PostSpecification {
                 ));
             }
 
-            // 중복 제거 (스택 조인 시 필요)
             query.distinct(true);
 
             return cb.and(predicates.toArray(new Predicate[0]));
@@ -63,7 +68,7 @@ public class PostSpecification {
     /**
      * 특정 사용자의 게시글 + 복합 검색 조건 (상태별 필터링 가능)
      *
-     * @param userId 사용자 ID
+     * @param userId    사용자 ID
      * @param condition 검색 조건 (status 포함)
      * @return Specification
      */
@@ -74,10 +79,16 @@ public class PostSpecification {
             // 사용자 필터 (필수)
             predicates.add(cb.equal(root.get("user").get("id"), userId));
 
-            // 스택 필터
+            // 스택 필터 (서브쿼리)
             if (condition.getStackName() != null && !condition.getStackName().isBlank()) {
-                Join<Post, Stack> stackJoin = root.join("stacks", JoinType.INNER);
-                predicates.add(cb.equal(stackJoin.get("name"), condition.getStackName()));
+                Subquery<Long> subquery = query.subquery(Long.class);
+                Root<PostStack> ps = subquery.from(PostStack.class);
+                subquery.select(ps.get("post").get("id"))
+                        .where(cb.and(
+                                cb.equal(ps.get("post"), root),
+                                cb.equal(ps.get("stack").get("name"), condition.getStackName())
+                        ));
+                predicates.add(cb.exists(subquery));
             }
 
             // 키워드 검색

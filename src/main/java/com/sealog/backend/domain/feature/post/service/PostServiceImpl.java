@@ -12,8 +12,6 @@ import com.sealog.backend.domain.feature.post.strategy.PostSearchStrategy;
 import com.sealog.backend.domain.feature.post.util.PostMarkdownFileParser;
 import com.sealog.backend.domain.feature.post.util.PostSlugGenerator;
 import com.sealog.backend.domain.feature.post.util.PostValidateMarkdown;
-import com.sealog.backend.domain.feature.stack.entity.Stack;
-import com.sealog.backend.domain.feature.stack.repository.StackRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +26,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -37,7 +34,8 @@ import java.util.stream.Collectors;
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
-    private final StackRepository stackRepository;
+    private final PostStackService postStackService;
+    private final PostTagService postTagService;
     private final PostFileService postFileService;
     private final FileMetadataService fileMetadataService;
     private final PostSearchStrategy postSearchStrategy;
@@ -46,7 +44,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostResponse.Detail getDetail(String nickname, String slug) {
-        Post post = postRepository.findBySlugWithStacks(slug)
+        Post post = postRepository.findPublishedBySlug(slug)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
         if (!post.getUser().getNickname().equals(nickname)) {
@@ -86,17 +84,11 @@ public class PostServiceImpl implements PostService {
                 .status(PostStatus.PUBLISHED)
                 .build();
 
-        if (request.getTags() != null && !request.getTags().isEmpty()) {
-            post.updateTags(request.getTags());
-        }
-
-        if (request.getStacks() != null && !request.getStacks().isEmpty()) {
-            List<Stack> stacks = stackRepository.findByNameIn(request.getStacks());
-            post.updateStacks(new HashSet<>(stacks));
-        }
-
         Post savedPost = postRepository.save(post);
         log.info("게시글 생성 완료: postId={}, slug={}", savedPost.getId(), savedPost.getSlug());
+
+        postStackService.updatePostStacks(savedPost.getId(), request.getStackIds());
+        postTagService.updatePostTags(savedPost.getId(), request.getTags());
 
         if (request.getThumbnailFileId() != null) {
             handleThumbnailFromPreUpload(savedPost, request.getThumbnailFileId(), request.getThumbnailPath());
@@ -112,13 +104,8 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findBySlugAndUserId(slug, userId)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
-        List<String> stackNames = post.getStacks().stream()
-                .map(Stack::getName)
-                .collect(Collectors.toList());
-
-        List<String> tags = post.getTags() != null
-                ? new ArrayList<>(post.getTags())
-                : new ArrayList<>();
+        List<String> stackNames = postStackService.getStackNamesByPostId(post.getId());
+        List<String> tagNames = postTagService.getTagNamesByPostId(post.getId());
 
         return PostResponse.Edit.of(
                 post.getId(),
@@ -128,7 +115,7 @@ public class PostServiceImpl implements PostService {
                 post.getContent(),
                 post.getStatus(),
                 post.getThumbnailPath(),
-                tags,
+                tagNames,
                 stackNames,
                 post.getCreatedAt(),
                 post.getUpdatedAt()
@@ -158,14 +145,8 @@ public class PostServiceImpl implements PostService {
                 request.getContent()
         );
 
-        if (request.getTags() != null && !request.getTags().isEmpty()) {
-            post.updateTags(request.getTags());
-        }
-
-        if (request.getStacks() != null && !request.getStacks().isEmpty()) {
-            List<Stack> stacks = stackRepository.findByNameIn(request.getStacks());
-            post.updateStacks(new HashSet<>(stacks));
-        }
+        postStackService.updatePostStacks(post.getId(), request.getStackIds());
+        postTagService.updatePostTags(post.getId(), request.getTags());
 
         handleThumbnailUpdate(post, request);
         handleContentFilesUpdate(post.getId(), request.getContent());
@@ -222,13 +203,8 @@ public class PostServiceImpl implements PostService {
     // ========== DTO 빌더 메서드 ========== //
 
     private PostResponse.PostItems buildPostItemsResponse(Post post) {
-        List<String> stackNames = post.getStacks().stream()
-                .map(Stack::getName)
-                .collect(Collectors.toList());
-
-        List<String> tags = post.getTags() != null
-                ? new ArrayList<>(post.getTags())
-                : new ArrayList<>();
+        List<String> stackNames = postStackService.getStackNamesByPostId(post.getId());
+        List<String> tagNames = postTagService.getTagNamesByPostId(post.getId());
 
         PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
                 post.getUser().getNickname(),
@@ -242,7 +218,7 @@ public class PostServiceImpl implements PostService {
                 post.getExcerpt(),
                 post.getStatus(),
                 post.getThumbnailPath(),
-                tags,
+                tagNames,
                 stackNames,
                 author,
                 post.getCreatedAt()
@@ -250,13 +226,8 @@ public class PostServiceImpl implements PostService {
     }
 
     private PostResponse.Detail buildPostDetailResponse(Post post, boolean includeRelatedPosts) {
-        List<String> stackNames = post.getStacks().stream()
-                .map(Stack::getName)
-                .collect(Collectors.toList());
-
-        List<String> tags = post.getTags() != null
-                ? new ArrayList<>(post.getTags())
-                : new ArrayList<>();
+        List<String> stackNames = postStackService.getStackNamesByPostId(post.getId());
+        List<String> tagNames = postTagService.getTagNamesByPostId(post.getId());
 
         PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
                 post.getUser().getNickname(),
@@ -264,7 +235,7 @@ public class PostServiceImpl implements PostService {
         );
 
         List<PostResponse.PostItems> relatedPostItems = includeRelatedPosts
-                ? getRelatedPosts(post).stream().map(this::buildPostItemsResponse).collect(Collectors.toList())
+                ? getRelatedPosts(post).stream().map(this::buildPostItemsResponse).toList()
                 : List.of();
 
         return PostResponse.Detail.of(
@@ -275,7 +246,7 @@ public class PostServiceImpl implements PostService {
                 post.getContent(),
                 post.getStatus(),
                 post.getThumbnailPath(),
-                tags,
+                tagNames,
                 stackNames,
                 author,
                 relatedPostItems,
@@ -287,68 +258,39 @@ public class PostServiceImpl implements PostService {
     // ========== 관련 게시글 추천 로직 ========== //
 
     private List<Post> getRelatedPosts(Post currentPost) {
-        List<Post> relatedPosts = new ArrayList<>();
+        List<Long> stackIds = postStackService.getStackIdsByPostId(currentPost.getId());
 
-        List<String> stackNames = currentPost.getStacks().stream()
-                .map(Stack::getName)
-                .collect(Collectors.toList());
-
-        if (stackNames.isEmpty()) {
+        if (stackIds.isEmpty()) {
             log.info("관련 게시글 조회 - Stack 없음, 최신 공개 게시글 조회: postId={}", currentPost.getId());
-            return postRepository.findLatestPublicPosts(
-                    currentPost.getId(),
-                    PageRequest.of(0, 3)
-            );
+            return postRepository.findLatestPublicPosts(currentPost.getId(), PageRequest.of(0, 3));
         }
 
-        // 1순위: Stack 일치
-        List<Post> firstPriority = postRepository.findRelatedPostsByStackAndType(
-                currentPost.getId(),
-                stackNames,
-                PageRequest.of(0, 2)
+        // 스택 기반 관련 게시글 조회
+        List<Post> related = new ArrayList<>(
+                postRepository.findRelatedPostsByStackIds(currentPost.getId(), stackIds, PageRequest.of(0, 3))
         );
+        log.info("관련 게시글 조회: postId={}, count={}", currentPost.getId(), related.size());
 
-        relatedPosts.addAll(firstPriority);
-        log.info("관련 게시글 조회 - 1순위: postId={}, count={}", currentPost.getId(), firstPriority.size());
+        int remaining = 3 - related.size();
 
-        int remaining = 3 - relatedPosts.size();
-
-        // 2순위: Stack 일치
+        // fallback: 최신 공개 게시글
         if (remaining > 0) {
-            List<Post> secondPriority = postRepository.findRelatedPostsByStackOnly(
-                    currentPost.getId(),
-                    stackNames,
-                    PageRequest.of(0, remaining)
+            Set<Long> existingIds = new HashSet<>();
+            for (Post p : related) existingIds.add(p.getId());
+
+            List<Post> latest = postRepository.findLatestPublicPosts(
+                    currentPost.getId(), PageRequest.of(0, remaining + existingIds.size())
             );
 
-            relatedPosts.addAll(secondPriority);
-            log.info("관련 게시글 조회 - 2순위: postId={}, count={}", currentPost.getId(), secondPriority.size());
-
-            remaining = 3 - relatedPosts.size();
-        }
-
-        // 3순위: 최신 공개 게시글
-        if (remaining > 0) {
-            List<Post> latestPosts = postRepository.findLatestPublicPosts(
-                    currentPost.getId(),
-                    PageRequest.of(0, remaining)
-            );
-
-            List<Long> existingIds = relatedPosts.stream()
-                    .map(Post::getId)
-                    .toList();
-
-            List<Post> filtered = latestPosts.stream()
+            latest.stream()
                     .filter(p -> !existingIds.contains(p.getId()))
                     .limit(remaining)
-                    .toList();
+                    .forEach(related::add);
 
-            relatedPosts.addAll(filtered);
-            log.info("관련 게시글 조회 - 3순위: postId={}, count={}", currentPost.getId(), filtered.size());
+            log.info("관련 게시글 조회 - fallback 추가: postId={}, total={}", currentPost.getId(), related.size());
         }
 
-        log.info("관련 게시글 조회 완료: postId={}, totalCount={}", currentPost.getId(), relatedPosts.size());
-        return relatedPosts;
+        return related;
     }
 
     // ========== 파일 처리 ========== //

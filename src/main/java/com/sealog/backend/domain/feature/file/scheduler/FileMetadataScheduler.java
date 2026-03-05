@@ -19,7 +19,7 @@ public class FileMetadataScheduler {
     private final FileMetadataSchedulerService fileMetadataSchedulerService;
 
     /**
-     * 매일 새벽 3시에 사용되지 않는 파일을 정리합니다. (합집합-차집합 전략)
+     * 매일 새벽 3시에 사용되지 않는 파일을 정리합니다.
      *
      * 트랜잭션 전략:
      * - S3 삭제 성공한 파일만 DB에서 삭제

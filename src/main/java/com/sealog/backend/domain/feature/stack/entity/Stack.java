@@ -1,6 +1,5 @@
 package com.sealog.backend.domain.feature.stack.entity;
 
-import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;
 import com.sealog.backend.domain.feature.stack.enums.StackGroup;
 import jakarta.persistence.*;
@@ -8,9 +7,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "stacks")
@@ -28,9 +24,6 @@ public class Stack extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private StackGroup stackGroup;
-
-    @ManyToMany(mappedBy = "stacks")
-    private Set<Post> posts = new HashSet<>();
 
     @Builder
     public Stack(String name, StackGroup stackGroup) {

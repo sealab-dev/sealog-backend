@@ -4,7 +4,6 @@ import com.sealog.backend.domain.feature.post.entity.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -37,83 +36,46 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     // ========== Slug 기반 조회 ========== //
 
     /**
-     * slug로 게시글 조회 (PUBLISHED만)
+     * slug로 공개 게시글 조회 (PUBLISHED만)
      */
     @Query("SELECT p FROM Post p WHERE p.slug = :slug AND p.status = 'PUBLISHED'")
-    Optional<Post> findBySlug(@Param("slug") String slug);
-
-    /**
-     * slug로 게시글 상세 조회 (스택, 태그 정보 함께 로딩) - PUBLISHED만
-     */
-    @Query("SELECT p FROM Post p " +
-            "LEFT JOIN FETCH p.stacks " +
-            "LEFT JOIN FETCH p.tags " +
-            "WHERE p.slug = :slug AND p.status = 'PUBLISHED'")
-    Optional<Post> findBySlugWithStacks(@Param("slug") String slug);
+    Optional<Post> findPublishedBySlug(@Param("slug") String slug);
 
     /**
      * slug로 내 게시글 조회 (상태 무관 - 작성자 본인용)
      */
-    @Query("SELECT p FROM Post p " +
-            "LEFT JOIN FETCH p.stacks " +
-            "LEFT JOIN FETCH p.tags " +
-            "WHERE p.slug = :slug AND p.user.id = :userId")
+    @Query("SELECT p FROM Post p WHERE p.slug = :slug AND p.user.id = :userId")
     Optional<Post> findBySlugAndUserId(@Param("slug") String slug, @Param("userId") Long userId);
 
     // ========== Specification 조회 (페이징) ========== //
 
     /**
      * Specification을 사용한 동적 쿼리 조회
-     * - 스택, 태그를 함께 로딩 (N+1 방지)
      */
-    @EntityGraph(attributePaths = {"stacks", "tags"})
     @Override
     Page<Post> findAll(Specification<Post> spec, Pageable pageable);
 
     // ========== 관련 게시글 조회 (PUBLISHED만) ========== //
 
     /**
-     * 1순위 관련 게시글 조회 (Stack 교집합 많음 + 최신순)
+     * 스택 기반 관련 게시글 조회 (공유 스택 수 많은 순)
      */
-    @Query("SELECT DISTINCT p FROM Post p " +
-            "LEFT JOIN FETCH p.stacks " +
-            "LEFT JOIN FETCH p.tags " +
-            "JOIN p.stacks s " +
-            "WHERE p.id != :currentPostId " +
+    @Query("SELECT DISTINCT p FROM Post p, PostStack ps " +
+            "WHERE ps.post = p " +
+            "AND p.id != :currentPostId " +
             "AND p.status = 'PUBLISHED' " +
-            "AND s.name IN :stackNames " +
-            "GROUP BY p.id " +
-            "ORDER BY COUNT(s.id) DESC, p.createdAt DESC")
-    List<Post> findRelatedPostsByStackAndType(
+            "AND ps.stack.id IN :stackIds " +
+            "ORDER BY p.createdAt DESC")
+    List<Post> findRelatedPostsByStackIds(
             @Param("currentPostId") Long currentPostId,
-            @Param("stackNames") List<String> stackNames,
+            @Param("stackIds") List<Long> stackIds,
             Pageable pageable
     );
 
     /**
-     * 2순위 관련 게시글 조회 (Stack 교집합 많음 + 최신순)
-     */
-    @Query("SELECT DISTINCT p FROM Post p " +
-            "LEFT JOIN FETCH p.stacks " +
-            "LEFT JOIN FETCH p.tags " +
-            "JOIN p.stacks s " +
-            "WHERE p.id != :currentPostId " +
-            "AND p.status = 'PUBLISHED' " +
-            "AND s.name IN :stackNames " +
-            "GROUP BY p.id " +
-            "ORDER BY COUNT(s.id) DESC, p.createdAt DESC")
-    List<Post> findRelatedPostsByStackOnly(
-            @Param("currentPostId") Long currentPostId,
-            @Param("stackNames") List<String> stackNames,
-            Pageable pageable
-    );
-
-    /**
-     * 3순위 관련 게시글 조회 (최신 공개 게시글)
+     * 최신 공개 게시글 조회 (관련 게시글 없을 때 fallback)
      */
     @Query("SELECT p FROM Post p " +
-            "LEFT JOIN FETCH p.stacks " +
-            "LEFT JOIN FETCH p.tags " +
             "WHERE p.id != :currentPostId " +
             "AND p.status = 'PUBLISHED' " +
             "ORDER BY p.createdAt DESC")
@@ -128,8 +90,6 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
      * 특정 사용자의 삭제된 게시글 목록 조회 (본인만)
      */
     @Query("SELECT p FROM Post p " +
-            "LEFT JOIN FETCH p.stacks " +
-            "LEFT JOIN FETCH p.tags " +
             "WHERE p.user.id = :userId " +
             "AND p.status = 'DELETED' " +
             "ORDER BY p.deletedAt DESC")
@@ -155,8 +115,6 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
      * 제목 부분 일치 검색 (PUBLISHED만)
      */
     @Query("SELECT p FROM Post p " +
-            "LEFT JOIN FETCH p.stacks " +
-            "LEFT JOIN FETCH p.tags " +
             "LEFT JOIN FETCH p.user " +
             "WHERE p.status = 'PUBLISHED' " +
             "AND p.title LIKE %:keyword% " +
@@ -167,11 +125,9 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     );
 
     /**
-     * 설명 부분 일치 검색 (PUBLISHED만)
+     * 요약 부분 일치 검색 (PUBLISHED만)
      */
     @Query("SELECT p FROM Post p " +
-            "LEFT JOIN FETCH p.stacks " +
-            "LEFT JOIN FETCH p.tags " +
             "LEFT JOIN FETCH p.user " +
             "WHERE p.status = 'PUBLISHED' " +
             "AND p.excerpt LIKE %:keyword% " +
@@ -182,11 +138,9 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     );
 
     /**
-     * 설명 부분 일치 검색 - 특정 ID 제외 (PUBLISHED만)
+     * 요약 부분 일치 검색 - 특정 ID 제외 (PUBLISHED만)
      */
     @Query("SELECT p FROM Post p " +
-            "LEFT JOIN FETCH p.stacks " +
-            "LEFT JOIN FETCH p.tags " +
             "LEFT JOIN FETCH p.user " +
             "WHERE p.status = 'PUBLISHED' " +
             "AND p.excerpt LIKE %:keyword% " +

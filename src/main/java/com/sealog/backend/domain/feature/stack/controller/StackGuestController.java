@@ -1,5 +1,6 @@
 package com.sealog.backend.domain.feature.stack.controller;
 
+import com.sealog.backend.domain.feature.post.service.PostStackService;
 import com.sealog.backend.domain.feature.stack.dto.StackResponse;
 import com.sealog.backend.domain.feature.stack.service.StackGuestService;
 import com.sealog.backend.global.response.CustomResponse;
@@ -15,6 +16,7 @@ import java.util.List;
 public class StackGuestController implements StackGuestControllerDocs {
 
     private final StackGuestService stackGuestService;
+    private final PostStackService postStackService;
 
     @Override
     @GetMapping
@@ -25,7 +27,7 @@ public class StackGuestController implements StackGuestControllerDocs {
     @Override
     @GetMapping("/grouped")
     public ResponseEntity<CustomResponse<StackResponse.GroupedStacks>> getGrouped() {
-        return ResponseEntity.ok(CustomResponse.success(stackGuestService.getGroupedStacksWithPostCount()));
+        return ResponseEntity.ok(CustomResponse.success(postStackService.getGroupedStacksWithPostCount()));
     }
 
     @Override
@@ -33,7 +35,7 @@ public class StackGuestController implements StackGuestControllerDocs {
     public ResponseEntity<CustomResponse<StackResponse.GroupedStacks>> getGroupedStacksByUser(
             @PathVariable String nickname
     ) {
-        return ResponseEntity.ok(CustomResponse.success(stackGuestService.getGroupedStacksWithPostCountByUser(nickname)));
+        return ResponseEntity.ok(CustomResponse.success(postStackService.getGroupedStacksWithPostCountByUser(nickname)));
     }
 
     @Override
@@ -41,7 +43,7 @@ public class StackGuestController implements StackGuestControllerDocs {
     public ResponseEntity<CustomResponse<List<StackResponse.PopularStack>>> getPopularStacks(
             @RequestParam(defaultValue = "5") int limit
     ) {
-        return ResponseEntity.ok(CustomResponse.success(stackGuestService.getPopularStacks(limit)));
+        return ResponseEntity.ok(CustomResponse.success(postStackService.getPopularStacks(limit)));
     }
 
     @Override

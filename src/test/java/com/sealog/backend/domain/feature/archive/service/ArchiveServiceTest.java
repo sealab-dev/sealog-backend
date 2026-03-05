@@ -7,7 +7,7 @@ import com.sealog.backend.domain.feature.archive.repository.ArchiveRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
-import com.sealog.backend.support.base.TestNormalBase;
+import com.sealog.backend.support.base.TestUnitBase;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @Transactional
 @DisplayName("ArchiveService 통합 테스트")
-class ArchiveServiceTest extends TestNormalBase {
+class ArchiveServiceTest extends TestUnitBase {
 
     @Autowired
     private ArchiveService archiveService;
