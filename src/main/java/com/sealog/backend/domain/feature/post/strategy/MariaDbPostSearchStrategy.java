@@ -3,7 +3,8 @@ package com.sealog.backend.domain.feature.post.strategy;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.feature.post.repository.PostRepository;
-import com.sealog.backend.domain.feature.stack.entity.Stack;
+import com.sealog.backend.domain.feature.post.service.PostStackService;
+import com.sealog.backend.domain.feature.post.service.PostTagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +26,8 @@ import java.util.stream.Collectors;
 public class MariaDbPostSearchStrategy implements PostSearchStrategy {
 
     private final PostRepository postRepository;
+    private final PostStackService postStackService;
+    private final PostTagService postTagService;
 
     @Override
     public List<PostResponse.PostItems> autocomplete(String keyword, int limit) {
@@ -77,13 +80,8 @@ public class MariaDbPostSearchStrategy implements PostSearchStrategy {
     }
 
     private PostResponse.PostItems toPostItems(Post post) {
-        List<String> stackNames = post.getStacks().stream()
-                .map(Stack::getName)
-                .collect(Collectors.toList());
-
-        List<String> tags = post.getTags() != null
-                ? new ArrayList<>(post.getTags())
-                : new ArrayList<>();
+        List<String> stackNames = postStackService.getStackNamesByPostId(post.getId());
+        List<String> tagNames = postTagService.getTagNamesByPostId(post.getId());
 
         PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
                 post.getUser().getNickname(),
@@ -97,7 +95,7 @@ public class MariaDbPostSearchStrategy implements PostSearchStrategy {
                 post.getExcerpt(),
                 post.getStatus(),
                 post.getThumbnailPath(),
-                tags,
+                tagNames,
                 stackNames,
                 author,
                 post.getCreatedAt()
