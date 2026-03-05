@@ -1,8 +1,6 @@
 package com.sealog.backend.domain.feature.archive.controller;
 
-import com.sealog.backend.domain.feature.archive.dto.ArchivePostResponse;
 import com.sealog.backend.domain.feature.archive.dto.ArchiveResponse;
-import com.sealog.backend.domain.feature.archive.service.ArchivePostService;
 import com.sealog.backend.domain.feature.archive.service.ArchiveService;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
@@ -12,13 +10,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 아카이브 공개 컨트롤러 (인증 불필요)
  *
+ * 역할:
  * - 공개 아카이브 목록 조회 (닉네임 기준)
- * - 게시글의 공개 아카이브 목록 조회
+ * - 아카이브에 속한 공개 게시글 목록 조회
  */
 @RestController
 @RequestMapping("/api/guest/archive")
@@ -26,7 +28,8 @@ import org.springframework.web.bind.annotation.*;
 public class ArchiveGuestController implements ArchiveGuestControllerDocs {
 
     private final ArchiveService archiveService;
-    private final ArchivePostService archivePostService;
+
+    // ========== 조회 ========== //
 
     /**
      * 사용자의 공개 아카이브 목록 조회
@@ -34,25 +37,25 @@ public class ArchiveGuestController implements ArchiveGuestControllerDocs {
      */
     @Override
     @GetMapping("/{nickname}")
-    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.ArchiveItems>>> getArchivesByNickname(
+    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.ArchiveItems>>> getPagedItemsByNicknameForGuest(
             @PathVariable String nickname,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ArchiveResponse.ArchiveItems> result = archiveService.getPagedPublicItemsByNickname(nickname, pageable);
+        Page<ArchiveResponse.ArchiveItems> result = archiveService.getPagedItemsByNicknameForGuest(nickname, pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
     }
 
     /**
-     * 게시글의 공개 아카이브 목록 조회
-     * GET /api/guest/archive/post/{postId}
+     * 아카이브에 속한 공개 게시글 목록 조회
+     * GET /api/guest/archive/{archiveId}/posts
      */
     @Override
-    @GetMapping("/post/{postId}")
-    public ResponseEntity<CustomResponse<PageResponse<ArchivePostResponse.ArchivePostItems>>> getArchivePostsByPostId(
-            @PathVariable Long postId,
-            @PageableDefault(size = 20, sort = "sortOrder", direction = Sort.Direction.ASC) Pageable pageable
+    @GetMapping("/{archiveId}/posts")
+    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.PostItems>>> getPagedPostItemsByArchiveIdForGuest(
+            @PathVariable Long archiveId,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ArchivePostResponse.ArchivePostItems> result = archivePostService.getPagedPublicItems(postId, pageable);
+        Page<ArchiveResponse.PostItems> result = archiveService.getPagedPostItemsByArchiveIdForGuest(archiveId, pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
     }
 }
