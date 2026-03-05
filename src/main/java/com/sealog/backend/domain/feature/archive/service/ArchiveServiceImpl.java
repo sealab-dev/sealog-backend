@@ -113,6 +113,10 @@ public class ArchiveServiceImpl implements ArchiveService {
         if (Objects.equals(prevName, editName))
             throw CustomException.badRequest("같은 이름으로 변경할 수 없습니다.");
 
+        // 다른 아카이브와 이름 중복 차단
+        if (archiveRepository.existsByNameAndUserId(editName, userId))
+            throw CustomException.conflict("이미 같은 이름의 아카이브가 존재합니다.");
+
         // 3. 연관관계 메소드 기반 갱신
         archive.edit(editName, SlugUtils.generate(editName));
     }
@@ -121,13 +125,11 @@ public class ArchiveServiceImpl implements ArchiveService {
     @Override
     public void show(Long userId, String nickname, String slug) {
 
-        // 1. 조회
+        // 1. 조회 및 검증
         Archive archive = findArchiveByNicknameAndSlug(nickname, slug);
-
-        // 2. 검증
         verifyOwner(archive, userId); // 타인 정보 수정 차단
 
-        // 3. 공개상태로 변경
+        // 2. 공개 상태로 변경
         archive.editIsPublic(true);
     }
 
@@ -136,13 +138,11 @@ public class ArchiveServiceImpl implements ArchiveService {
     @Override
     public void hide(Long userId, String nickname, String slug) {
 
-        // 1. 조회
+        // 1. 조회 및 검증
         Archive archive = findArchiveByNicknameAndSlug(nickname, slug);
-
-        // 2. 검증
         verifyOwner(archive, userId); // 타인 정보 수정 차단
 
-        // 3. 비공개상태로 변경
+        // 2. 비공개 상태로 변경
         archive.editIsPublic(false);
     }
 
@@ -151,40 +151,40 @@ public class ArchiveServiceImpl implements ArchiveService {
     @Override
     public void remove(Long userId, String nickname, String slug) {
 
-        // 1. 조회
+        // 1. 조회 및 검증
         Archive archive = findArchiveByNicknameAndSlug(nickname, slug);
-
-        // 2. 검증
         verifyOwner(archive, userId); // 타인 정보 수정 차단
 
-        // 3. 삭제 수행
+        // 2. 삭제 수행
         archiveRepository.delete(archive);
     }
 
+    @Transactional
     @Override
     public void changePostArchive(Long userId, Long archiveId, Long postId) {
 
-        // 1. Post 조회
+        // 1. Post 조회 및 검증
         Post post = findPostById(postId);
+        verifyOwner(post, userId);
 
-        // 2. Post 검증
-        if (!post.isWrittenBy(userId))
-            throw CustomException.forbidden("다른 사용자의 게시글에 추가할 수 없습니다");
+        // 2. Archive 조회 및 검증
+        Archive archive = findArchiveById(archiveId);
+        verifyOwner(archive, userId);
 
-        // 3. 변경 수행
-        if (Objects.isNull(archiveId)) { // "없는 상태"로 변경하는 경우
-            post.removeFromArchive();
+        // 3. 변경
+        post.addToArchive(archive);
+    }
 
-        } else {
-            // Archive 조회
-            Archive archive = findArchiveById(archiveId);
+    @Transactional
+    @Override
+    public void removePostArchive(Long userId, Long postId) {
 
-            // Archive 검증
-            if (Objects.nonNull(archive)) verifyOwner(archive, userId);
+        // 1. Post 조회 및 검증
+        Post post = findPostById(postId);
+        verifyOwner(post, userId);
 
-            // 변경
-            post.addToArchive(archive);
-        }
+        // 2. 아카이브 해제
+        post.removeFromArchive();
     }
 
 
@@ -201,7 +201,7 @@ public class ArchiveServiceImpl implements ArchiveService {
 
 
     /**
-     * Archive 아카이브 조회
+     * 엔티티 조회 메소드
      */
     private Archive findArchiveByNicknameAndSlug(String nickname, String slug) {
 
@@ -217,9 +217,6 @@ public class ArchiveServiceImpl implements ArchiveService {
                 .orElseThrow(() -> CustomException.notFound("존재하지 않거나 이미 삭제된 아카이브입니다."));
     }
 
-    /**
-     * post 조회
-     */
     private Post findPostById(Long postId) {
 
         return postRepository
@@ -228,12 +225,18 @@ public class ArchiveServiceImpl implements ArchiveService {
     }
 
     /**
-     * 수정 전 사용자 검증
+     * 검증 메소드
      */
     private void verifyOwner(Archive archive, Long requestUserId) {
 
         if (!archive.isOwnedBy(requestUserId))
             throw CustomException.forbidden("다른 사용자의 아카이브를 변경할 수 없습니다.");
+    }
+
+    private void verifyOwner(Post post, Long requestUserId) {
+
+        if (!post.isWrittenBy(requestUserId))
+            throw CustomException.forbidden("다른 사용자의 게시글을 변경할 수 없습니다");
     }
 
 }

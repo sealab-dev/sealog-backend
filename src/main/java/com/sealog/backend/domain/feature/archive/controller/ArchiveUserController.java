@@ -1,10 +1,7 @@
 package com.sealog.backend.domain.feature.archive.controller;
 
-import com.sealog.backend.domain.feature.archive.dto.ArchivePostRequest;
-import com.sealog.backend.domain.feature.archive.dto.ArchivePostResponse;
 import com.sealog.backend.domain.feature.archive.dto.ArchiveRequest;
 import com.sealog.backend.domain.feature.archive.dto.ArchiveResponse;
-import com.sealog.backend.domain.feature.archive.service.ArchivePostService;
 import com.sealog.backend.domain.feature.archive.service.ArchiveService;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
@@ -23,8 +20,11 @@ import org.springframework.web.bind.annotation.*;
 /**
  * 아카이브 컨트롤러 (인증 필수)
  *
+ * 역할:
+ * - 아카이브 목록·게시글 조회
  * - 아카이브 CRUD
- * - 게시글-아카이브 연결/해제
+ * - 아카이브 공개/비공개
+ * - 게시글-아카이브 배정/해제
  */
 @RestController
 @RequestMapping("/api/user/archive")
@@ -32,9 +32,8 @@ import org.springframework.web.bind.annotation.*;
 public class ArchiveUserController implements ArchiveUserControllerDocs {
 
     private final ArchiveService archiveService;
-    private final ArchivePostService archivePostService;
 
-    // ========== Archive CRUD ========== //
+    // ========== 조회 ========== //
 
     /**
      * 내 아카이브 목록 조회
@@ -42,15 +41,32 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
      */
     @Override
     @GetMapping
-    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.ArchiveItems>>> getMyArchives(
+    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.ArchiveItems>>> getPagedItemsForUser(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ArchiveResponse.ArchiveItems> result = archiveService.getPagedItemsForUser(
-                userDetails.getUserId(), pageable
+        Page<ArchiveResponse.ArchiveItems> result = archiveService.getPagedItemsForUser(userDetails.getUserId(), pageable);
+        return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
+    }
+
+    /**
+     * 내 아카이브 게시글 목록 조회
+     * GET /api/user/archive/{archiveId}/posts
+     */
+    @Override
+    @GetMapping("/{archiveId}/posts")
+    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.PostItems>>> getPagedPostItemsByUserIdAndArchiveIdForUser(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long archiveId,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<ArchiveResponse.PostItems> result = archiveService.getPagedPostItemsByUserIdAndArchiveIdForUser(
+                userDetails.getUserId(), archiveId, pageable
         );
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
     }
+
+    // ========== CRUD ========== //
 
     /**
      * 아카이브 생성
@@ -58,7 +74,7 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
      */
     @Override
     @PostMapping
-    public ResponseEntity<CustomResponse<Void>> createArchive(
+    public ResponseEntity<CustomResponse<Void>> add(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody @Valid ArchiveRequest.Add request
     ) {
@@ -74,7 +90,7 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
      */
     @Override
     @PutMapping("/{nickname}/{slug}")
-    public ResponseEntity<CustomResponse<Void>> updateArchive(
+    public ResponseEntity<CustomResponse<Void>> edit(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String nickname,
             @PathVariable String slug,
@@ -90,7 +106,7 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
      */
     @Override
     @PatchMapping("/{nickname}/{slug}/show")
-    public ResponseEntity<CustomResponse<Void>> showArchive(
+    public ResponseEntity<CustomResponse<Void>> show(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String nickname,
             @PathVariable String slug
@@ -105,7 +121,7 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
      */
     @Override
     @PatchMapping("/{nickname}/{slug}/hide")
-    public ResponseEntity<CustomResponse<Void>> hideArchive(
+    public ResponseEntity<CustomResponse<Void>> hide(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String nickname,
             @PathVariable String slug
@@ -120,7 +136,7 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
      */
     @Override
     @DeleteMapping("/{nickname}/{slug}")
-    public ResponseEntity<CustomResponse<Void>> deleteArchive(
+    public ResponseEntity<CustomResponse<Void>> remove(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String nickname,
             @PathVariable String slug
@@ -129,35 +145,34 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
         return ResponseEntity.ok(CustomResponse.success(null, "아카이브가 삭제되었습니다"));
     }
 
-    // ========== ArchivePost ========== //
+    // ========== 게시글 연결 ========== //
 
     /**
-     * 게시글 아카이브 추가
-     * POST /api/user/archive/post
+     * 게시글 아카이브 배정
+     * PATCH /api/user/archive/{archiveId}/post/{postId}
      */
     @Override
-    @PostMapping("/post")
-    public ResponseEntity<CustomResponse<Void>> addArchivePost(
+    @PatchMapping("/{archiveId}/post/{postId}")
+    public ResponseEntity<CustomResponse<Void>> changePostArchive(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody @Valid ArchivePostRequest.Add request
+            @PathVariable Long archiveId,
+            @PathVariable Long postId
     ) {
-        archivePostService.add(userDetails.getUserId(), request);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(CustomResponse.success(null, "게시글이 아카이브에 추가되었습니다"));
+        archiveService.changePostArchive(userDetails.getUserId(), archiveId, postId);
+        return ResponseEntity.ok(CustomResponse.success(null, "게시글이 아카이브에 배정되었습니다"));
     }
 
     /**
-     * 게시글 아카이브 제거
-     * DELETE /api/user/archive/post/{archivePostId}
+     * 게시글 아카이브 해제
+     * DELETE /api/user/archive/post/{postId}
      */
     @Override
-    @DeleteMapping("/post/{archivePostId}")
-    public ResponseEntity<CustomResponse<Void>> removeArchivePost(
+    @DeleteMapping("/post/{postId}")
+    public ResponseEntity<CustomResponse<Void>> removePostArchive(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long archivePostId
+            @PathVariable Long postId
     ) {
-        archivePostService.remove(userDetails.getUserId(), archivePostId);
-        return ResponseEntity.ok(CustomResponse.success(null, "게시글이 아카이브에서 제거되었습니다"));
+        archiveService.removePostArchive(userDetails.getUserId(), postId);
+        return ResponseEntity.ok(CustomResponse.success(null, "게시글 아카이브 배정이 해제되었습니다"));
     }
 }

@@ -109,15 +109,24 @@ public interface ArchiveService {
     void remove(Long userId, String nickname, String slug);
 
     /**
-     * 게시글의 소속 아카이브 변경
-     * - archiveId가 null이면 아카이브 해제 (post.removeFromArchive())
-     * - archiveId가 존재하면 해당 아카이브에 게시글 배정
+     * 게시글의 소속 아카이브 변경 (배정/재배정)
+     * - 이미 다른 아카이브에 속해 있는 경우 교체됨
      *
      * @param userId    요청 사용자 ID
-     * @param archiveId 지정할 아카이브 ID (null = 아카이브 해제)
+     * @param archiveId 지정할 아카이브 ID
      * @param postId    변경 대상 게시글 ID
      * @throws CustomException 게시글 없음, 아카이브 없음, 권한 없음
      */
     void changePostArchive(Long userId, Long archiveId, Long postId);
+
+    /**
+     * 게시글의 아카이브 배정 해제
+     * - 게시글의 archive 필드를 null로 설정
+     *
+     * @param userId 요청 사용자 ID
+     * @param postId 해제 대상 게시글 ID
+     * @throws CustomException 게시글 없음, 권한 없음
+     */
+    void removePostArchive(Long userId, Long postId);
 
 }
