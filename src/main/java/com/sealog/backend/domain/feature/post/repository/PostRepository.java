@@ -1,6 +1,7 @@
 package com.sealog.backend.domain.feature.post.repository;
 
 import com.sealog.backend.domain.feature.post.entity.Post;
+import com.sealog.backend.domain.feature.post.enums.PostStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -149,6 +150,26 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     List<Post> findByExcerptContainingAndPublishedExcluding(
             @Param("keyword") String keyword,
             @Param("excludeIds") Set<Long> excludeIds,
+            Pageable pageable
+    );
+
+    // ========== 아카이브 기반 조회 ========== //
+
+    /**
+     * 특정 아카이브에 속하는 목록 조회 (특정 회원이 가지는 목록)
+     */
+    Page<Post> findByUserIdAndArchiveId(
+            @Param("userId") Long userId,
+            @Param("archiveId") Long archiveId,
+            Pageable pageable
+    );
+
+    /**
+     * 특정 아카이브에 속하는 목록 조회 (상태 값 기준)
+     */
+    Page<Post> findByArchiveIdAndStatus(
+            @Param("archiveId") Long archiveId,
+            @Param("status") PostStatus status,
             Pageable pageable
     );
 }

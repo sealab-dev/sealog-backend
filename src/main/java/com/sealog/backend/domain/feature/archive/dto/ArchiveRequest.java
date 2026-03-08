@@ -14,7 +14,7 @@ import lombok.experimental.UtilityClass;
 public class ArchiveRequest {
 
     /**
-     * 게시글 생성 요청
+     * 아카이브 생성 요청
      */
     @Getter
     @Builder
@@ -29,7 +29,7 @@ public class ArchiveRequest {
     }
 
     /**
-     * 게시글 생성 요청
+     * 아카이브 수정 요청
      */
     @Getter
     @Builder

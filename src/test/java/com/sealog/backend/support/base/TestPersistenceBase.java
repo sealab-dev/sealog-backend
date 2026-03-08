@@ -24,14 +24,4 @@ import org.springframework.test.context.ActiveProfiles;
 @DataJpaTest
 public abstract class TestPersistenceBase extends TestContainerBase {
 
-    @Autowired TestDataFactory testDataFactory;
-
-    private User testUser;
-    private User adminUser;
-
-    @BeforeEach
-    void setUp() {
-        testUser = testDataFactory.createUser(UserRole.USER);
-        adminUser = testDataFactory.createUser(UserRole.ADMIN);
-    }
 }

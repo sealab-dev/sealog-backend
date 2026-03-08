@@ -2,8 +2,6 @@ package com.sealog.backend.support.component;
 
 
 import com.sealog.backend.domain.feature.archive.entity.Archive;
-import com.sealog.backend.domain.feature.archive.entity.ArchivePost;
-import com.sealog.backend.domain.feature.archive.repository.ArchivePostRepository;
 import com.sealog.backend.domain.feature.archive.repository.ArchiveRepository;
 import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
@@ -15,7 +13,6 @@ import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.utils.LogUtils;
-import com.sealog.backend.support.constant.TestSql;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.context.TestComponent;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -41,7 +38,6 @@ public class TestDataFactory {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final ArchiveRepository archiveRepository;
-    private final ArchivePostRepository archivePostRepository;
     private final StackRepository stackRepository;
 
     // 패스워드 인코더 직접 주입(스프링 의존성 제거)
@@ -279,47 +275,6 @@ public class TestDataFactory {
         // JDBC batch 방식
         //LogUtils.runAndShowCostLog("테스트 아카이브 저장", () -> jdbcTemplate.batchUpdate(TestSql.INSERT_ARCHIVE, archives));
     }
-
-
-    /**
-     * TEST ArchivePost 생성
-     * @param amount  생성 수량
-     * @param archive 소속 아카이브
-     * @param post    소속 블로그 게시글
-     */
-    public void createTestArchivePosts(int amount, Archive archive, Post post) {
-
-        // 1. ArchivePost 생성
-        // JPA 방식
-        List<ArchivePost> archivePosts = createEntities(
-                amount,
-                archivePostRepository::count,
-                idx -> ArchivePost.builder()
-                        .archive(archive)
-                        .post(post)
-                        .sortOrder(idx.intValue())
-                        .build()
-        );
-
-        // JDBC 방식
-        //List<Object[]> archivePosts = createEntities(
-        //        amount,
-        //        archivePostRepository::count,
-        //        idx -> new Object[] {
-        //                archive.getId(),
-        //                post.getId(),
-        //                idx.intValue()
-        //        }
-        //);
-
-        // 2. 삽입 수행 (시간 측정)
-        // JPA 방식
-        LogUtils.runAndShowCostLog("테스트 아카이브 포스트 저장", () -> archivePostRepository.saveAll(archivePosts));
-
-        // JDBC batch 방식
-        //LogUtils.runAndShowCostLog("테스트 아카이브 포스트 저장", () -> jdbcTemplate.batchUpdate(TestSql.INSERT_ARCHIVE_POST, archivePosts));
-    }
-
 
     /**
      * 엔티티 생성 일반화 메소드

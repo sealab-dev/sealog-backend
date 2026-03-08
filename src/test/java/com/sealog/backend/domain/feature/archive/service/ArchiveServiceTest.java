@@ -386,7 +386,7 @@ class ArchiveServiceTest extends TestUnitBase {
 
             // when
             Page<ArchiveResponse.ArchiveItems> result =
-                    archiveService.getPagedPublicItemsByNickname(owner.getNickname(), PageRequest.of(0, 10));
+                    archiveService.getPagedItemsByNicknameForGuest(owner.getNickname(), PageRequest.of(0, 10));
 
             // then
             assertThat(result.getTotalElements()).isEqualTo(2);
@@ -403,7 +403,7 @@ class ArchiveServiceTest extends TestUnitBase {
 
             // when
             Page<ArchiveResponse.ArchiveItems> result =
-                    archiveService.getPagedPublicItemsByNickname(owner.getNickname(), PageRequest.of(0, 10));
+                    archiveService.getPagedItemsByNicknameForGuest(owner.getNickname(), PageRequest.of(0, 10));
 
             // then
             assertThat(result.getTotalElements()).isZero();

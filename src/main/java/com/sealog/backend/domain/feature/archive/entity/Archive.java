@@ -27,12 +27,6 @@ public class Archive extends BaseTimeEntity {
     @Column(nullable = false, length = 100)
     private String name;
 
-    /**
-     * URL-safe한 컬렉션 식별자
-     * - 이름 기반으로 자동 생성
-     * - UNIQUE 제약조건
-     * - 조회 시 ID 대신 사용
-     */
     @Column(nullable = false, length = 200)
     private String slug;
 

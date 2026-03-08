@@ -11,9 +11,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ArchiveResponse {
 
-    /**
-     * 아카이브 목록 응답
-     */
+
     @Getter
     @Builder
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -35,4 +33,27 @@ public class ArchiveResponse {
         }
     }
 
+
+    @Getter
+    @Builder
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    @Schema(description = "아카이브에 속하는 블로그 게시글 목록 조회")
+    public static class PostItems {
+
+        private Long postId;
+        private String title;
+        private String slug;
+        private String thumbnailPath;
+
+        public static PostItems of(Long postId, String title, String slug, String thumbnailPath) {
+
+            return PostItems.builder()
+                    .postId(postId)
+                    .title(title)
+                    .slug(slug)
+                    .thumbnailPath(thumbnailPath)
+                    .build();
+        }
+    }
 }
