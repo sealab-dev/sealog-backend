@@ -75,31 +75,4 @@ public class StackResponse {
                     .build();
         }
     }
-
-    @Getter
-    @Builder
-    @Schema(description = "인기 스택")
-    public static class PopularStack {
-
-        @Schema(description = "순위", example = "1")
-        private int rank;
-
-        @Schema(description = "스택 ID", example = "3")
-        private Long id;
-
-        @Schema(description = "스택명", example = "React")
-        private String name;
-
-        @Schema(description = "게시글 수", example = "25")
-        private Long postCount;
-
-        public static PopularStack of(int rank, Stack stack, Long postCount) {
-            return PopularStack.builder()
-                    .rank(rank)
-                    .id(stack.getId())
-                    .name(stack.getName())
-                    .postCount(postCount)
-                    .build();
-        }
-    }
 }

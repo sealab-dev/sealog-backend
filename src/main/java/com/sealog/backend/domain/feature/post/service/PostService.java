@@ -2,7 +2,6 @@ package com.sealog.backend.domain.feature.post.service;
 
 import com.sealog.backend.domain.feature.post.dto.PostRequest;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
-import com.sealog.backend.domain.feature.post.dto.PostSearchCondition;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.global.exception.CustomException;
 import org.springframework.data.domain.Page;
@@ -17,7 +16,25 @@ import java.util.List;
  */
 public interface PostService {
 
-    // ========== Guest (공개) ========== //
+    // ========== Read ========== //
+    /**
+     * 특정 유저의 공개 게시글 목록 조회
+     * - PUBLISHED 상태만 조회
+     *
+     * @param nickname 조회할 유저 닉네임
+     * @param pageable 페이지네이션 정보
+     * @return 게시글 목록
+     */
+    Page<PostResponse.PostItems> getUserPosts(String nickname, Pageable pageable);
+
+    /**
+     * 전체 공개 게시글 목록 조회
+     * - PUBLISHED 상태만 조회
+     *
+     * @param pageable 페이지네이션 정보
+     * @return 게시글 목록
+     */
+    Page<PostResponse.PostItems> getPosts(Pageable pageable);
 
     /**
      * 게시글 상세 조회 (Nickname + Slug 기반)
@@ -31,17 +48,7 @@ public interface PostService {
     PostResponse.Detail getDetail(String nickname, String slug);
 
     /**
-     * 공개 게시글 복합 검색
-     * - PUBLISHED 상태만 검색
-     *
-     * @param condition 검색 조건 (nickname, stackName, keyword)
-     * @param pageable 페이지네이션 정보
-     * @return 검색된 게시글 목록
-     */
-    Page<PostResponse.PostItems> search(PostSearchCondition condition, Pageable pageable);
-
-    /**
-     * 자동완성 검색
+     * 게시글 전체 자동완성 검색
      * - PUBLISHED 상태만 검색
      *
      * @param keyword 검색 키워드
@@ -49,7 +56,7 @@ public interface PostService {
      */
     List<PostResponse.PostItems> autocomplete(String keyword);
 
-    // ========== User (인증) ========== //
+    // ========== Create, Update, Delete ========== //
 
     /**
      * 게시글 생성
@@ -63,10 +70,9 @@ public interface PostService {
 
     /**
      * 게시글 수정용 데이터 조회
-     * - 본인 게시글은 상태 무관하게 조회 가능
      *
      * @param userId 조회 요청 사용자 ID
-     * @param slug 조회할 게시글의 slug
+     * @param slug 조회할 게시글 slug
      * @return 게시글 수정용 데이터
      * @throws CustomException 게시글을 찾을 수 없거나 권한이 없는 경우
      */
@@ -76,41 +82,31 @@ public interface PostService {
      * 게시글 수정
      *
      * @param userId 수정 요청 사용자 ID
-     * @param slug 수정할 게시글의 slug
+     * @param postId 수정할 게시글 ID
      * @param request 게시글 수정 요청 데이터
      * @return 수정된 게시글 상세 정보
      * @throws CustomException 게시글 없음, 권한 없음, 제목 중복 등
      */
-    PostResponse.Detail update(Long userId, String slug, PostRequest.Update request);
+    PostResponse.Detail update(Long userId, Long postId, PostRequest.Update request);
 
     /**
      * 게시글 삭제 (소프트 삭제)
      *
      * @param userId 삭제 요청 사용자 ID
-     * @param slug 삭제할 게시글의 slug
+     * @param postId 삭제할 게시글 ID
      * @throws CustomException 게시글 없음, 권한 없음
      */
-    void delete(Long userId, String slug);
+    void delete(Long userId, Long postId);
 
     /**
      * 게시글 복구
      * - DELETED 상태의 게시글을 PUBLISHED 상태로 복구
      *
      * @param userId 복구 요청 사용자 ID
-     * @param slug 복구할 게시글의 slug
+     * @param postId 복구할 게시글 ID
      * @throws CustomException 게시글 없음, 권한 없음, 이미 복구된 게시글
      */
-    void restore(Long userId, String slug);
-
-    /**
-     * 내 게시글 검색
-     *
-     * @param userId 조회 요청 사용자 ID
-     * @param condition 검색 조건 (stackName, keyword)
-     * @param pageable 페이지네이션 정보
-     * @return 검색된 게시글 목록
-     */
-    Page<PostResponse.PostItems> search(Long userId, PostSearchCondition condition, Pageable pageable);
+    void restore(Long userId, Long postId);
 
     /**
      * 삭제된 게시글 조회

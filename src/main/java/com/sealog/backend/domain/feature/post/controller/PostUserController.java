@@ -2,7 +2,6 @@ package com.sealog.backend.domain.feature.post.controller;
 
 import com.sealog.backend.domain.feature.post.dto.PostRequest;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
-import com.sealog.backend.domain.feature.post.dto.PostSearchCondition;
 import com.sealog.backend.domain.feature.post.service.PostService;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
@@ -17,15 +16,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 /**
  * 내 게시글 컨트롤러 (인증 필수)
  *
  * 로그인한 사용자만 접근 가능한 게시글 관리 API
  * - 게시글 생성, 수정, 삭제, 복구
  */
-
 @RestController
-@RequestMapping("/api/user/post")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class PostUserController implements PostUserControllerDocs {
 
@@ -35,20 +34,15 @@ public class PostUserController implements PostUserControllerDocs {
 
     /**
      * 게시글 생성
-     * POST /api/user/post
-     *
-     * @param request 게시글 데이터 (thumbnailFileId, thumbnailUrl 포함)
+     * POST /api/user/posts
      */
     @Override
-    @PostMapping
+    @PostMapping("/posts")
     public ResponseEntity<CustomResponse<PostResponse.Detail>> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody @Valid PostRequest.Create request
     ) {
-        PostResponse.Detail response = postService.create(
-                userDetails.getUser(),
-                request
-        );
+        PostResponse.Detail response = postService.create(userDetails.getUser(), request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(CustomResponse.success(response, "게시글이 생성되었습니다"));
@@ -56,10 +50,10 @@ public class PostUserController implements PostUserControllerDocs {
 
     /**
      * 게시글 수정용 데이터 조회
-     * GET /api/user/post/{slug}/edit
+     * GET /api/user/posts/{slug}
      */
     @Override
-    @GetMapping("/{slug}/edit")
+    @GetMapping("/posts/{slug}")
     public ResponseEntity<CustomResponse<PostResponse.Edit>> getPostForEdit(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug
@@ -70,97 +64,60 @@ public class PostUserController implements PostUserControllerDocs {
 
     /**
      * 게시글 수정
-     * PUT /api/user/post/{slug}
-     *
-     * @param slug 수정할 게시글 slug
-     * @param request 게시글 데이터 (thumbnailFileId, thumbnailUrl, removeThumbnail 포함)
+     * PUT /api/user/posts/{postId}
      */
     @Override
-    @PutMapping("/{slug}")
+    @PutMapping("/posts/{postId}")
     public ResponseEntity<CustomResponse<PostResponse.Detail>> update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable String slug,
+            @PathVariable Long postId,
             @RequestBody @Valid PostRequest.Update request
     ) {
-        PostResponse.Detail response = postService.update(
-                userDetails.getUserId(),
-                slug,
-                request
-        );
+        PostResponse.Detail response = postService.update(userDetails.getUserId(), postId, request);
         return ResponseEntity.ok(CustomResponse.success(response, "게시글이 수정되었습니다"));
     }
 
     /**
      * 게시글 삭제 (소프트 삭제)
-     * DELETE /api/user/post/{slug}
-     *
-     * @param slug 삭제할 게시글 slug
+     * DELETE /api/user/posts/{postId}
      */
     @Override
-    @DeleteMapping("/{slug}")
-    public ResponseEntity<CustomResponse<Void>> delete(
+    @DeleteMapping("/posts/{postId}")
+    public ResponseEntity<Void> delete(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable String slug
+            @PathVariable Long postId
     ) {
-        postService.delete(userDetails.getUserId(), slug);
-        return ResponseEntity.ok(CustomResponse.success(null, "게시글이 삭제되었습니다"));
+        postService.delete(userDetails.getUserId(), postId);
+        return ResponseEntity.noContent().build();
     }
 
     /**
-     * 게시글 복구
-     * POST /api/user/post/{slug}/restore
-     *
-     * @param slug 복구할 게시글 slug
+     * 게시글 복구 (소프트 삭제 취소)
+     * PATCH /api/user/posts/{postId}/restore
      */
     @Override
-    @PostMapping("/{slug}/restore")
+    @PatchMapping("/posts/{postId}/restore")
     public ResponseEntity<CustomResponse<Void>> restore(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable String slug
+            @PathVariable Long postId
     ) {
-        postService.restore(userDetails.getUserId(), slug);
+        postService.restore(userDetails.getUserId(), postId);
         return ResponseEntity.ok(CustomResponse.success(null, "게시글이 복구되었습니다"));
     }
 
     // ========== 조회 ========== //
 
     /**
-     * 내 게시글 검색 (복합 필터링)
-     * GET /api/user/post
-     *
-     * - DELETED 상태 제외 (삭제된 게시글은 별도 엔드포인트)
-     */
-    @Override
-    @GetMapping
-    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> search(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam(required = false) String stack,
-            @RequestParam(required = false) String keyword,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
-        PostSearchCondition condition = PostSearchCondition.ofMine(stack, keyword);
-        Page<PostResponse.PostItems> posts = postService.search(
-                userDetails.getUserId(),
-                condition,
-                pageable
-        );
-        return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
-    }
-
-    /**
      * 삭제된 게시글 목록 조회
-     * GET /api/user/post/deleted
+     * GET /api/user/posts/deleted
      */
     @Override
-    @GetMapping("/deleted")
+    @GetMapping("/posts/deleted")
     public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getDeleted(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 10, sort = "deletedAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<PostResponse.PostItems> posts = postService.getDeleted(
-                userDetails.getUserId(),
-                pageable
-        );
+        Page<PostResponse.PostItems> posts = postService.getDeleted(userDetails.getUserId(), pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
     }
 }

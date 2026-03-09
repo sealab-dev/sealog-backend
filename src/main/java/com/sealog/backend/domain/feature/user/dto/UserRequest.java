@@ -62,6 +62,7 @@ public class UserRequest {
         private String newPassword;
 
         @NotBlank(message = "새 비밀번호 확인을 입력해주세요")
+        @Size(min = 8, max = 20, message = "비밀번호는 8~20자로 입력해주세요")
         @Schema(description = "새 비밀번호 확인", example = "newpass1234")
         private String newPasswordConfirm;
     }
