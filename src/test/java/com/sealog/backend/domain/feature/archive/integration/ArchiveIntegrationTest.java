@@ -5,18 +5,17 @@ import com.sealog.backend.domain.feature.archive.dto.ArchiveRequest;
 import com.sealog.backend.domain.feature.archive.entity.Archive;
 import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
-import com.sealog.backend.domain.feature.post.repository.PostRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
-import com.sealog.backend.security.jwt.JwtTokenProvider;
+import com.sealog.backend.security.auth.CustomUserDetails;
 import com.sealog.backend.support.base.TestIntegrationBase;
 import com.sealog.backend.support.component.TestDataFactory;
-import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -29,22 +28,19 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
     @Autowired TestDataFactory testDataFactory;
-    @Autowired JwtTokenProvider jwtTokenProvider;
-    @Autowired PostRepository postRepository;
 
     private User testUser;
     private User otherUser;
-    private String myToken;
-    private String otherToken;
+    private CustomUserDetails myDetails;    // testUser 인증 컨텍스트
+    private CustomUserDetails otherDetails; // otherUser 인증 컨텍스트
 
-    private Archive testArchive;
-    private Archive privateArchive;
-    private Archive otherArchive;
+    private Archive testArchive;    // testUser 소유, 공개
+    private Archive privateArchive; // testUser 소유, 비공개
+    private Archive otherArchive;   // otherUser 소유, 공개
 
-    private Post publishedPost;    // testArchive 소속, PUBLISHED
-    private Post deletedPost;      // testArchive 소속, DELETED (Guest 쿼리 제외 검증용)
-    private Post unassignedPost;   // 아카이브 미배정, PUBLISHED (배정 테스트용)
-    private Post otherPost;
+    private Post publishedPost;  // testArchive 소속, PUBLISHED
+    private Post unassignedPost; // 아카이브 미배정, PUBLISHED (배정 테스트용)
+    private Post otherPost;      // otherUser 소유, PUBLISHED
 
     @BeforeEach
     void setUp() {
@@ -52,27 +48,19 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         testUser  = testDataFactory.createUser(UserRole.USER);
         otherUser = testDataFactory.createUser(UserRole.USER);
 
-        // JWT 토큰 생성
-        myToken    = jwtTokenProvider.createAccessToken(testUser.getId(),  testUser.getEmail());
-        otherToken = jwtTokenProvider.createAccessToken(otherUser.getId(), otherUser.getEmail());
+        // Mock 인증 컨텍스트 생성 (JWT 필터 우회)
+        myDetails    = new CustomUserDetails(testUser);
+        otherDetails = new CustomUserDetails(otherUser);
 
         // 아카이브 생성
-        testArchive    = testDataFactory.createArchive(testUser,  true);   // 공개
-        privateArchive = testDataFactory.createArchive(testUser,  false);  // 비공개
-        otherArchive   = testDataFactory.createArchive(otherUser, true);   // 타인 소유, 공개
+        testArchive    = testDataFactory.createArchive(testUser,  true);
+        privateArchive = testDataFactory.createArchive(testUser,  false);
+        otherArchive   = testDataFactory.createArchive(otherUser, true);
 
         // 게시글 생성
-        publishedPost  = testDataFactory.createPost(testUser,  PostStatus.PUBLISHED);
-        // todo: 삭제된 게시글은 더이상 상태에서 관리하지 않고 deleteAt에서 관리합니다
-        //deletedPost    = testDataFactory.createPost(testUser,  PostStatus.DELETED);
-        unassignedPost = testDataFactory.createPost(testUser,  PostStatus.PUBLISHED);
-        otherPost      = testDataFactory.createPost(otherUser, PostStatus.PUBLISHED);
-
-        // publishedPost, deletedPost를 testArchive에 배정
-        publishedPost.addToArchive(testArchive);
-        deletedPost.addToArchive(testArchive);
-        postRepository.save(publishedPost);
-        postRepository.save(deletedPost);
+        publishedPost  = testDataFactory.createPost(testUser, testArchive, PostStatus.PUBLISHED);
+        unassignedPost = testDataFactory.createPost(testUser,              PostStatus.PUBLISHED);
+        otherPost      = testDataFactory.createPost(otherUser,             PostStatus.PUBLISHED);
     }
 
     @Test
@@ -107,10 +95,8 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
     class 아카이브_내_공개_게시글_조회 {
 
         @Test
-        @DisplayName("성공 - PUBLISHED 게시글만 반환 → 200, DELETED 미포함")
+        @DisplayName("성공 - PUBLISHED 게시글 반환 → 200")
         void 성공() throws Exception {
-            // testArchive: publishedPost(PUBLISHED) + deletedPost(DELETED) 총 2개
-            // Guest는 PUBLISHED만 반환 → totalElements=1
             mockMvc.perform(get("/api/guest/archive/{archiveId}/posts", testArchive.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -130,7 +116,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @DisplayName("성공 - 공개·비공개 모두 반환 → 200")
         void 성공() throws Exception {
             mockMvc.perform(get("/api/user/archive")
-                            .cookie(new Cookie("access_token", myToken)))
+                            .with(user(myDetails)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.totalElements").value(2));
@@ -139,7 +125,8 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 미인증 → 401")
         void 미인증() throws Exception {
-            mockMvc.perform(get("/api/user/archive"))
+            mockMvc.perform(get("/api/user/archive")
+                            .with(anonymous()))
                     .andExpect(status().isUnauthorized());
         }
     }
@@ -152,21 +139,20 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
     class 내_아카이브_게시글_목록_조회 {
 
         @Test
-        @DisplayName("성공 - 게시 상태 무관 반환 → 200")
+        @DisplayName("성공 → 200")
         void 성공() throws Exception {
-            // testArchive: publishedPost(PUBLISHED) + deletedPost(DELETED) 총 2개
-            // User는 상태 무관 반환 → totalElements=2
             mockMvc.perform(get("/api/user/archive/{archiveId}/posts", testArchive.getId())
-                            .cookie(new Cookie("access_token", myToken)))
+                            .with(user(myDetails)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.totalElements").value(2));
+                    .andExpect(jsonPath("$.data.totalElements").value(1));
         }
 
         @Test
         @DisplayName("실패 - 미인증 → 401")
         void 미인증() throws Exception {
-            mockMvc.perform(get("/api/user/archive/{archiveId}/posts", testArchive.getId()))
+            mockMvc.perform(get("/api/user/archive/{archiveId}/posts", testArchive.getId())
+                            .with(anonymous()))
                     .andExpect(status().isUnauthorized());
         }
     }
@@ -186,7 +172,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
                     .build();
 
             mockMvc.perform(post("/api/user/archive")
-                            .cookie(new Cookie("access_token", myToken))
+                            .with(user(myDetails))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
@@ -201,7 +187,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
                     .build();
 
             mockMvc.perform(post("/api/user/archive")
-                            .cookie(new Cookie("access_token", myToken))
+                            .with(user(myDetails))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
@@ -215,6 +201,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
                     .build();
 
             mockMvc.perform(post("/api/user/archive")
+                            .with(anonymous())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isUnauthorized());
@@ -236,7 +223,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
                     .build();
 
             mockMvc.perform(put("/api/user/archive/{nickname}/{slug}", testUser.getNickname(), testArchive.getSlug())
-                            .cookie(new Cookie("access_token", myToken))
+                            .with(user(myDetails))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -251,7 +238,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
                     .build();
 
             mockMvc.perform(put("/api/user/archive/{nickname}/{slug}", testUser.getNickname(), testArchive.getSlug())
-                            .cookie(new Cookie("access_token", myToken))
+                            .with(user(myDetails))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
@@ -260,13 +247,12 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 다른 아카이브와 이름 중복 → 409")
         void 이름_중복() throws Exception {
-            // privateArchive와 같은 이름으로 testArchive 수정 시도
             ArchiveRequest.Edit request = ArchiveRequest.Edit.builder()
                     .name(privateArchive.getName())
                     .build();
 
             mockMvc.perform(put("/api/user/archive/{nickname}/{slug}", testUser.getNickname(), testArchive.getSlug())
-                            .cookie(new Cookie("access_token", myToken))
+                            .with(user(myDetails))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isConflict());
@@ -280,7 +266,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
                     .build();
 
             mockMvc.perform(put("/api/user/archive/{nickname}/{slug}", testUser.getNickname(), testArchive.getSlug())
-                            .cookie(new Cookie("access_token", otherToken))
+                            .with(user(otherDetails))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isForbidden());
@@ -299,7 +285,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         void 성공() throws Exception {
             mockMvc.perform(patch("/api/user/archive/{nickname}/{slug}/show",
                             testUser.getNickname(), privateArchive.getSlug())
-                            .cookie(new Cookie("access_token", myToken)))
+                            .with(user(myDetails)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -309,7 +295,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         void 권한_없음() throws Exception {
             mockMvc.perform(patch("/api/user/archive/{nickname}/{slug}/show",
                             testUser.getNickname(), testArchive.getSlug())
-                            .cookie(new Cookie("access_token", otherToken)))
+                            .with(user(otherDetails)))
                     .andExpect(status().isForbidden());
         }
     }
@@ -326,7 +312,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         void 성공() throws Exception {
             mockMvc.perform(patch("/api/user/archive/{nickname}/{slug}/hide",
                             testUser.getNickname(), testArchive.getSlug())
-                            .cookie(new Cookie("access_token", myToken)))
+                            .with(user(myDetails)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -336,7 +322,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         void 권한_없음() throws Exception {
             mockMvc.perform(patch("/api/user/archive/{nickname}/{slug}/hide",
                             testUser.getNickname(), testArchive.getSlug())
-                            .cookie(new Cookie("access_token", otherToken)))
+                            .with(user(otherDetails)))
                     .andExpect(status().isForbidden());
         }
     }
@@ -351,10 +337,9 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("성공 → 200")
         void 성공() throws Exception {
-            // privateArchive는 게시글 미포함 → FK 제약 없이 삭제 가능
             mockMvc.perform(delete("/api/user/archive/{nickname}/{slug}",
                             testUser.getNickname(), privateArchive.getSlug())
-                            .cookie(new Cookie("access_token", myToken)))
+                            .with(user(myDetails)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -364,7 +349,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         void 권한_없음() throws Exception {
             mockMvc.perform(delete("/api/user/archive/{nickname}/{slug}",
                             testUser.getNickname(), testArchive.getSlug())
-                            .cookie(new Cookie("access_token", otherToken)))
+                            .with(user(otherDetails)))
                     .andExpect(status().isForbidden());
         }
     }
@@ -379,10 +364,9 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("성공 → 200")
         void 성공() throws Exception {
-            // unassignedPost는 어느 아카이브에도 속하지 않은 상태
             mockMvc.perform(patch("/api/user/archive/{archiveId}/post/{postId}",
                             testArchive.getId(), unassignedPost.getId())
-                            .cookie(new Cookie("access_token", myToken)))
+                            .with(user(myDetails)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -392,7 +376,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         void 타인_게시글() throws Exception {
             mockMvc.perform(patch("/api/user/archive/{archiveId}/post/{postId}",
                             testArchive.getId(), otherPost.getId())
-                            .cookie(new Cookie("access_token", myToken)))
+                            .with(user(myDetails)))
                     .andExpect(status().isForbidden());
         }
 
@@ -401,7 +385,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         void 타인_아카이브() throws Exception {
             mockMvc.perform(patch("/api/user/archive/{archiveId}/post/{postId}",
                             otherArchive.getId(), unassignedPost.getId())
-                            .cookie(new Cookie("access_token", myToken)))
+                            .with(user(myDetails)))
                     .andExpect(status().isForbidden());
         }
     }
@@ -416,9 +400,8 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("성공 → 200")
         void 성공() throws Exception {
-            // publishedPost는 testArchive에 배정된 상태
             mockMvc.perform(delete("/api/user/archive/post/{postId}", publishedPost.getId())
-                            .cookie(new Cookie("access_token", myToken)))
+                            .with(user(myDetails)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
@@ -427,7 +410,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @DisplayName("실패 - 타인 게시글 해제 시도 → 403")
         void 타인_게시글() throws Exception {
             mockMvc.perform(delete("/api/user/archive/post/{postId}", otherPost.getId())
-                            .cookie(new Cookie("access_token", myToken)))
+                            .with(user(myDetails)))
                     .andExpect(status().isForbidden());
         }
     }
