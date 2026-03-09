@@ -108,12 +108,8 @@ public class TestDataFactory {
      * @return 저장된 Stack 엔티티 (ID 포함)
      */
     public Stack createStack(StackGroup stackGroup) {
-        long idx = stackRepository.count() + 1;
         return stackRepository.save(
-                Stack.builder()
-                        .name("스택%06d".formatted(idx))
-                        .stackGroup(stackGroup)
-                        .build()
+                createEntity(stackRepository::count, idx -> buildStack(stackGroup, idx))
         );
     }
 
@@ -292,6 +288,18 @@ public class TestDataFactory {
                 .isPublic(isPublic)
                 .build();
     }
+
+    /**
+     * builder 기반 stack entity 생성
+     */
+    private Stack buildStack(StackGroup stackGroup, long idx) {
+        return Stack.builder()
+                .name("스택%06d".formatted(idx))
+                .stackGroup(stackGroup)
+                .build();
+    }
+
+
 
     /**
      * 엔티티 생성 일반화 메소드
