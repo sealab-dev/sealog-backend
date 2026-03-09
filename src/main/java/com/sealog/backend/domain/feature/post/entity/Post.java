@@ -1,5 +1,6 @@
 package com.sealog.backend.domain.feature.post.entity;
 
+import com.sealog.backend.domain.feature.archive.entity.Archive;
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;
@@ -24,6 +25,10 @@ public class Post extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "archive_id")
+    private Archive archive;
 
     @Column(nullable = false, unique = true, length = 100)
     private String title;
@@ -124,5 +129,15 @@ public class Post extends BaseTimeEntity {
      */
     public void removeThumbnailPath() {
         this.thumbnailPath = null;
+    }
+
+    // ============== 아카이브 관리 ============== //
+
+    public void addToArchive(Archive archive) {
+        this.archive = archive;
+    }
+
+    public void removeFromArchive() {
+        this.archive = null;
     }
 }
