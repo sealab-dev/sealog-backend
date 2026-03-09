@@ -70,7 +70,6 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:mariadb")
-	testImplementation("org.testcontainers:redis")
 
 	// ========== AWS S3 ========== //
 	implementation("io.awspring.cloud:spring-cloud-aws-starter-s3:3.0.0")
