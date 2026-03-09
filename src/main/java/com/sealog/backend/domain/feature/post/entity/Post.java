@@ -6,6 +6,8 @@ import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "posts",
@@ -26,6 +28,7 @@ public class Post extends BaseTimeEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "archive_id")
     private Archive archive;
