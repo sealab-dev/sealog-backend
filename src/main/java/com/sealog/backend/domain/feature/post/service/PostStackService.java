@@ -1,5 +1,6 @@
 package com.sealog.backend.domain.feature.post.service;
 
+import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.stack.dto.StackResponse;
 
 import java.util.List;
@@ -23,12 +24,12 @@ public interface PostStackService {
     void updatePostStacks(Long postId, List<Long> stackIds);
 
     /**
-     * 게시글에 연결된 스택 이름 목록 조회
+     * 게시글에 연결된 스택 ID + 이름 목록 조회 (수정 폼용)
      *
      * @param postId 게시글 ID
-     * @return 스택 이름 목록 (sortOrder 순)
+     * @return 스택 ID + 이름 목록 (sortOrder 순)
      */
-    List<String> getStackNamesByPostId(Long postId);
+    List<PostResponse.StackItem>  getStackItemsByPostId(Long postId);
 
     /**
      * 게시글에 연결된 스택 ID 목록 조회 (관련 게시글 추천용)
@@ -45,22 +46,4 @@ public interface PostStackService {
      */
     void deleteAllByPostId(Long postId);
 
-    /**
-     * 그룹별 스택 + 공개 게시글 수 조회 (전체)
-     */
-    StackResponse.GroupedStacks getGroupedStacksWithPostCount();
-
-    /**
-     * 그룹별 스택 + 공개 게시글 수 조회 (사용자별)
-     *
-     * @param nickname 사용자 닉네임
-     */
-    StackResponse.GroupedStacks getGroupedStacksWithPostCountByUser(String nickname);
-
-    /**
-     * 인기 스택 조회 (공개 게시글 기준)
-     *
-     * @param limit 조회할 스택 수
-     */
-    List<StackResponse.PopularStack> getPopularStacks(int limit);
 }

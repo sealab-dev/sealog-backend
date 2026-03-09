@@ -20,7 +20,7 @@ public class PostRequest {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @Schema(description = "게시글 생성 요청")
+    @Schema(name = "PostCreate", description = "게시글 생성 요청")
     public static class Create {
 
         @NotBlank(message = "제목을 입력해주세요")
@@ -60,7 +60,7 @@ public class PostRequest {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @Schema(description = "게시글 수정 요청")
+    @Schema(name = "PostUpdate", description = "게시글 수정 요청")
     public static class Update {
 
         @NotBlank(message = "제목을 입력해주세요")

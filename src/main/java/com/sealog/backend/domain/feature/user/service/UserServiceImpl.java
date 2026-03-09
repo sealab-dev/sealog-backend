@@ -100,8 +100,9 @@ public class UserServiceImpl implements UserService {
             throw CustomException.badRequest("새 비밀번호는 현재 비밀번호와 달라야 합니다");
         }
 
-        // 5. 비밀번호 변경
+        // 5. 비밀번호 변경 + Refresh Token 무효화 (기존 세션 강제 종료)
         user.updatePassword(passwordEncoder.encode(request.getNewPassword()));
+        user.clearRefreshToken();
         userRepository.save(user);
 
         log.info("비밀번호 변경 완료: userId={}", userId);

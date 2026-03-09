@@ -50,25 +50,25 @@ public class FileUploadController implements FileUploadControllerDocs{
     public ResponseEntity<CustomResponse<FileUploadResponse>> uploadFile(
             @RequestPart("file") MultipartFile file
     ) throws IOException {
-        log.info("파일 업로드 요청: filename={}, contentType={}, size={}bytes",
+        log.debug("파일 업로드 요청: filename={}, contentType={}, size={}bytes",
                 file.getOriginalFilename(), file.getContentType(), file.getSize());
 
         // 1. 파일 검증
         FileValidator.validateFile(file);
-        log.info("파일 검증 완료: filename={}", file.getOriginalFilename());
+        log.debug("파일 검증 완료: filename={}", file.getOriginalFilename());
 
         // 2. 업로드 (타입별 경로 자동 분류)
         FileUploadResult uploadResult = fileStorageService.uploadFile(file);
-        log.info("업로드 완료: originalName={} path={} contentType={}",
+        log.debug("업로드 완료: originalName={} path={} contentType={}",
                 uploadResult.originalName(), uploadResult.path(), uploadResult.contentType());
 
         // 3. FileMetadata 저장
         FileMetadata fileMetadata = fileMetadataService.upload(uploadResult);
-        log.info("파일 메타데이터 저장 완료: fileId={}", fileMetadata.getId());
+        log.debug("파일 메타데이터 저장 완료: fileId={}", fileMetadata.getId());
 
         // 4. 응답 반환
         FileUploadResponse response = FileUploadResponse.from(fileMetadata);
-        log.info("파일 업로드 성공: fileId={}, path={}", response.id(), response.path());
+        log.debug("파일 업로드 성공: fileId={}, path={}", response.id(), response.path());
 
         return ResponseEntity.ok(CustomResponse.success(response, "파일이 업로드되었습니다"));
     }
