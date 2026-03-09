@@ -8,22 +8,32 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class TestSql {
 
+    public static final String FOREIGN_KEY_CHECKS_ACTIVATION = "SET FOREIGN_KEY_CHECKS = 0";
+    public static final String FOREIGN_KEY_CHECKS_INACTIVATION = "SET FOREIGN_KEY_CHECKS = 1";
+    public static final String TRUNCATE_TABLE = "TRUNCATE TABLE ";
+
+    public static final String SELECT_TABLE_NAMES = """
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = ?
+    """.strip();
+
     public static final String INSERT_USER = """
         INSERT INTO users (email, password, name, nickname, role) VALUES (?, ?, ?, ?, ?)
-    """;
+    """.strip();
 
     public static final String INSERT_POST = """
-        INSERT INTO posts (user_id, title, slug, excerpt, content, status, thumbnail_path, created_at, updated_at) 
+        INSERT INTO posts (user_id, title, slug, excerpt, content, status, thumbnail_path, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, null, NOW(), NOW())
-    """;
+    """.strip();
 
     public static final String INSERT_ARCHIVE = """
         INSERT INTO archives (user_id, name, slug, is_public, created_at, updated_at)
         VALUES (?, ?, ?, ?, NOW(), NOW())
-    """;
+    """.strip();
 
     public static final String INSERT_ARCHIVE_POST = """
         INSERT INTO archive_posts (archive_id, post_id, sort_order)
         VALUES (?, ?, ?)
-    """;
+    """.strip();
 }
