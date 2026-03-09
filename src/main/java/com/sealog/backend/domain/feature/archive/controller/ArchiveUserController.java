@@ -142,7 +142,7 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
             @PathVariable String slug
     ) {
         archiveService.remove(userDetails.getUserId(), nickname, slug);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(CustomResponse.success(null, "아카이브가 삭제되었습니다"));
     }
 
     // ========== 게시글 연결 ========== //

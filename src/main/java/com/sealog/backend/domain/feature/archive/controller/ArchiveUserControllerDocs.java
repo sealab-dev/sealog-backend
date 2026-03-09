@@ -122,7 +122,7 @@ public interface ArchiveUserControllerDocs {
             @ApiResponse(responseCode = "403", description = "권한 없음 (소유자 아님)",
                     content = @Content(schema = @Schema(hidden = true)))
     })
-    ResponseEntity<CustomResponse<Void>> hideArchive(
+    ResponseEntity<CustomResponse<Void>> hide(
             @Parameter(hidden = true) CustomUserDetails userDetails,
             @Parameter(description = "소유자 닉네임", example = "테스터") String nickname,
             @Parameter(description = "아카이브 slug", example = "spring-boot-study") String slug
@@ -133,7 +133,7 @@ public interface ArchiveUserControllerDocs {
             description = "아카이브를 삭제합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "삭제 성공"),
+            @ApiResponse(responseCode = "200", description = "삭제 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
             @ApiResponse(responseCode = "403", description = "권한 없음 (소유자 아님)",
@@ -167,7 +167,7 @@ public interface ArchiveUserControllerDocs {
             description = "게시글의 아카이브 배정을 해제합니다. 게시글의 archive 필드를 null로 설정합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "제거 성공"),
+            @ApiResponse(responseCode = "200", description = "해제 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
             @ApiResponse(responseCode = "403", description = "권한 없음 (게시글 소유자 아님)",
