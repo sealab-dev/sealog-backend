@@ -8,7 +8,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "posts")
+@Table(name = "posts",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_post_user_title", columnNames = {"user_id", "title"}),
+                @UniqueConstraint(name = "uk_post_user_slug", columnNames = {"user_id", "slug"})
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post extends BaseTimeEntity {
@@ -28,14 +33,7 @@ public class Post extends BaseTimeEntity {
     @Column(nullable = false, unique = true, length = 100)
     private String title;
 
-    /**
-     * URL-safe한 게시글 식별자
-     * - 제목 기반으로 자동 생성
-     * - 한글 지원
-     * - UNIQUE 제약조건
-     * - 조회 시 ID 대신 사용
-     */
-    @Column(nullable = false, unique = true, length = 200)
+    @Column(nullable = false, length = 200)
     private String slug;
 
     @Column(nullable = false, length = 500)
@@ -49,12 +47,6 @@ public class Post extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private PostStatus status;
 
-    /**
-     * 썸네일 Path (Denormalization - 조회 성능 최적화)
-     * - PostFile 테이블에도 매핑 정보 저장 (파일 추적용)
-     * - Path는 빠른 조회를 위해 중복 저장
-     * - null 허용 (썸네일 없는 게시글 가능)
-     */
     @Column(name = "thumbnail_path", length = 1000)
     private String thumbnailPath;
 
@@ -67,12 +59,11 @@ public class Post extends BaseTimeEntity {
         this.slug = slug;
         this.excerpt = excerpt;
         this.content = content;
-        this.status = status != null ? status : PostStatus.DELETED;
+        this.status = status;
         this.thumbnailPath = thumbnailPath;
     }
 
-    // === 비즈니스 로직 === //
-
+    // ============== 업데이트 관리 ============== //
     /**
      * 게시글 수정
      */
@@ -83,13 +74,7 @@ public class Post extends BaseTimeEntity {
         this.content = content;
     }
 
-    /**
-     * slug 업데이트
-     */
-    public void updateSlug(String slug) {
-        this.slug = slug;
-    }
-
+    // ============== 상태 관리 ============== //
     /**
      * 발행됨 상태로 변경
      */
@@ -98,20 +83,20 @@ public class Post extends BaseTimeEntity {
     }
 
     /**
-     * 삭제됨 상태로 변경 (소프트 삭제)
+     * 비공개 상태로 변경
      */
     public void unpublish() {
-        this.status = PostStatus.DELETED;
+        this.status = PostStatus.PRIVATE;
     }
 
+    // ============== 삭제 관리 ============== //
     /**
      * 소프트 삭제 처리
      * - status를 DELETED로 변경
      * - deletedAt 시간 기록 (BaseTimeEntity)
      */
     public void softDelete() {
-        this.status = PostStatus.DELETED;
-        this.markAsDeleted(); // BaseTimeEntity의 메서드 호출
+        this.markAsDeleted();
     }
 
     /**
@@ -120,39 +105,33 @@ public class Post extends BaseTimeEntity {
      * - deletedAt 초기화 (BaseTimeEntity)
      */
     public void restoreFromDelete() {
-        this.status = PostStatus.PUBLISHED;
-        this.restore(); // BaseTimeEntity의 메서드 호출
+        this.restore();
     }
 
+    // ============== 작성자 확인 ============== //
     /**
-     * 작성자 확인
+     * 게시글 작성자가 맞는지 확인
      */
     public boolean isWrittenBy(Long userId) {
         return this.user.getId().equals(userId);
     }
 
-    // === 썸네일 관리 === //
-
+    // ============== 썸네일 관리 ============== //
     /**
      * 썸네일 URL 업데이트
      */
-    public void updateThumbnailUrl(String thumbnailUrl) {
-        this.thumbnailPath = thumbnailUrl;
+    public void updateThumbnailPath(String thumbnailPath) {
+        this.thumbnailPath = thumbnailPath;
     }
 
     /**
      * 썸네일 제거
      */
-    public void removeThumbnail() {
+    public void removeThumbnailPath() {
         this.thumbnailPath = null;
     }
 
-    /**
-     * 썸네일 존재 여부 확인
-     */
-    public boolean hasThumbnail() {
-        return this.thumbnailPath != null && !this.thumbnailPath.isBlank();
-    }
+    // ============== 아카이브 관리 ============== //
 
     public void addToArchive(Archive archive) {
         this.archive = archive;

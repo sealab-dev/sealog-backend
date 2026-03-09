@@ -2,6 +2,7 @@ package com.sealog.backend.domain.feature.stack.repository;
 
 import com.sealog.backend.domain.feature.stack.entity.Stack;
 import com.sealog.backend.domain.feature.stack.enums.StackGroup;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -35,7 +36,12 @@ public interface StackRepository extends JpaRepository<Stack, Long> {
     boolean existsByName(String name);
 
     /**
-     * 스택명 부분 일치 검색
+     * 스택명 부분 일치 검색 (자동완성용 - List 반환)
      */
     List<Stack> findByNameContainingIgnoreCaseOrderByNameAsc(String keyword, Pageable pageable);
+
+    /**
+     * 스택명 부분 일치 검색 (페이지네이션용 - Page 반환)
+     */
+    Page<Stack> findByNameContainingIgnoreCase(String keyword, Pageable pageable);
 }

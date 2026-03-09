@@ -1,6 +1,7 @@
 package com.sealog.backend.domain.feature.post.dto;
 
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -14,14 +15,37 @@ public class PostResponse {
      */
     @Getter
     @Builder
+    @Schema(name = "PostUserInfo")
     public static class AuthorInfo {
         private String nickname;
         private String profileImagePath;
 
-        public static AuthorInfo of(String nickname, String profileImageUrl) {
+        public static AuthorInfo of(String nickname, String profileImagePath) {
             return AuthorInfo.builder()
                     .nickname(nickname)
-                    .profileImagePath(profileImageUrl)
+                    .profileImagePath(profileImagePath)
+                    .build();
+        }
+    }
+
+    /**
+     * 스택 정보 (post 도메인 내부 관리)
+     * - stack 도메인 DTO 의존 제거
+     * - sortOrder 포함
+     */
+    @Getter
+    @Builder
+    @Schema(name = "PostStackItem")
+    public static class StackItem {
+        private Long id;
+        private String name;
+        private Integer sortOrder;
+
+        public static StackItem of(Long id, String name, Integer sortOrder) {
+            return StackItem.builder()
+                    .id(id)
+                    .name(name)
+                    .sortOrder(sortOrder)
                     .build();
         }
     }
@@ -40,14 +64,10 @@ public class PostResponse {
         private PostStatus status;
         private String thumbnailPath;
         private List<String> tags;
-        private List<String> stacks;
+        private List<StackItem> stacks;
         private AuthorInfo author;
         private LocalDateTime createdAt;
 
-        /**
-         * 서비스 레이어에서 준비된 데이터로 DTO 생성
-         * Lazy Loading 방지: 모든 데이터를 파라미터로 받음
-         */
         public static PostItems of(
                 Long id,
                 String slug,
@@ -56,7 +76,7 @@ public class PostResponse {
                 PostStatus status,
                 String thumbnailPath,
                 List<String> tags,
-                List<String> stacks,
+                List<StackItem> stacks,
                 AuthorInfo author,
                 LocalDateTime createdAt
         ) {
@@ -76,10 +96,11 @@ public class PostResponse {
     }
 
     /**
-     * 게시글 상세 응답 (전체 정보)
+     * 게시글 상세 응답 (전체 정보 + 연관 게시글)
      */
     @Getter
     @Builder
+    @Schema(name = "PostDetail")
     public static class Detail {
 
         private Long id;
@@ -90,16 +111,11 @@ public class PostResponse {
         private PostStatus status;
         private String thumbnailPath;
         private List<String> tags;
-        private List<String> stacks;
+        private List<StackItem> stacks;
         private AuthorInfo author;
-        private List<PostItems> relatedPosts;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
-        /**
-         * 서비스 레이어에서 준비된 데이터로 DTO 생성
-         * Lazy Loading 방지: 모든 데이터를 파라미터로 받음
-         */
         public static Detail of(
                 Long id,
                 String slug,
@@ -109,9 +125,8 @@ public class PostResponse {
                 PostStatus status,
                 String thumbnailPath,
                 List<String> tags,
-                List<String> stacks,
+                List<StackItem> stacks,
                 AuthorInfo author,
-                List<PostItems> relatedPosts,
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt
         ) {
@@ -126,20 +141,18 @@ public class PostResponse {
                     .tags(tags)
                     .stacks(stacks)
                     .author(author)
-                    .relatedPosts(relatedPosts != null ? relatedPosts : List.of())
                     .createdAt(createdAt)
                     .updatedAt(updatedAt)
                     .build();
         }
     }
+
     /**
-     * 게시글 수정용 응답 (현재 사용 중인 파일 ID 포함)
-     * 프론트엔드에서 파일 관리를 위해:
-     * - contentFileIds: 현재 사용 중인 본문 파일 ID 목록
-     * - 프론트에서 이 정보를 기반으로 파일 삭제/추가 관리
+     * 게시글 수정용 응답
      */
     @Getter
     @Builder
+    @Schema(name = "PostEdit")
     public static class Edit {
 
         private Long id;
@@ -150,7 +163,7 @@ public class PostResponse {
         private PostStatus status;
         private String thumbnailPath;
         private List<String> tags;
-        private List<String> stacks;
+        private List<StackItem> stacks;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
@@ -163,7 +176,7 @@ public class PostResponse {
                 PostStatus status,
                 String thumbnailPath,
                 List<String> tags,
-                List<String> stacks,
+                List<StackItem> stacks,
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt
         ) {

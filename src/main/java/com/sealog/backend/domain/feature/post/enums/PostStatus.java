@@ -7,8 +7,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum PostStatus {
 
-    PUBLISHED("published", "발행됨"),
-    DELETED("deleted", "삭제됨");
+    PUBLISHED("PUBLISHED", "공개"),
+    PRIVATE("PRIVATE", "비공개"),
+    DRAFT("DRAFT", "작성 중");
 
     private final String key;
     private final String title;

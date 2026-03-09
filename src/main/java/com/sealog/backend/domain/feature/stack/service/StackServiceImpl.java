@@ -1,30 +1,74 @@
 package com.sealog.backend.domain.feature.stack.service;
 
 import com.sealog.backend.domain.feature.post.repository.PostStackRepository;
-import com.sealog.backend.domain.feature.stack.dto.StackResponse;
 import com.sealog.backend.domain.feature.stack.dto.StackRequest;
+import com.sealog.backend.domain.feature.stack.dto.StackResponse;
 import com.sealog.backend.domain.feature.stack.entity.Stack;
 import com.sealog.backend.domain.feature.stack.enums.StackGroup;
 import com.sealog.backend.domain.feature.stack.repository.StackRepository;
+import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 /**
- * 어드민 스택 서비스 구현체
+ * 공개 스택 서비스 구현체
  */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class StackAdminServiceImpl implements StackAdminService {
+public class StackServiceImpl implements StackService {
 
     private final StackRepository stackRepository;
     private final PostStackRepository postStackRepository;
+    private final UserRepository userRepository;
 
-    /**
-     * 스택 생성 (어드민 전용)
-     */
+    @Override
+    public List<StackResponse.StackItem> autocomplete(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return List.of();
+        }
+
+        return stackRepository.findByNameContainingIgnoreCaseOrderByNameAsc(
+                        keyword.trim(),
+                        PageRequest.of(0, 5)
+                ).stream()
+                .map(StackResponse.StackItem::from)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public StackResponse.GroupedStacks getGroupedStacksWithPostCountByUser(String nickname) {
+        userRepository.findByNickname(nickname)
+                .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
+
+        List<Object[]> results = postStackRepository.findStacksWithPublicPostCountByUser(nickname);
+        List<StackResponse.StackWithCount> stacksWithCount = convertToStackWithCount(results);
+
+        Map<StackGroup, List<StackResponse.StackWithCount>> grouped = stacksWithCount.stream()
+                .collect(Collectors.groupingBy(StackResponse.StackWithCount::getStackGroup));
+
+        return StackResponse.GroupedStacks.of(grouped);
+    }
+
+    @Override
+    public Page<StackResponse.StackItem> getAllStacks(String keyword, Pageable pageable) {
+        if (keyword == null || keyword.isBlank()) {
+            return stackRepository.findAll(pageable).map(StackResponse.StackItem::from);
+        }
+        return stackRepository.findByNameContainingIgnoreCase(keyword.trim(), pageable)
+                .map(StackResponse.StackItem::from);
+    }
+
     @Override
     @Transactional
     public StackResponse.StackItem createStack(StackRequest.Create request, Long userId) {
@@ -40,9 +84,6 @@ public class StackAdminServiceImpl implements StackAdminService {
         return StackResponse.StackItem.from(savedStack);
     }
 
-    /**
-     * 스택 수정 (어드민 전용)
-     */
     @Override
     @Transactional
     public StackResponse.StackItem updateStack(Long stackId, StackRequest.Update request, Long userId) {
@@ -61,10 +102,6 @@ public class StackAdminServiceImpl implements StackAdminService {
         return StackResponse.StackItem.from(stack);
     }
 
-    /**
-     * 스택 삭제 (어드민 전용)
-     * - 연결된 PostStack 매핑을 먼저 삭제 후 스택 삭제
-     */
     @Override
     @Transactional
     public void deleteStack(Long stackId, Long userId) {
@@ -74,6 +111,18 @@ public class StackAdminServiceImpl implements StackAdminService {
     }
 
     // ========== Private Methods ========== //
+    /**
+     * DTO
+     */
+    private List<StackResponse.StackWithCount> convertToStackWithCount(List<Object[]> results) {
+        return results.stream()
+                .map(result -> {
+                    Stack stack = (Stack) result[0];
+                    Long postCount = (Long) result[1];
+                    return StackResponse.StackWithCount.of(stack, postCount);
+                })
+                .collect(Collectors.toList());
+    }
 
     /**
      * 스택 ID로 Stack 엔티티 조회
