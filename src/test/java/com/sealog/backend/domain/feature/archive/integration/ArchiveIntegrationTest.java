@@ -10,7 +10,6 @@ import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
 import com.sealog.backend.support.base.TestIntegrationBase;
-import com.sealog.backend.support.base.TestIntegrationBaseV2;
 import com.sealog.backend.support.component.TestDataFactory;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
@@ -25,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Archive 통합 테스트
  */
 @DisplayName("Archive 통합 테스트 (Controller → Service → Repository)")
-class ArchiveIntegrationTest extends TestIntegrationBaseV2 {
+class ArchiveIntegrationTest extends TestIntegrationBase {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
@@ -64,7 +63,8 @@ class ArchiveIntegrationTest extends TestIntegrationBaseV2 {
 
         // 게시글 생성
         publishedPost  = testDataFactory.createPost(testUser,  PostStatus.PUBLISHED);
-        deletedPost    = testDataFactory.createPost(testUser,  PostStatus.DELETED);
+        // todo: 삭제된 게시글은 더이상 상태에서 관리하지 않고 deleteAt에서 관리합니다
+        //deletedPost    = testDataFactory.createPost(testUser,  PostStatus.DELETED);
         unassignedPost = testDataFactory.createPost(testUser,  PostStatus.PUBLISHED);
         otherPost      = testDataFactory.createPost(otherUser, PostStatus.PUBLISHED);
 
