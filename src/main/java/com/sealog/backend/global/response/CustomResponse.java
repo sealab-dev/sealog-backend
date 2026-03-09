@@ -25,6 +25,13 @@ public class CustomResponse<T> {
                 .message(message)
                 .build();
     }
+
+    public static <T> CustomResponse<T> success(String message) {
+        return CustomResponse.<T>builder()
+                .success(true)
+                .message(message)
+                .build();
+    }
     
     public static <T> CustomResponse<T> error(String message) {
         return CustomResponse.<T>builder()
