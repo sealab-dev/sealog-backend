@@ -3,6 +3,7 @@ package com.sealog.backend.domain.feature.user.service;
 import com.sealog.backend.domain.feature.user.dto.UserRequest;
 import com.sealog.backend.domain.feature.user.dto.UserResponse;
 import com.sealog.backend.global.exception.CustomException;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
 
@@ -25,7 +26,8 @@ public interface UserService {
      */
     UserResponse.MyProfile updateProfile(
             Long userId,
-            UserRequest.UpdateProfileRequest request
+            UserRequest.UpdateProfileRequest request,
+            MultipartFile profileImage
     );
 
     /**

@@ -1,6 +1,7 @@
 package com.sealog.backend.domain.feature.file.service;
 
 import com.sealog.backend.domain.feature.file.entity.FileMetadata;
+import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.infra.storage.dto.FileUploadResult;
 import com.sealog.backend.global.exception.CustomException;
 
@@ -20,9 +21,10 @@ public interface FileMetadataService {
      * FileUploadResult를 기반으로 FileMetadata를 생성하고 저장합니다.
      *
      * @param uploadResult S3 업로드 결과
+     * @param user 업로드 한 유저
      * @return 저장된 FileMetadata
      */
-    FileMetadata upload(FileUploadResult uploadResult);
+    FileMetadata upload(FileUploadResult uploadResult, User user);
 
     /**
      * 파일 메타데이터를 ID로 조회합니다.
@@ -62,5 +64,14 @@ public interface FileMetadataService {
      * @return 고아 파일 목록
      */
     List<FileMetadata> findOrphanFiles(int hoursThreshold);
+
+    /**
+     * 파일 목록이 특정 유저가 업로드한 파일인지 검증합니다.
+     *
+     * @param fileIds 검증할 파일 ID 목록
+     * @param userId  요청자 유저 ID
+     * @throws CustomException 소유자가 아닌 파일이 포함된 경우
+     */
+    void validateFilesOwnership(List<Long> fileIds, Long userId);
 
 }

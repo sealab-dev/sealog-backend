@@ -8,8 +8,8 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class TestSql {
 
-    public static final String FOREIGN_KEY_CHECKS_ACTIVATION = "SET FOREIGN_KEY_CHECKS = 0";
-    public static final String FOREIGN_KEY_CHECKS_INACTIVATION = "SET FOREIGN_KEY_CHECKS = 1";
+    public static final String FOREIGN_KEY_CHECKS_ACTIVATION = "SET FOREIGN_KEY_CHECKS = 1";
+    public static final String FOREIGN_KEY_CHECKS_INACTIVATION = "SET FOREIGN_KEY_CHECKS = 0";
     public static final String TRUNCATE_TABLE = "TRUNCATE TABLE ";
 
     public static final String SELECT_TABLE_NAMES = """

@@ -13,9 +13,9 @@ import java.util.List;
 public class PostRequest {
 
     /**
-     * 게시글 생성 요청
+     * 게시글 생성 요청 (multipart/form-data의 JSON 파트)
+     * 썸네일은 별도 파일 파트로 전송
      */
-
     @Getter
     @Builder
     @NoArgsConstructor
@@ -34,15 +34,9 @@ public class PostRequest {
         private String excerpt;
 
         @NotBlank(message = "내용을 입력해주세요")
-        @Size(max = 50000, message = "본문은 50000자 이내로 입력해주세요")
-        @Schema(description = "본문", example = "내용 여기에 본문을 작성합니다.", maxLength = 50000)
+        @Size(max = 150000, message = "본문이 최대길이를 초과했습니다.")
+        @Schema(description = "본문", example = "여기에 본문을 작성합니다.", maxLength = 150000)
         private String content;
-
-        @Schema(description = "썸네일 파일 ID", example = "10")
-        private Long thumbnailFileId;
-
-        @Schema(description = "썸네일 경로", example = "")
-        private String thumbnailPath;
 
         @Schema(description = "태그 목록", example = "[\"spring\", \"jwt\"]")
         private List<String> tags;
@@ -54,7 +48,8 @@ public class PostRequest {
     }
 
     /**
-     * 게시글 수정 요청
+     * 게시글 수정 요청 (multipart/form-data의 JSON 파트)
+     * 새 썸네일은 별도 파일 파트로 전송, 없으면 기존 썸네일 유지
      */
     @Getter
     @Builder
@@ -77,15 +72,6 @@ public class PostRequest {
         @Size(max = 50000, message = "본문은 50000자 이내로 입력해주세요")
         @Schema(description = "본문", example = "내용 여기에 본문을 작성합니다.", maxLength = 50000)
         private String content;
-
-        @Schema(description = "썸네일 파일 ID", example = "10")
-        private Long thumbnailFileId;
-
-        @Schema(description = "썸네일 경로", example = "https://cdn.example.com/thumb/10.png")
-        private String thumbnailPath;
-
-        @Schema(description = "썸네일 제거 여부", example = "false")
-        private Boolean removeThumbnail;
 
         @Schema(description = "태그 목록", example = "[\"spring\", \"jwt\"]")
         private List<String> tags;

@@ -8,7 +8,7 @@ import lombok.Getter;
 public class UserResponse {
 
     /**
-     * 사용자 정보 응답
+     * 사용자 정보 응답 (내 정보)
      */
     @Getter
     @Builder
@@ -21,9 +21,9 @@ public class UserResponse {
         private UserRole role;
         private String position;
         private String about;
-        private String profileImagePath;
+        private String profileImageUrl;
 
-        public static MyProfile from(User user) {
+        public static MyProfile of(User user, String profileImageUrl) {
             return MyProfile.builder()
                     .id(user.getId())
                     .email(user.getEmail())
@@ -32,7 +32,7 @@ public class UserResponse {
                     .role(user.getRole())
                     .position(user.getPosition())
                     .about(user.getAbout())
-                    .profileImagePath(user.getProfileImagePath())
+                    .profileImageUrl(profileImageUrl)
                     .build();
         }
     }
@@ -45,14 +45,14 @@ public class UserResponse {
     public static class PublicProfile {
 
         private String nickname;
-        private String profileImagePath;
+        private String profileImageUrl;
         private String position;
         private String about;
 
-        public static PublicProfile from(User user) {
+        public static PublicProfile of(User user, String profileImageUrl) {
             return PublicProfile.builder()
                     .nickname(user.getNickname())
-                    .profileImagePath(user.getProfileImagePath())
+                    .profileImageUrl(profileImageUrl)
                     .position(user.getPosition())
                     .about(user.getAbout())
                     .build();

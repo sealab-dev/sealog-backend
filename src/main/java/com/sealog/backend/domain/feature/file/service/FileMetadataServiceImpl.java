@@ -2,6 +2,7 @@ package com.sealog.backend.domain.feature.file.service;
 
 import com.sealog.backend.domain.feature.file.entity.FileMetadata;
 import com.sealog.backend.domain.feature.file.repository.FileMetadataRepository;
+import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.infra.storage.dto.FileUploadResult;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
@@ -33,8 +34,9 @@ public class FileMetadataServiceImpl implements FileMetadataService {
 
     @Override
     @Transactional
-    public FileMetadata upload(FileUploadResult uploadResult) {
+    public FileMetadata upload(FileUploadResult uploadResult, User user) {
         FileMetadata fileMetadata = FileMetadata.builder()
+                .user(user)
                 .originalName(uploadResult.originalName())
                 .path(uploadResult.path())
                 .contentType(uploadResult.contentType())
@@ -62,7 +64,7 @@ public class FileMetadataServiceImpl implements FileMetadataService {
             return List.of();
         }
 
-        return fileMetadataRepository.findByIdIn(fileIds);
+        return fileMetadataRepository.findByIdInWithUser(fileIds);
     }
 
     @Override
@@ -100,5 +102,25 @@ public class FileMetadataServiceImpl implements FileMetadataService {
         return orphanFiles;
     }
 
+    @Override
+    public void validateFilesOwnership(List<Long> fileIds, Long userId) {
+        if (fileIds == null || fileIds.isEmpty()) {
+            return;
+        }
+
+        List<FileMetadata> files = fileMetadataRepository.findByIdInWithUser(fileIds);
+
+        List<Long> unauthorizedIds = files.stream()
+                .filter(f -> !f.getUser().getId().equals(userId))
+                .map(FileMetadata::getId)
+                .toList();
+
+        if (!unauthorizedIds.isEmpty()) {
+            log.error("파일 소유자 검증 실패: userId={}, unauthorizedFileIds={}", userId, unauthorizedIds);
+            throw new CustomException("접근 권한이 없는 파일이 포함되어 있습니다.", FORBIDDEN);
+        }
+
+        log.debug("파일 소유자 검증 통과: userId={}, fileCount={}", userId, fileIds.size());
+    }
 
 }

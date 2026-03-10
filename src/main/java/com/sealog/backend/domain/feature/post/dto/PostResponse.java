@@ -18,20 +18,18 @@ public class PostResponse {
     @Schema(name = "PostUserInfo")
     public static class AuthorInfo {
         private String nickname;
-        private String profileImagePath;
+        private String profileImageUrl;
 
-        public static AuthorInfo of(String nickname, String profileImagePath) {
+        public static AuthorInfo of(String nickname, String profileImageUrl) {
             return AuthorInfo.builder()
                     .nickname(nickname)
-                    .profileImagePath(profileImagePath)
+                    .profileImageUrl(profileImageUrl)
                     .build();
         }
     }
 
     /**
      * 스택 정보 (post 도메인 내부 관리)
-     * - stack 도메인 DTO 의존 제거
-     * - sortOrder 포함
      */
     @Getter
     @Builder
@@ -62,7 +60,7 @@ public class PostResponse {
         private String title;
         private String excerpt;
         private PostStatus status;
-        private String thumbnailPath;
+        private String thumbnailUrl;
         private List<String> tags;
         private List<StackItem> stacks;
         private AuthorInfo author;
@@ -74,7 +72,7 @@ public class PostResponse {
                 String title,
                 String excerpt,
                 PostStatus status,
-                String thumbnailPath,
+                String thumbnailUrl,
                 List<String> tags,
                 List<StackItem> stacks,
                 AuthorInfo author,
@@ -86,7 +84,7 @@ public class PostResponse {
                     .title(title)
                     .excerpt(excerpt)
                     .status(status)
-                    .thumbnailPath(thumbnailPath)
+                    .thumbnailUrl(thumbnailUrl)
                     .tags(tags)
                     .stacks(stacks)
                     .author(author)
@@ -96,7 +94,7 @@ public class PostResponse {
     }
 
     /**
-     * 게시글 상세 응답 (전체 정보 + 연관 게시글)
+     * 게시글 상세 응답
      */
     @Getter
     @Builder
@@ -109,7 +107,7 @@ public class PostResponse {
         private String excerpt;
         private String content;
         private PostStatus status;
-        private String thumbnailPath;
+        private String thumbnailUrl;
         private List<String> tags;
         private List<StackItem> stacks;
         private AuthorInfo author;
@@ -123,7 +121,7 @@ public class PostResponse {
                 String excerpt,
                 String content,
                 PostStatus status,
-                String thumbnailPath,
+                String thumbnailUrl,
                 List<String> tags,
                 List<StackItem> stacks,
                 AuthorInfo author,
@@ -137,7 +135,7 @@ public class PostResponse {
                     .excerpt(excerpt)
                     .content(content)
                     .status(status)
-                    .thumbnailPath(thumbnailPath)
+                    .thumbnailUrl(thumbnailUrl)
                     .tags(tags)
                     .stacks(stacks)
                     .author(author)
@@ -161,7 +159,7 @@ public class PostResponse {
         private String excerpt;
         private String content;
         private PostStatus status;
-        private String thumbnailPath;
+        private String thumbnailUrl;
         private List<String> tags;
         private List<StackItem> stacks;
         private LocalDateTime createdAt;
@@ -174,7 +172,7 @@ public class PostResponse {
                 String excerpt,
                 String content,
                 PostStatus status,
-                String thumbnailPath,
+                String thumbnailUrl,
                 List<String> tags,
                 List<StackItem> stacks,
                 LocalDateTime createdAt,
@@ -187,7 +185,7 @@ public class PostResponse {
                     .excerpt(excerpt)
                     .content(content)
                     .status(status)
-                    .thumbnailPath(thumbnailPath)
+                    .thumbnailUrl(thumbnailUrl)
                     .tags(tags)
                     .stacks(stacks)
                     .createdAt(createdAt)

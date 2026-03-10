@@ -67,6 +67,16 @@ public class S3FileStorageService implements FileStorageService {
     }
 
     @Override
+    public FileUploadResult uploadPublicThumbnail(MultipartFile file) throws IOException {
+        return uploadFileInternal(file, StoragePath.PUBLIC_THUMBNAIL);
+    }
+
+    @Override
+    public FileUploadResult uploadPublicProfileImage(MultipartFile file) throws IOException {
+        return uploadFileInternal(file, StoragePath.PUBLIC_PROFILE);
+    }
+
+    @Override
     public FileUploadResult uploadPublicVideo(MultipartFile file) throws IOException {
         return uploadFileInternal(file, StoragePath.PUBLIC_VIDEO);
     }

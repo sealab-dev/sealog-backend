@@ -32,12 +32,6 @@ public class UserRequest {
         @Schema(description = "소개", example = "Java/Spring 기반 백엔드 개발자입니다.")
         private String about;
 
-        @Schema(description = "프로필 이미지 ID", example = "10")
-        private Long profileImageId;
-
-        @Schema(description = "프로필 이미지 경로", example = "https://cdn.example.com/profile/10.png")
-        private String profileImagePath;
-
         @Schema(description = "프로필 이미지 제거 여부", example = "false")
         private Boolean removeProfileImage;
     }

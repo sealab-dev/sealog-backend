@@ -3,14 +3,15 @@ package com.sealog.backend.domain.feature.user.controller;
 import com.sealog.backend.domain.feature.user.dto.UserRequest;
 import com.sealog.backend.domain.feature.user.service.UserService;
 import com.sealog.backend.global.response.CustomResponse;
-import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.security.auth.CustomUserDetails;
 import com.sealog.backend.domain.feature.user.dto.UserResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/user/me")
@@ -41,18 +42,16 @@ public class UserMeController implements UserMeControllerDocs {
      * user
      */
     @Override
-    @PatchMapping("/profile")
+    @PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CustomResponse<UserResponse.MyProfile>> updateProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestPart(required = false) @Valid UserRequest.UpdateProfileRequest request
+            @RequestPart("request") @Valid UserRequest.UpdateProfileRequest request,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
     ) {
-        if ((request == null || request.getNickname() == null || request.getNickname().isBlank())) {
-            throw CustomException.badRequest("수정할 정보를 입력해주세요");
-        }
-
         UserResponse.MyProfile response = userService.updateProfile(
                 userDetails.getUserId(),
-                request
+                request,
+                profileImage
         );
 
         return ResponseEntity.ok(CustomResponse.success(response, "프로필이 수정되었습니다"));
