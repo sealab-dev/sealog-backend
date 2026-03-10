@@ -11,9 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
@@ -80,20 +82,6 @@ public class FileMetadataServiceImpl implements FileMetadataService {
     }
 
     @Override
-    public void validateFilesExist(List<Long> fileIds) {
-        if (fileIds == null || fileIds.isEmpty()) {
-            return;
-        }
-
-        long existingCount = fileMetadataRepository.countByIdIn(fileIds);
-
-        if (existingCount != fileIds.size()) {
-            log.error("일부 파일을 찾을 수 없음: 요청={}, 존재={}", fileIds.size(), existingCount);
-            throw new CustomException("일부 파일을 찾을 수 없습니다.", NOT_FOUND);
-        }
-    }
-
-    @Override
     public List<FileMetadata> findOrphanFiles(int hoursThreshold) {
         LocalDateTime thresholdTime = LocalDateTime.now().minusHours(hoursThreshold);
         List<FileMetadata> orphanFiles = fileMetadataRepository.findOrphanFiles(thresholdTime);
@@ -103,24 +91,29 @@ public class FileMetadataServiceImpl implements FileMetadataService {
     }
 
     @Override
-    public void validateFilesOwnership(List<Long> fileIds, Long userId) {
+    public Set<Long> findInvalidFileIds(List<Long> fileIds, Long userId) {
         if (fileIds == null || fileIds.isEmpty()) {
-            return;
+            return Set.of();
         }
 
         List<FileMetadata> files = fileMetadataRepository.findByIdInWithUser(fileIds);
 
-        List<Long> unauthorizedIds = files.stream()
+        Set<Long> existingIds = files.stream()
+                .map(FileMetadata::getId)
+                .collect(Collectors.toSet());
+
+        Set<Long> invalidIds = fileIds.stream()
+                .filter(id -> !existingIds.contains(id))
+                .collect(Collectors.toCollection(HashSet::new));
+
+        files.stream()
                 .filter(f -> !f.getUser().getId().equals(userId))
                 .map(FileMetadata::getId)
-                .toList();
+                .forEach(invalidIds::add);
 
-        if (!unauthorizedIds.isEmpty()) {
-            log.error("파일 소유자 검증 실패: userId={}, unauthorizedFileIds={}", userId, unauthorizedIds);
-            throw new CustomException("접근 권한이 없는 파일이 포함되어 있습니다.", FORBIDDEN);
-        }
-
-        log.debug("파일 소유자 검증 통과: userId={}, fileCount={}", userId, fileIds.size());
+        log.debug("유효하지 않은 파일 ID 조회 완료: userId={}, 요청={}, 유효하지 않음={}",
+                userId, fileIds.size(), invalidIds.size());
+        return invalidIds;
     }
 
 }

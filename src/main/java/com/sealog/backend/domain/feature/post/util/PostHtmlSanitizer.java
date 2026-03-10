@@ -52,6 +52,18 @@ public class PostHtmlSanitizer {
         }
 
         Document doc = Jsoup.parseBodyFragment(html);
+        validateTags(doc);
+
+        String cleaned = Jsoup.clean(html, "", SAFELIST, OUTPUT_SETTINGS);
+        log.debug("HTML 새니타이즈 완료: 원본 길이={}, 결과 길이={}", html.length(), cleaned.length());
+        return cleaned;
+    }
+
+    /**
+     * 이미 파싱된 Document의 태그를 검증합니다.
+     * 허용되지 않은 태그가 있으면 예외를 던집니다.
+     */
+    private static void validateTags(Document doc) {
         for (Element el : doc.body().getAllElements()) {
             String tag = el.tagName();
             if (!"body".equals(tag) && !ALLOWED_TAGS.contains(tag)) {
@@ -59,9 +71,5 @@ public class PostHtmlSanitizer {
                 throw CustomException.badRequest("허용되지 않는 HTML 태그가 포함되어 있습니다");
             }
         }
-
-        String cleaned = Jsoup.clean(html, "", SAFELIST, OUTPUT_SETTINGS);
-        log.debug("HTML 새니타이즈 완료: 원본 길이={}, 결과 길이={}", html.length(), cleaned.length());
-        return cleaned;
     }
 }

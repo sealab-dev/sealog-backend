@@ -36,24 +36,22 @@ public interface PostFileService extends FileUsageCollector {
     // ========== 본문 파일 오케스트레이션 ========== //
 
     /**
-     * 게시글 생성 시 본문 HTML에서 파일 ID를 추출해 post_file 매핑을 저장합니다.
-     * 파일 존재 여부와 소유권을 검증한 후 매핑을 저장합니다.
+     * 게시글 생성 후: 이미 정제된 본문 HTML에서 파일 ID를 추출해 post_file 매핑을 저장합니다.
+     * cleanContentHtml 호출 후 게시글 저장이 완료된 시점에 호출합니다.
      *
-     * @param postId        게시글 ID
-     * @param userId        작성자 ID
-     * @param processedContent 정제된 본문 HTML
+     * @param postId      게시글 ID
+     * @param cleanedHtml cleanContentHtml이 반환한 최종 HTML
      */
-    void saveContentFilesFromHtml(Long postId, Long userId, String processedContent);
+    void saveContentFileMappings(Long postId, String cleanedHtml);
 
     /**
-     * 게시글 수정 시 본문 파일 매핑을 이전 상태와 비교해 업데이트합니다.
-     * 제거된 파일은 매핑 삭제, 추가된 파일은 검증 후 매핑 저장합니다.
+     * 게시글 수정 후: 이미 정제된 본문 HTML을 기준으로 파일 매핑을 증분 업데이트합니다.
+     * 제거된 파일은 매핑 삭제, 추가된 파일은 매핑 저장합니다. (유효성 검증 없음)
      *
-     * @param postId        게시글 ID
-     * @param userId        작성자 ID
-     * @param processedContent 정제된 본문 HTML
+     * @param postId      게시글 ID
+     * @param cleanedHtml cleanContentHtml이 반환한 최종 HTML
      */
-    void updateContentFilesFromHtml(Long postId, Long userId, String processedContent);
+    void updateContentFileMappings(Long postId, String cleanedHtml);
 
     // ========== 매핑 CRUD ========== //
 

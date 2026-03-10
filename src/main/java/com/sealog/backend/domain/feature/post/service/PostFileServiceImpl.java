@@ -80,42 +80,34 @@ public class PostFileServiceImpl implements PostFileService {
     // ========== 본문 파일 오케스트레이션 ========== //
 
     /**
-     * 게시글 생성 시 본문 HTML에서 파일 ID를 추출해 post_file 매핑을 저장합니다.
-     * data-file-id 속성이 있는 img 태그만 대상으로 하며,
-     * 파일 존재 여부와 소유권을 검증한 후 매핑을 저장합니다.
-     * 매핑이 저장된 파일은 고아 파일 스케줄러의 정리 대상에서 제외됩니다.
+     * 게시글 생성 후: 이미 정제된 HTML에서 파일 ID를 추출해 post_file 매핑을 저장합니다.
+     * cleanContentHtml 호출 후 게시글 저장이 완료된 시점에 호출합니다.
      */
     @Override
     @Transactional
-    public void saveContentFilesFromHtml(Long postId, Long userId, String sanitizedHtml) {
-        Set<Long> fileIds = PostHtmlParser.extractFileIds(sanitizedHtml);
+    public void saveContentFileMappings(Long postId, String refinedHtml) {
+        Set<Long> fileIds = PostHtmlParser.extractFileIds(refinedHtml);
 
         if (fileIds.isEmpty()) {
             log.debug("게시글 생성 - 본문에 파일 참조 없음: postId={}", postId);
             return;
         }
 
-        List<Long> fileIdList = new ArrayList<>(fileIds);
-        log.debug("게시글 생성 - 본문 파일 매핑 시작: postId={}, fileCount={}", postId, fileIdList.size());
-
-        fileMetadataService.validateFilesExist(fileIdList);
-        fileMetadataService.validateFilesOwnership(fileIdList, userId);
-        saveContentFiles(postId, fileIdList);
-
-        log.debug("게시글 생성 - 본문 파일 매핑 완료: postId={}", postId);
+        saveContentFiles(postId, new ArrayList<>(fileIds));
+        log.debug("게시글 생성 - 본문 파일 매핑 완료: postId={}, count={}", postId, fileIds.size());
     }
 
     /**
-     * 게시글 수정 시 본문 파일 매핑을 이전 상태와 비교해 증분 업데이트합니다.
+     * 게시글 수정 후: 이미 정제된 HTML을 기준으로 파일 매핑을 증분 업데이트합니다.
      * - 본문에서 제거된 파일: post_file 매핑 삭제 → 고아 파일 스케줄러 정리 대상으로 전환
-     * - 본문에 새로 추가된 파일: 존재/소유권 검증 후 post_file 매핑 저장
+     * - 본문에 새로 추가된 파일: 매핑 저장 (유효성 검증 없음, cleanContentHtml에서 이미 처리)
      * - 변경 없는 파일: 그대로 유지
      */
     @Override
     @Transactional
-    public void updateContentFilesFromHtml(Long postId, Long userId, String sanitizedHtml) {
+    public void updateContentFileMappings(Long postId, String cleanedHtml) {
         Set<Long> oldFileIds = getContentFileIds(postId);
-        Set<Long> newFileIds = PostHtmlParser.extractFileIds(sanitizedHtml);
+        Set<Long> newFileIds = PostHtmlParser.extractFileIds(cleanedHtml);
 
         Set<Long> fileIdsToDelete = new HashSet<>(oldFileIds);
         fileIdsToDelete.removeAll(newFileIds);
@@ -132,10 +124,7 @@ public class PostFileServiceImpl implements PostFileService {
         }
 
         if (!fileIdsToAdd.isEmpty()) {
-            List<Long> toAddList = new ArrayList<>(fileIdsToAdd);
-            fileMetadataService.validateFilesExist(toAddList);
-            fileMetadataService.validateFilesOwnership(toAddList, userId);
-            saveContentFiles(postId, toAddList);
+            saveContentFiles(postId, new ArrayList<>(fileIdsToAdd));
         }
     }
 

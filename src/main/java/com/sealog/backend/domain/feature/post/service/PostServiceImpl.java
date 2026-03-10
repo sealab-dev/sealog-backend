@@ -1,5 +1,6 @@
 package com.sealog.backend.domain.feature.post.service;
 
+import com.sealog.backend.domain.feature.file.service.FileMetadataService;
 import com.sealog.backend.domain.feature.post.dto.PostRequest;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.post.entity.Post;
@@ -20,7 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -32,6 +35,7 @@ public class PostServiceImpl implements PostService {
     private final PostStackService postStackService;
     private final PostTagService postTagService;
     private final PostFileService postFileService;
+    private final FileMetadataService fileMetadataService;
 
     @Value("${storage.base-url}")
     private String storageBaseUrl;
@@ -70,10 +74,6 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findByUserIdAndSlug(userId, slug)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
-        if (!post.isWrittenBy(userId)) {
-            throw CustomException.forbidden("접근 권한이 없습니다");
-        }
-
         List<PostResponse.StackItem> stackItems = postStackService.getStackItemsByPostId(post.getId());
         List<String> tagNames = postTagService.getTagNamesByPostId(post.getId());
         String displayContent = PostHtmlParser.injectSrcAttributes(post.getContent(), storageBaseUrl);
@@ -104,45 +104,41 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public PostResponse.Detail create(User user, PostRequest.Create request, MultipartFile thumbnail) {
-        // 유저별 제목 중복 확인
+        // 1. 유저별 제목 중복 확인
         validateTitle(user.getId(), request.getTitle());
 
-        // XSS 방지 허용되지 않은 태그 일 경우 예외 반환
-        // 본문 파싱을 통해 src를 제거(메타데이터 속성들만 남김)
-        String processedContent = PostHtmlParser.stripSrcAttributes(
-                PostHtmlSanitizer.sanitize(request.getContent())
-        );
+        // 2. 본문 정제 (XSS → src 제거 → 유효하지 않은 파일 태그 제거)
+        String refinedHtml = prepareContent(user.getId(), request.getContent());
 
-        // 제목으로 slug 생성
+        // 3. slug 생성
         String slug = generateUniqueSlug(user.getId(), request.getTitle());
 
-        Post post = Post.builder()
+        // 4. 게시글 저장
+        Post savedPost = postRepository.save(Post.builder()
                 .user(user)
                 .title(request.getTitle())
                 .slug(slug)
                 .excerpt(request.getExcerpt())
-                .content(processedContent)
+                .content(refinedHtml)
                 .status(PostStatus.PUBLISHED)
-                .build();
+                .build());
 
-        Post savedPost = postRepository.save(post);
-
+        // 5. 스택 / 태그 매핑
         if (request.getStackIds() != null) {
             postStackService.updatePostStacks(savedPost.getId(), request.getStackIds());
         }
-
         if (request.getTags() != null) {
             postTagService.updatePostTags(savedPost.getId(), request.getTags());
         }
 
-        // 썸네일이 있을 경우 파일을 저장하고 메타데이터 추가 및 post엔티티에 경로 추가
+        // 6. 썸네일 업로드 + 매핑
         if (thumbnail != null && !thumbnail.isEmpty()) {
             String thumbnailPath = postFileService.saveThumbnailFile(savedPost.getId(), user, thumbnail);
             savedPost.updateThumbnailPath(thumbnailPath);
         }
 
-        // 본문에서 파일을 추출해 매핑
-        postFileService.saveContentFilesFromHtml(savedPost.getId(), user.getId(), processedContent);
+        // 7. 본문 파일 매핑 (검증 완료된 refinedHtml 기준)
+        postFileService.saveContentFileMappings(savedPost.getId(), refinedHtml);
 
         return buildPostDetailResponse(savedPost);
     }
@@ -157,10 +153,14 @@ public class PostServiceImpl implements PostService {
             throw CustomException.forbidden("접근 권한이 없습니다");
         }
 
-        String processedContent = PostHtmlParser.stripSrcAttributes(
-                PostHtmlSanitizer.sanitize(request.getContent())
-        );
+        if (post.isDeleted()) {
+            throw CustomException.badRequest("삭제된 게시글은 수정할 수 없습니다");
+        }
 
+        // 1. 본문 정제 (XSS → src 제거 → 유효하지 않은 파일 태그 제거)
+        String finalContent = prepareContent(userId, request.getContent());
+
+        // 2. slug 재생성 (제목 변경 시)
         String newSlug = post.getSlug();
         if (!post.getTitle().equals(request.getTitle())) {
             validateTitle(userId, postId, request.getTitle());
@@ -169,17 +169,21 @@ public class PostServiceImpl implements PostService {
                     post.getId(), post.getSlug(), newSlug);
         }
 
-        post.update(request.getTitle(), newSlug, request.getExcerpt(), processedContent);
+        // 3. 게시글 업데이트
+        post.update(request.getTitle(), newSlug, request.getExcerpt(), finalContent);
 
+        // 4. 스택 / 태그 매핑
         postStackService.updatePostStacks(post.getId(), request.getStackIds());
         postTagService.updatePostTags(post.getId(), request.getTags());
 
+        // 5. 썸네일 업로드 + 매핑
         if (thumbnail != null && !thumbnail.isEmpty()) {
             String thumbnailPath = postFileService.saveThumbnailFile(post.getId(), post.getUser(), thumbnail);
             post.updateThumbnailPath(thumbnailPath);
         }
 
-        postFileService.updateContentFilesFromHtml(post.getId(), userId, processedContent);
+        // 6. 본문 파일 매핑 증분 업데이트 (검증 완료된 finalContent 기준)
+        postFileService.updateContentFileMappings(post.getId(), finalContent);
 
         return buildPostDetailResponse(post);
     }
@@ -279,6 +283,27 @@ public class PostServiceImpl implements PostService {
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );
+    }
+
+    // ========== 본문 정제 ========== //
+
+    /**
+     * 본문을 저장 가능한 형태로 정제합니다.
+     * 파싱은 단 1회만 수행하며, 이후 작업은 모두 동일한 Document 위에서 처리합니다.
+     * 1. XSS 검증 + Safelist 정제 (PostHtmlSanitizer.sanitize)
+     * 2. 파싱 + 파일 ID 추출 (PostHtmlParser.prepare) — 재파싱 없이 Document 보존
+     * 3. 유효하지 않은 파일 ID 조회 (서비스 호출)
+     * 4. src 제거 + 유효하지 않은 파일 태그 제거 후 직렬화 (finalize)
+     */
+    private String prepareContent(Long userId, String rawContent) {
+        String sanitized = PostHtmlSanitizer.sanitize(rawContent);
+        PostHtmlParser.ContentPrep prep = PostHtmlParser.prepare(sanitized);
+
+        Set<Long> invalidIds = prep.getFileIds().isEmpty()
+                ? Set.of()
+                : fileMetadataService.findInvalidFileIds(new ArrayList<>(prep.getFileIds()), userId);
+
+        return prep.finalize(invalidIds);
     }
 
     // ========== URL 조립 ========== //
