@@ -70,7 +70,8 @@ public class FileUploadController implements FileUploadControllerDocs{
         log.debug("파일 메타데이터 저장 완료: fileId={}", fileMetadata.getId());
 
         // 4. 응답 반환
-        FileResponse response = FileResponse.from(fileMetadata);
+        String fileUrl = fileStorageService.getFileUrl(fileMetadata.getPath());
+        FileResponse response = FileResponse.from(fileMetadata, fileUrl);
         log.debug("파일 업로드 성공: fileId={}, path={}", response.id(), response.path());
 
         return ResponseEntity.ok(CustomResponse.success(response, "파일이 업로드되었습니다"));
