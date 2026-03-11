@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.file.controller;
 
 import com.sealog.backend.global.response.CustomResponse;
-import com.sealog.backend.domain.feature.file.dto.FileUploadResponse;
+import com.sealog.backend.domain.feature.file.dto.FileResponse;
 import com.sealog.backend.domain.feature.file.entity.FileMetadata;
 import com.sealog.backend.domain.feature.file.service.FileMetadataService;
 import com.sealog.backend.domain.feature.file.util.FileValidator;
@@ -49,7 +49,7 @@ public class FileUploadController implements FileUploadControllerDocs{
     @Override
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Transactional
-    public ResponseEntity<CustomResponse<FileUploadResponse>> uploadFile(
+    public ResponseEntity<CustomResponse<FileResponse>> uploadFile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart("file") MultipartFile file
     ) throws IOException {
@@ -70,7 +70,7 @@ public class FileUploadController implements FileUploadControllerDocs{
         log.debug("파일 메타데이터 저장 완료: fileId={}", fileMetadata.getId());
 
         // 4. 응답 반환
-        FileUploadResponse response = FileUploadResponse.from(fileMetadata);
+        FileResponse response = FileResponse.from(fileMetadata);
         log.debug("파일 업로드 성공: fileId={}, path={}", response.id(), response.path());
 
         return ResponseEntity.ok(CustomResponse.success(response, "파일이 업로드되었습니다"));

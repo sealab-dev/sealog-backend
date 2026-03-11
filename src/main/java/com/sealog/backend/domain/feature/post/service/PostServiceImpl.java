@@ -11,9 +11,9 @@ import com.sealog.backend.domain.feature.post.util.PostHtmlSanitizer;
 import com.sealog.backend.domain.feature.post.util.PostSlugGenerator;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.global.exception.CustomException;
+import com.sealog.backend.infra.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,9 +36,7 @@ public class PostServiceImpl implements PostService {
     private final PostTagService postTagService;
     private final PostFileService postFileService;
     private final FileMetadataService fileMetadataService;
-
-    @Value("${storage.base-url}")
-    private String storageBaseUrl;
+    private final FileStorageService fileStorageService;
 
     // ========== 조회 ========== //
 
@@ -76,7 +74,7 @@ public class PostServiceImpl implements PostService {
 
         List<PostResponse.StackItem> stackItems = postStackService.getStackItemsByPostId(post.getId());
         List<String> tagNames = postTagService.getTagNamesByPostId(post.getId());
-        String displayContent = PostHtmlParser.injectSrcAttributes(post.getContent(), storageBaseUrl);
+        String displayContent = PostHtmlParser.injectSrcAttributes(post.getContent(), fileStorageService.getBaseUrl());
 
         return PostResponse.Edit.of(
                 post.getId(),
@@ -85,7 +83,7 @@ public class PostServiceImpl implements PostService {
                 post.getExcerpt(),
                 displayContent,
                 post.getStatus(),
-                toFileUrl(post.getThumbnailPath()),
+                fileStorageService.getFileUrl(post.getThumbnailPath()),
                 tagNames,
                 stackItems,
                 post.getCreatedAt(),
@@ -236,7 +234,7 @@ public class PostServiceImpl implements PostService {
 
         PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
                 post.getUser().getNickname(),
-                toFileUrl(post.getUser().getProfileImagePath())
+                fileStorageService.getFileUrl(post.getUser().getProfileImagePath())
         );
 
         return PostResponse.PostItems.of(
@@ -245,7 +243,7 @@ public class PostServiceImpl implements PostService {
                 post.getTitle(),
                 post.getExcerpt(),
                 post.getStatus(),
-                toFileUrl(post.getThumbnailPath()),
+                fileStorageService.getFileUrl(post.getThumbnailPath()),
                 tagNames,
                 stackItems,
                 author,
@@ -264,10 +262,10 @@ public class PostServiceImpl implements PostService {
 
         PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
                 post.getUser().getNickname(),
-                toFileUrl(post.getUser().getProfileImagePath())
+                fileStorageService.getFileUrl(post.getUser().getProfileImagePath())
         );
 
-        String displayContent = PostHtmlParser.injectSrcAttributes(post.getContent(), storageBaseUrl);
+        String displayContent = PostHtmlParser.injectSrcAttributes(post.getContent(), fileStorageService.getBaseUrl());
 
         return PostResponse.Detail.of(
                 post.getId(),
@@ -276,7 +274,7 @@ public class PostServiceImpl implements PostService {
                 post.getExcerpt(),
                 displayContent,
                 post.getStatus(),
-                toFileUrl(post.getThumbnailPath()),
+                fileStorageService.getFileUrl(post.getThumbnailPath()),
                 tagNames,
                 stackItems,
                 author,
@@ -304,18 +302,6 @@ public class PostServiceImpl implements PostService {
                 : fileMetadataService.findInvalidFileIds(new ArrayList<>(prep.getFileIds()), userId);
 
         return prep.finalize(invalidIds);
-    }
-
-    // ========== URL 조립 ========== //
-
-    private String toFileUrl(String path) {
-        if (path == null) {
-            return null;
-        }
-        String base = storageBaseUrl.endsWith("/")
-                ? storageBaseUrl.substring(0, storageBaseUrl.length() - 1)
-                : storageBaseUrl;
-        return path.startsWith("/") ? base + path : base + "/" + path;
     }
 
     // ========== Slug 생성 ========== //
