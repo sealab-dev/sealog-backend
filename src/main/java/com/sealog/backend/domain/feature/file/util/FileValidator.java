@@ -14,6 +14,36 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileValidator {
 
     /**
+     * 이미지 파일 전용 검증
+     *
+     * @param file 업로드할 이미지 파일
+     * @throws CustomException 검증 실패 시
+     */
+    public static void validateImageFile(MultipartFile file) {
+        validateFileNotEmpty(file);
+        validateFileName(file.getOriginalFilename());
+
+        String extension = extractExtension(file.getOriginalFilename());
+
+        if (!FileTypeConstants.Image.ALLOWED_EXTENSIONS.contains(extension)) {
+            throw CustomException.badRequest(
+                    String.format("이미지 파일만 업로드 가능합니다. (지원 형식: %s)",
+                            String.join(", ", FileTypeConstants.Image.ALLOWED_EXTENSIONS))
+            );
+        }
+
+        if (file.getSize() > FileTypeConstants.Image.MAX_SIZE) {
+            throw CustomException.badRequest(
+                    String.format("이미지는 최대 %dMB까지 업로드 가능합니다. (현재 파일: %.2fMB)",
+                            FileTypeConstants.Image.MAX_SIZE / (1024 * 1024),
+                            file.getSize() / (1024.0 * 1024.0))
+            );
+        }
+
+        log.info("이미지 파일 검증 완료: filename={}, size={}bytes", file.getOriginalFilename(), file.getSize());
+    }
+
+    /**
      * 파일 업로드 전체 검증
      *
      * 검증 순서:

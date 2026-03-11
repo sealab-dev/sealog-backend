@@ -1,6 +1,7 @@
 package com.sealog.backend.domain.feature.file.entity;
 
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;
+import com.sealog.backend.domain.feature.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -37,6 +38,10 @@ public class FileMetadata extends BaseTimeEntity {
     @Column(nullable = false)
     private String originalName;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     /**
      * S3 전체 경로 (버킷 제외)
      */
@@ -58,11 +63,13 @@ public class FileMetadata extends BaseTimeEntity {
 
     @Builder
     public FileMetadata(
+            User user,
             String originalName,
             String path,
             String contentType,
             Long size
     ) {
+        this.user = user;
         this.originalName = originalName;
         this.path = path;
         this.contentType = contentType;

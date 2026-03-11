@@ -82,6 +82,9 @@ jwt:
     access-token-validity: ${JWT_ACCESS_TTL:3600000}
     refresh-token-validity: ${JWT_REFRESH_TTL:86400000}
 
+storage:
+    base-url: ${STORAGE_BASE_URL:http://localhost:8080/files}
+
 file:
     local:
         upload-dir: ${FILE_UPLOAD_DIR:./uploads}

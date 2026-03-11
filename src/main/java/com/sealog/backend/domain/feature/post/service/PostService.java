@@ -6,6 +6,7 @@ import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.global.exception.CustomException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -66,7 +67,7 @@ public interface PostService {
      * @return 생성된 게시글 상세 정보
      * @throws CustomException 제목 중복, 사용자 없음, 파일 없음 등
      */
-    PostResponse.Detail create(User user, PostRequest.Create request);
+    PostResponse.Detail create(User user, PostRequest.Create request, MultipartFile thumbnail);
 
     /**
      * 게시글 수정용 데이터 조회
@@ -87,7 +88,7 @@ public interface PostService {
      * @return 수정된 게시글 상세 정보
      * @throws CustomException 게시글 없음, 권한 없음, 제목 중복 등
      */
-    PostResponse.Detail update(Long userId, Long postId, PostRequest.Update request);
+    PostResponse.Detail update(Long userId, Long postId, PostRequest.Update request, MultipartFile thumbnail);
 
     /**
      * 게시글 삭제 (소프트 삭제)

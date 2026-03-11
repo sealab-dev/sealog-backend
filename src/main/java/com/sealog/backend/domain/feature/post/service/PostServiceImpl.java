@@ -6,22 +6,22 @@ import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
 import com.sealog.backend.domain.feature.post.repository.PostRepository;
-import com.sealog.backend.domain.feature.post.util.PostMarkdownFileParser;
+import com.sealog.backend.domain.feature.post.util.PostHtmlParser;
+import com.sealog.backend.domain.feature.post.util.PostHtmlSanitizer;
 import com.sealog.backend.domain.feature.post.util.PostSlugGenerator;
-import com.sealog.backend.domain.feature.post.util.PostValidateMarkdown;
-import com.sealog.backend.domain.feature.stack.dto.StackResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -36,6 +36,11 @@ public class PostServiceImpl implements PostService {
     private final PostTagService postTagService;
     private final PostFileService postFileService;
     private final FileMetadataService fileMetadataService;
+
+    @Value("${storage.base-url}")
+    private String storageBaseUrl;
+
+    // ========== 조회 ========== //
 
     @Override
     public Page<PostResponse.PostItems> getPosts(Pageable pageable) {
@@ -54,7 +59,7 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findPublishedByNicknameAndSlug(nickname, slug)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
-        return buildPostDetailResponse(post, true);
+        return buildPostDetailResponse(post);
     }
 
     @Override
@@ -69,21 +74,18 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findByUserIdAndSlug(userId, slug)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
-        if (!post.isWrittenBy(userId)) {
-            throw CustomException.forbidden("접근 권한이 없습니다");
-        }
-
         List<PostResponse.StackItem> stackItems = postStackService.getStackItemsByPostId(post.getId());
         List<String> tagNames = postTagService.getTagNamesByPostId(post.getId());
+        String displayContent = PostHtmlParser.injectSrcAttributes(post.getContent(), storageBaseUrl);
 
         return PostResponse.Edit.of(
                 post.getId(),
                 post.getSlug(),
                 post.getTitle(),
                 post.getExcerpt(),
-                post.getContent(),
+                displayContent,
                 post.getStatus(),
-                post.getThumbnailPath(),
+                toFileUrl(post.getThumbnailPath()),
                 tagNames,
                 stackItems,
                 post.getCreatedAt(),
@@ -97,45 +99,53 @@ public class PostServiceImpl implements PostService {
                 .map(this::buildPostItemsResponse);
     }
 
+    // ========== 생성 / 수정 / 삭제 ========== //
+
     @Override
     @Transactional
-    public PostResponse.Detail create(User user, PostRequest.Create request) {
-        validateTitleForCreate(user.getId(), request.getTitle());
-        PostValidateMarkdown.validate(request.getContent());
+    public PostResponse.Detail create(User user, PostRequest.Create request, MultipartFile thumbnail) {
+        // 1. 유저별 제목 중복 확인
+        validateTitle(user.getId(), request.getTitle());
 
+        // 2. 본문 정제 (XSS → src 제거 → 유효하지 않은 파일 태그 제거)
+        String refinedHtml = prepareContent(user.getId(), request.getContent());
+
+        // 3. slug 생성
         String slug = generateUniqueSlug(user.getId(), request.getTitle());
 
-        Post post = Post.builder()
+        // 4. 게시글 저장
+        Post savedPost = postRepository.save(Post.builder()
                 .user(user)
                 .title(request.getTitle())
                 .slug(slug)
                 .excerpt(request.getExcerpt())
-                .content(request.getContent())
+                .content(refinedHtml)
                 .status(PostStatus.PUBLISHED)
-                .build();
+                .build());
 
-        Post savedPost = postRepository.save(post);
-
+        // 5. 스택 / 태그 매핑
         if (request.getStackIds() != null) {
             postStackService.updatePostStacks(savedPost.getId(), request.getStackIds());
         }
-
         if (request.getTags() != null) {
             postTagService.updatePostTags(savedPost.getId(), request.getTags());
         }
 
-        if (request.getThumbnailFileId() != null) {
-            handleThumbnailFromPreUpload(savedPost, request.getThumbnailFileId(), request.getThumbnailPath());
+        // 6. 썸네일 업로드 + 매핑
+        if (thumbnail != null && !thumbnail.isEmpty()) {
+            String thumbnailPath = postFileService.saveThumbnailFile(savedPost.getId(), user, thumbnail);
+            savedPost.updateThumbnailPath(thumbnailPath);
         }
 
-        handleContentFilesFromMarkdown(savedPost.getId(), request.getContent());
+        // 7. 본문 파일 매핑 (검증 완료된 refinedHtml 기준)
+        postFileService.saveContentFileMappings(savedPost.getId(), refinedHtml);
 
-        return buildPostDetailResponse(savedPost, false);
+        return buildPostDetailResponse(savedPost);
     }
 
     @Override
     @Transactional
-    public PostResponse.Detail update(Long userId, Long postId, PostRequest.Update request) {
+    public PostResponse.Detail update(Long userId, Long postId, PostRequest.Update request, MultipartFile thumbnail) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
@@ -143,30 +153,39 @@ public class PostServiceImpl implements PostService {
             throw CustomException.forbidden("접근 권한이 없습니다");
         }
 
-        PostValidateMarkdown.validate(request.getContent());
+        if (post.isDeleted()) {
+            throw CustomException.badRequest("삭제된 게시글은 수정할 수 없습니다");
+        }
 
+        // 1. 본문 정제 (XSS → src 제거 → 유효하지 않은 파일 태그 제거)
+        String finalContent = prepareContent(userId, request.getContent());
+
+        // 2. slug 재생성 (제목 변경 시)
         String newSlug = post.getSlug();
         if (!post.getTitle().equals(request.getTitle())) {
-            validateTitleForUpdate(userId, postId, request.getTitle());
+            validateTitle(userId, postId, request.getTitle());
             newSlug = generateUniqueSlug(userId, request.getTitle());
             log.debug("게시글 수정 - 제목 변경으로 slug 재생성: postId={}, oldSlug={}, newSlug={}",
                     post.getId(), post.getSlug(), newSlug);
         }
 
-        post.update(
-                request.getTitle(),
-                newSlug,
-                request.getExcerpt(),
-                request.getContent()
-        );
+        // 3. 게시글 업데이트
+        post.update(request.getTitle(), newSlug, request.getExcerpt(), finalContent);
 
+        // 4. 스택 / 태그 매핑
         postStackService.updatePostStacks(post.getId(), request.getStackIds());
         postTagService.updatePostTags(post.getId(), request.getTags());
 
-        handleThumbnailUpdate(post, request);
-        handleContentFilesUpdate(post.getId(), request.getContent());
+        // 5. 썸네일 업로드 + 매핑
+        if (thumbnail != null && !thumbnail.isEmpty()) {
+            String thumbnailPath = postFileService.saveThumbnailFile(post.getId(), post.getUser(), thumbnail);
+            post.updateThumbnailPath(thumbnailPath);
+        }
 
-        return buildPostDetailResponse(post, false);
+        // 6. 본문 파일 매핑 증분 업데이트 (검증 완료된 finalContent 기준)
+        postFileService.updateContentFileMappings(post.getId(), finalContent);
+
+        return buildPostDetailResponse(post);
     }
 
     @Override
@@ -204,17 +223,20 @@ public class PostServiceImpl implements PostService {
         log.info("게시글 복구 완료: postId={}, slug={}", post.getId(), post.getSlug());
     }
 
-    // ========== private 메서드 ========== //
-
     // ========== DTO 빌더 ========== //
 
+    /**
+     * 게시글 목록 응답 DTO를 빌드합니다.
+     * 썸네일 경로는 post.thumbnailPath(역정규화 컬럼)에서 직접 읽어
+     * file_metadata 조인 없이 완성 URL을 조립합니다.
+     */
     private PostResponse.PostItems buildPostItemsResponse(Post post) {
         List<PostResponse.StackItem> stackItems = postStackService.getStackItemsByPostId(post.getId());
         List<String> tagNames = postTagService.getTagNamesByPostId(post.getId());
 
         PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
                 post.getUser().getNickname(),
-                post.getUser().getProfileImagePath()
+                toFileUrl(post.getUser().getProfileImagePath())
         );
 
         return PostResponse.PostItems.of(
@@ -223,7 +245,7 @@ public class PostServiceImpl implements PostService {
                 post.getTitle(),
                 post.getExcerpt(),
                 post.getStatus(),
-                post.getThumbnailPath(),
+                toFileUrl(post.getThumbnailPath()),
                 tagNames,
                 stackItems,
                 author,
@@ -231,23 +253,30 @@ public class PostServiceImpl implements PostService {
         );
     }
 
-    private PostResponse.Detail buildPostDetailResponse(Post post, boolean includeRelatedPosts) {
+    /**
+     * 게시글 상세 응답 DTO를 빌드합니다.
+     * DB에는 src 없이 저장된 본문을 조회 시점에 injectSrcAttributes로 완성 URL을 주입합니다.
+     * 썸네일도 toFileUrl로 완성 URL을 조립해 반환합니다.
+     */
+    private PostResponse.Detail buildPostDetailResponse(Post post) {
         List<PostResponse.StackItem> stackItems = postStackService.getStackItemsByPostId(post.getId());
         List<String> tagNames = postTagService.getTagNamesByPostId(post.getId());
 
         PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
                 post.getUser().getNickname(),
-                post.getUser().getProfileImagePath()
+                toFileUrl(post.getUser().getProfileImagePath())
         );
+
+        String displayContent = PostHtmlParser.injectSrcAttributes(post.getContent(), storageBaseUrl);
 
         return PostResponse.Detail.of(
                 post.getId(),
                 post.getSlug(),
                 post.getTitle(),
                 post.getExcerpt(),
-                post.getContent(),
+                displayContent,
                 post.getStatus(),
-                post.getThumbnailPath(),
+                toFileUrl(post.getThumbnailPath()),
                 tagNames,
                 stackItems,
                 author,
@@ -256,71 +285,46 @@ public class PostServiceImpl implements PostService {
         );
     }
 
-    // ========== 파일 처리 ========== //
+    // ========== 본문 정제 ========== //
 
-    private void handleContentFilesFromMarkdown(Long postId, String content) {
-        Set<Long> fileIds = PostMarkdownFileParser.extractFileIds(content);
+    /**
+     * 본문을 저장 가능한 형태로 정제합니다.
+     * 파싱은 단 1회만 수행하며, 이후 작업은 모두 동일한 Document 위에서 처리합니다.
+     * 1. XSS 검증 + Safelist 정제 (PostHtmlSanitizer.sanitize)
+     * 2. 파싱 + 파일 ID 추출 (PostHtmlParser.prepare) — 재파싱 없이 Document 보존
+     * 3. 유효하지 않은 파일 ID 조회 (서비스 호출)
+     * 4. src 제거 + 유효하지 않은 파일 태그 제거 후 직렬화 (finalize)
+     */
+    private String prepareContent(Long userId, String rawContent) {
+        String sanitized = PostHtmlSanitizer.sanitize(rawContent);
+        PostHtmlParser.ContentPrep prep = PostHtmlParser.prepare(sanitized);
 
-        if (fileIds.isEmpty()) {
-            log.info("게시글 생성 - 본문에 파일 참조 없음: postId={}", postId);
-            return;
-        }
+        Set<Long> invalidIds = prep.getFileIds().isEmpty()
+                ? Set.of()
+                : fileMetadataService.findInvalidFileIds(new ArrayList<>(prep.getFileIds()), userId);
 
-        log.info("게시글 생성 - 본문 파일 매핑 시작: postId={}, fileCount={}", postId, fileIds.size());
-        fileMetadataService.validateFilesExist(new ArrayList<>(fileIds));
-        postFileService.saveContentFiles(postId, new ArrayList<>(fileIds));
-        log.info("게시글 생성 - 본문 파일 매핑 완료: postId={}", postId);
+        return prep.finalize(invalidIds);
     }
 
-    private void handleContentFilesUpdate(Long postId, String newContent) {
-        Set<Long> oldFileIds = postFileService.getContentFileIds(postId);
-        Set<Long> newFileIds = PostMarkdownFileParser.extractFileIds(newContent);
+    // ========== URL 조립 ========== //
 
-        Set<Long> fileIdsToDelete = new HashSet<>(oldFileIds);
-        fileIdsToDelete.removeAll(newFileIds);
-
-        Set<Long> fileIdsToAdd = new HashSet<>(newFileIds);
-        fileIdsToAdd.removeAll(oldFileIds);
-
-        log.info("게시글 수정 - 파일 매핑 변경 분석: postId={}, 기존={}, 신규={}, 삭제={}, 추가={}",
-                postId, oldFileIds.size(), newFileIds.size(),
-                fileIdsToDelete.size(), fileIdsToAdd.size());
-
-        if (!fileIdsToDelete.isEmpty()) {
-            postFileService.deleteContentFiles(postId, new ArrayList<>(fileIdsToDelete));
+    private String toFileUrl(String path) {
+        if (path == null) {
+            return null;
         }
-
-        if (!fileIdsToAdd.isEmpty()) {
-            fileMetadataService.validateFilesExist(new ArrayList<>(fileIdsToAdd));
-            postFileService.saveContentFiles(postId, new ArrayList<>(fileIdsToAdd));
-        }
-    }
-
-    private void handleThumbnailFromPreUpload(Post post, Long thumbnailFileId, String thumbnailPath) {
-        log.info("게시글 생성 - 썸네일 처리 시작: postId={}, fileId={}", post.getId(), thumbnailFileId);
-        fileMetadataService.validateFilesExist(List.of(thumbnailFileId));
-        postFileService.saveThumbnail(post.getId(), thumbnailFileId);
-        post.updateThumbnailPath(thumbnailPath);
-        log.info("게시글 생성 - 썸네일 처리 완료: postId={}, path={}", post.getId(), thumbnailPath);
-    }
-
-    private void handleThumbnailUpdate(Post post, PostRequest.Update request) {
-        if (request.getThumbnailFileId() != null) {
-            fileMetadataService.validateFilesExist(List.of(request.getThumbnailFileId()));
-            postFileService.deleteThumbnail(post.getId());
-            postFileService.saveThumbnail(post.getId(), request.getThumbnailFileId());
-            post.updateThumbnailPath(request.getThumbnailPath());
-            return;
-        }
-
-        if (Boolean.TRUE.equals(request.getRemoveThumbnail())) {
-            postFileService.deleteThumbnail(post.getId());
-            post.removeThumbnailPath();
-        }
+        String base = storageBaseUrl.endsWith("/")
+                ? storageBaseUrl.substring(0, storageBaseUrl.length() - 1)
+                : storageBaseUrl;
+        return path.startsWith("/") ? base + path : base + "/" + path;
     }
 
     // ========== Slug 생성 ========== //
 
+    /**
+     * 사용자별 고유한 slug를 생성합니다.
+     * 동일 사용자 내 slug 중복 시 "-2", "-3" 순으로 suffix를 붙여 재시도하며,
+     * 100회 시도 후에도 중복이 해소되지 않으면 타임스탬프를 붙여 반환합니다.
+     */
     private String generateUniqueSlug(Long userId, String title) {
         String baseSlug = PostSlugGenerator.generate(title);
 
@@ -343,13 +347,20 @@ public class PostServiceImpl implements PostService {
 
     // ========== Validation ========== //
 
-    private void validateTitleForCreate(Long userId, String title) {
+    /**
+     * 게시글 생성 시 동일 사용자 내 제목 중복을 검증합니다.
+     */
+    private void validateTitle(Long userId, String title) {
         if (postRepository.existsByUserIdAndTitle(userId, title)) {
             throw CustomException.conflict("이미 사용 중인 제목입니다");
         }
     }
 
-    private void validateTitleForUpdate(Long userId, Long postId, String newTitle) {
+    /**
+     * 게시글 수정 시 동일 사용자 내 제목 중복을 검증합니다.
+     * 현재 수정 중인 게시글 자신은 중복 대상에서 제외합니다.
+     */
+    private void validateTitle(Long userId, Long postId, String newTitle) {
         postRepository.findByUserIdAndTitle(userId, newTitle).ifPresent(existingPost -> {
             if (!existingPost.getId().equals(postId)) {
                 throw CustomException.conflict("이미 존재하는 제목입니다");
