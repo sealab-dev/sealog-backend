@@ -33,7 +33,7 @@ public class Post extends BaseTimeEntity {
     @JoinColumn(name = "archive_id")
     private Archive archive;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, length = 100)
     private String title;
 
     @Column(nullable = false, length = 200)
@@ -74,6 +74,13 @@ public class Post extends BaseTimeEntity {
         this.title = title;
         this.slug = slug;
         this.excerpt = excerpt;
+        this.content = content;
+    }
+
+    /**
+     * 본문 내용 업데이트
+     */
+    public void updateContent(String content) {
         this.content = content;
     }
 

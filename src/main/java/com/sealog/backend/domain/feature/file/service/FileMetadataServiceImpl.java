@@ -2,6 +2,7 @@ package com.sealog.backend.domain.feature.file.service;
 
 import com.sealog.backend.domain.feature.file.entity.FileMetadata;
 import com.sealog.backend.domain.feature.file.repository.FileMetadataRepository;
+import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.infra.storage.dto.FileUploadResult;
 import lombok.RequiredArgsConstructor;
@@ -10,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -33,8 +36,9 @@ public class FileMetadataServiceImpl implements FileMetadataService {
 
     @Override
     @Transactional
-    public FileMetadata upload(FileUploadResult uploadResult) {
+    public FileMetadata upload(FileUploadResult uploadResult, User user) {
         FileMetadata fileMetadata = FileMetadata.builder()
+                .user(user)
                 .originalName(uploadResult.originalName())
                 .path(uploadResult.path())
                 .contentType(uploadResult.contentType())
@@ -62,7 +66,7 @@ public class FileMetadataServiceImpl implements FileMetadataService {
             return List.of();
         }
 
-        return fileMetadataRepository.findByIdIn(fileIds);
+        return fileMetadataRepository.findByIdInWithUser(fileIds);
     }
 
     @Override
@@ -78,20 +82,6 @@ public class FileMetadataServiceImpl implements FileMetadataService {
     }
 
     @Override
-    public void validateFilesExist(List<Long> fileIds) {
-        if (fileIds == null || fileIds.isEmpty()) {
-            return;
-        }
-
-        long existingCount = fileMetadataRepository.countByIdIn(fileIds);
-
-        if (existingCount != fileIds.size()) {
-            log.error("일부 파일을 찾을 수 없음: 요청={}, 존재={}", fileIds.size(), existingCount);
-            throw new CustomException("일부 파일을 찾을 수 없습니다.", NOT_FOUND);
-        }
-    }
-
-    @Override
     public List<FileMetadata> findOrphanFiles(int hoursThreshold) {
         LocalDateTime thresholdTime = LocalDateTime.now().minusHours(hoursThreshold);
         List<FileMetadata> orphanFiles = fileMetadataRepository.findOrphanFiles(thresholdTime);
@@ -100,5 +90,30 @@ public class FileMetadataServiceImpl implements FileMetadataService {
         return orphanFiles;
     }
 
+    @Override
+    public Set<Long> findInvalidFileIds(List<Long> fileIds, Long userId) {
+        if (fileIds == null || fileIds.isEmpty()) {
+            return Set.of();
+        }
+
+        List<FileMetadata> files = fileMetadataRepository.findByIdInWithUser(fileIds);
+
+        Set<Long> existingIds = files.stream()
+                .map(FileMetadata::getId)
+                .collect(Collectors.toSet());
+
+        Set<Long> invalidIds = fileIds.stream()
+                .filter(id -> !existingIds.contains(id))
+                .collect(Collectors.toCollection(HashSet::new));
+
+        files.stream()
+                .filter(f -> !f.getUser().getId().equals(userId))
+                .map(FileMetadata::getId)
+                .forEach(invalidIds::add);
+
+        log.debug("유효하지 않은 파일 ID 조회 완료: userId={}, 요청={}, 유효하지 않음={}",
+                userId, fileIds.size(), invalidIds.size());
+        return invalidIds;
+    }
 
 }

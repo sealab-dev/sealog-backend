@@ -13,9 +13,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 내 게시글 컨트롤러 (인증 필수)
@@ -35,14 +37,18 @@ public class PostUserController implements PostUserControllerDocs {
     /**
      * 게시글 생성
      * POST /api/user/posts
+     * Content-Type: multipart/form-data
+     * - request: JSON 파트 (제목, 본문 등)
+     * - thumbnail: 이미지 파일 파트 (선택)
      */
     @Override
-    @PostMapping("/posts")
+    @PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CustomResponse<PostResponse.Detail>> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody @Valid PostRequest.Create request
+            @RequestPart("request") @Valid PostRequest.Create request,
+            @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail
     ) {
-        PostResponse.Detail response = postService.create(userDetails.getUser(), request);
+        PostResponse.Detail response = postService.create(userDetails.getUser(), request, thumbnail);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(CustomResponse.success(response, "게시글이 생성되었습니다"));
@@ -65,15 +71,19 @@ public class PostUserController implements PostUserControllerDocs {
     /**
      * 게시글 수정
      * PUT /api/user/posts/{postId}
+     * Content-Type: multipart/form-data
+     * - request: JSON 파트 (제목, 본문 등)
+     * - thumbnail: 이미지 파일 파트 (선택, 없으면 기존 썸네일 유지)
      */
     @Override
-    @PutMapping("/posts/{postId}")
+    @PutMapping(value = "/posts/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CustomResponse<PostResponse.Detail>> update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId,
-            @RequestBody @Valid PostRequest.Update request
+            @RequestPart("request") @Valid PostRequest.Update request,
+            @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail
     ) {
-        PostResponse.Detail response = postService.update(userDetails.getUserId(), postId, request);
+        PostResponse.Detail response = postService.update(userDetails.getUserId(), postId, request, thumbnail);
         return ResponseEntity.ok(CustomResponse.success(response, "게시글이 수정되었습니다"));
     }
 

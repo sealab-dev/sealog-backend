@@ -72,7 +72,8 @@ public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long
      * @param fileIds 파일 ID 목록
      * @return 파일 메타데이터 목록
      */
-    List<FileMetadata> findByIdIn(List<Long> fileIds);
+    @Query("SELECT f FROM FileMetadata f JOIN FETCH f.user WHERE f.id IN :ids")
+    List<FileMetadata> findByIdInWithUser(@Param("ids") List<Long> fileIds);
 
     /**
      * 특정 파일 ID들의 존재 여부 확인

@@ -2,6 +2,7 @@ package com.sealog.backend.global.exception;
 
 import com.sealog.backend.global.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -59,6 +60,19 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.badRequest().body(response);
+    }
+
+    // DB 제약 조건 위반 (동시 요청으로 인한 slug/title 충돌 등)
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+        log.warn("DataIntegrityViolationException: {}", e.getMessage());
+
+        ErrorResponse response = ErrorResponse.of(
+                "요청을 처리할 수 없습니다. 다시 시도해주세요",
+                HttpStatus.CONFLICT.value()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     // 그 외 예외 처리

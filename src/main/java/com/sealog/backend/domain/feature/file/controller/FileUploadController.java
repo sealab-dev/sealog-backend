@@ -7,10 +7,12 @@ import com.sealog.backend.domain.feature.file.service.FileMetadataService;
 import com.sealog.backend.domain.feature.file.util.FileValidator;
 import com.sealog.backend.infra.storage.dto.FileUploadResult;
 import com.sealog.backend.infra.storage.service.FileStorageService;
+import com.sealog.backend.security.auth.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,7 +26,7 @@ import java.io.IOException;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/user/files")
+@RequestMapping("/api/files")
 @RequiredArgsConstructor
 public class FileUploadController implements FileUploadControllerDocs{
 
@@ -48,6 +50,7 @@ public class FileUploadController implements FileUploadControllerDocs{
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Transactional
     public ResponseEntity<CustomResponse<FileUploadResponse>> uploadFile(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart("file") MultipartFile file
     ) throws IOException {
         log.debug("파일 업로드 요청: filename={}, contentType={}, size={}bytes",
@@ -63,7 +66,7 @@ public class FileUploadController implements FileUploadControllerDocs{
                 uploadResult.originalName(), uploadResult.path(), uploadResult.contentType());
 
         // 3. FileMetadata 저장
-        FileMetadata fileMetadata = fileMetadataService.upload(uploadResult);
+        FileMetadata fileMetadata = fileMetadataService.upload(uploadResult, userDetails.getUser());
         log.debug("파일 메타데이터 저장 완료: fileId={}", fileMetadata.getId());
 
         // 4. 응답 반환

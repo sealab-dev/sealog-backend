@@ -1,5 +1,6 @@
 package com.sealog.backend.infra.storage.service;
 
+import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.infra.storage.dto.FileUploadResult;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,6 +21,24 @@ public interface FileStorageService {
      * @throws IOException 파일 처리 중 오류 발생 시
      */
     FileUploadResult uploadPublicImage(MultipartFile file) throws IOException;
+
+    /**
+     * 썸네일 이미지를 저장소에 업로드
+     *
+     * @param file 업로드할 썸네일 이미지 파일
+     * @return FileUploadResult 업로드된 파일 메타데이터
+     * @throws IOException 파일 처리 중 오류 발생 시
+     */
+    FileUploadResult uploadPublicThumbnail(MultipartFile file) throws IOException;
+
+    /**
+     * 프로필 이미지를 저장소에 업로드
+     *
+     * @param file 업로드할 프로필 이미지 파일
+     * @return FileUploadResult 업로드된 파일 메타데이터
+     * @throws IOException 파일 처리 중 오류 발생 시
+     */
+    FileUploadResult uploadPublicProfileImage(MultipartFile file) throws IOException;
 
     /**
      * 동영상을 저장소에 업로드

@@ -71,11 +71,10 @@ public class SecurityConfig {
                         // 인증 없이 접근 가능한 경로
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/user/**").hasRole("user")
+                        .requestMatchers("/api/user/**").hasRole("USER")
                         .requestMatchers(HttpMethod.GET, "/api/guest/**").permitAll()
-
                         // Swagger html 경로
-                                .requestMatchers("/swagger-ui/**","/v3/api-docs/**","/swagger-ui.html", "/docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/**","/v3/api-docs/**","/swagger-ui.html", "/docs/**").permitAll()
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )

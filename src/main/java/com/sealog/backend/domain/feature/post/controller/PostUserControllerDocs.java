@@ -15,12 +15,13 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Post", description = "내 게시글 API (인증 필수)")
 @SecurityRequirement(name = "bearerAuth")
 public interface PostUserControllerDocs {
 
-    @Operation(summary = "게시글 생성", description = "내 게시글을 생성합니다.")
+    @Operation(summary = "게시글 생성", description = "multipart/form-data로 게시글을 생성합니다. request(JSON)와 thumbnail(이미지, 선택)을 전송합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "생성 성공",
                     content = @Content(schema = @Schema(hidden = true))),
@@ -31,7 +32,8 @@ public interface PostUserControllerDocs {
     })
     ResponseEntity<CustomResponse<PostResponse.Detail>> create(
             CustomUserDetails userDetails,
-            PostRequest.Create request
+            PostRequest.Create request,
+            @Parameter(description = "썸네일 이미지 파일 (선택)") MultipartFile thumbnail
     );
 
     @Operation(summary = "게시글 수정용 데이터 조회", description = "에디터에서 수정할 수 있도록 게시글 데이터를 반환합니다.")
@@ -49,7 +51,7 @@ public interface PostUserControllerDocs {
             @Parameter(description = "게시글 slug", example = "spring-boot-jpa") String slug
     );
 
-    @Operation(summary = "게시글 수정", description = "postId 기준으로 내 게시글을 수정합니다.")
+    @Operation(summary = "게시글 수정", description = "multipart/form-data로 게시글을 수정합니다. thumbnail이 없으면 기존 썸네일을 유지합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 검사 실패",
@@ -64,7 +66,8 @@ public interface PostUserControllerDocs {
     ResponseEntity<CustomResponse<PostResponse.Detail>> update(
             CustomUserDetails userDetails,
             @Parameter(description = "게시글 ID", example = "1") Long postId,
-            PostRequest.Update request
+            PostRequest.Update request,
+            @Parameter(description = "새 썸네일 이미지 파일 (선택, 없으면 기존 유지)") MultipartFile thumbnail
     );
 
     @Operation(summary = "게시글 삭제", description = "postId 기준으로 내 게시글을 소프트 삭제합니다.")
