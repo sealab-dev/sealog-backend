@@ -53,17 +53,11 @@ public class TestDataFactory {
      * @return 저장된 User 엔티티 (ID 포함)
      */
     public User createUser(UserRole role) {
-        long idx = userRepository.count() + 1;
         return userRepository.save(
-                User.builder()
-                        .email("test%06d@test.com".formatted(idx))
-                        .password(passwordEncoder.encode("password"))
-                        .name("테스트%06d".formatted(idx))
-                        .nickname("테스트%06d".formatted(idx))
-                        .role(role)
-                        .build()
+                createEntity(postRepository::count, idx -> buildUser(idx, "password", role))
         );
     }
+
 
     /**
      * Post 단일 생성
@@ -72,17 +66,27 @@ public class TestDataFactory {
      * @return 저장된 Post 엔티티 (ID 포함)
      */
     public Post createPost(User user, PostStatus status) {
-        long idx = postRepository.count() + 1;
         return postRepository.save(
-                Post.builder()
-                        .user(user)
-                        .title("제목%06d".formatted(idx))
-                        .slug("post-%06d".formatted(idx))
-                        .excerpt("요약%06d".formatted(idx))
-                        .content("내용%06d".formatted(idx))
-                        .status(status)
-                        .build()
+                createEntity(postRepository::count, idx -> buildPost(user, status, idx))
         );
+    }
+
+
+    /**
+     * Post 단일 생성
+     * @param user    작성자
+     * @param archive 게시글 소속 아카이브
+     * @param status  게시글 상태
+     * @return 저장된 Post 엔티티 (ID 포함)
+     */
+    public Post createPost(User user, Archive archive, PostStatus status) {
+
+        // 1. 엔티티 생성 및 아카이브 삽입
+        Post post = createEntity(postRepository::count, idx -> buildPost(user, status, idx));
+        post.addToArchive(archive);
+
+        // 2. 생성 및 반환
+        return postRepository.save(post);
     }
 
     /**
@@ -92,16 +96,11 @@ public class TestDataFactory {
      * @return 저장된 Archive 엔티티 (ID 포함)
      */
     public Archive createArchive(User user, boolean isPublic) {
-        long idx = archiveRepository.count() + 1;
         return archiveRepository.save(
-                Archive.builder()
-                        .user(user)
-                        .name("아카이브%06d".formatted(idx))
-                        .slug("archive-%06d".formatted(idx))
-                        .isPublic(isPublic)
-                        .build()
+                createEntity(archiveRepository::count, idx -> buildArchive(user, isPublic, idx))
         );
     }
+
 
     /**
      * Stack 단일 생성
@@ -109,12 +108,8 @@ public class TestDataFactory {
      * @return 저장된 Stack 엔티티 (ID 포함)
      */
     public Stack createStack(StackGroup stackGroup) {
-        long idx = stackRepository.count() + 1;
         return stackRepository.save(
-                Stack.builder()
-                        .name("스택%06d".formatted(idx))
-                        .stackGroup(stackGroup)
-                        .build()
+                createEntity(stackRepository::count, idx -> buildStack(stackGroup, idx))
         );
     }
 
@@ -149,21 +144,12 @@ public class TestDataFactory {
      */
     public void createTestUsers(int amount, UserRole role) {
 
-        // 1. 사용 패스워드 조회
-        String password = passwordEncoder.encode("password");
-
-        // 2. User 생성
+        // 1. User 생성
         // JPA 방식
         List<User> users = createEntities(
                 amount,
                 userRepository::count,
-                idx -> User.builder()
-                        .email("test%06d@test.com".formatted(idx))
-                        .password(password)
-                        .name("테스트%06d".formatted(idx))
-                        .nickname("테스트%06d".formatted(idx))
-                        .role(role)
-                        .build()
+                idx -> buildUser(idx, "password", role)
         );
 
         // jdbc bulk 연산 방식
@@ -180,7 +166,7 @@ public class TestDataFactory {
         //);
 
 
-        // 3. 삽입 수행 (시간 측정)
+        // 2. 삽입 수행 (시간 측정)
         LogUtils.runAndShowCostLog("테스트 사용자 저장", () -> userRepository.saveAll(users));
 
         // JDBC batch 방식
@@ -201,14 +187,7 @@ public class TestDataFactory {
         List<Post> posts = createEntities(
                 amount,
                 postRepository::count,
-                idx -> Post.builder()
-                        .user(user)
-                        .title("제목%06d".formatted(idx))
-                        .slug("post-%06d".formatted(idx))
-                        .excerpt("요약%06d".formatted(idx))
-                        .content("내용%06d".formatted(idx))
-                        .status(status)
-                        .build()
+                idx -> buildPost(user, status, idx)
         );
 
         // JDBC 방식
@@ -248,12 +227,7 @@ public class TestDataFactory {
         List<Archive> archives = createEntities(
                 amount,
                 archiveRepository::count,
-                idx -> Archive.builder()
-                        .user(user)
-                        .name("아카이브%06d".formatted(idx))
-                        .slug("archive-%06d".formatted(idx))
-                        .isPublic(isPublic)
-                        .build()
+                idx -> buildArchive(user, isPublic, idx)
         );
 
         // JDBC 방식
@@ -277,6 +251,75 @@ public class TestDataFactory {
     }
 
     /**
+     * builder 기반 User entity 생성
+     */
+    private User buildUser(long idx, String rawPassword, UserRole role) {
+        return User.builder()
+                .email("test%06d@test.com".formatted(idx))
+                .password(passwordEncoder.encode(rawPassword))
+                .name("테스트%06d".formatted(idx))
+                .nickname("테스트%06d".formatted(idx))
+                .role(role)
+                .build();
+    }
+
+    /**
+     * builder 기반 post entity 생성
+     */
+    private Post buildPost(User user, PostStatus status, long idx) {
+        return Post.builder()
+                .user(user)
+                .title("제목%06d".formatted(idx))
+                .slug("post-%06d".formatted(idx))
+                .excerpt("요약%06d".formatted(idx))
+                .content("내용%06d".formatted(idx))
+                .status(status)
+                .build();
+    }
+
+    /**
+     * builder 기반 archive entity 생성
+     */
+    private Archive buildArchive(User user, boolean isPublic, long idx) {
+        return Archive.builder()
+                .user(user)
+                .name("아카이브%06d".formatted(idx))
+                .slug("archive-%06d".formatted(idx))
+                .isPublic(isPublic)
+                .build();
+    }
+
+    /**
+     * builder 기반 stack entity 생성
+     */
+    private Stack buildStack(StackGroup stackGroup, long idx) {
+        return Stack.builder()
+                .name("스택%06d".formatted(idx))
+                .stackGroup(stackGroup)
+                .build();
+    }
+
+
+
+    /**
+     * 엔티티 생성 일반화 메소드
+     * @param countMethod 현재 개수를 세는 메소드 (ex. userRepository.count())
+     * @param mappingMethod Entity 생성 메소드 (ex. User.builder().build())
+     * @return Entity
+     */
+    private <T> T createEntity(
+            Supplier<Long> countMethod,
+            Function<Long, T> mappingMethod
+    ) {
+        // 1. 인덱스 계산
+        long idx = countMethod.get() + 1;
+
+        // 2. Entity 생성 및 반환
+        return mappingMethod.apply(idx);
+    }
+
+
+    /**
      * 엔티티 생성 일반화 메소드
      * @param amount 생성 수량
      * @param countMethod 현재 개수를 세는 메소드 (ex. userRepository.count())
@@ -297,4 +340,6 @@ public class TestDataFactory {
                 .mapToObj(mappingMethod::apply)
                 .toList();
     }
+
+
 }
