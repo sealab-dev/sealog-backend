@@ -1,9 +1,14 @@
 package com.sealog.backend.domain.feature.user.dto;
 
 import com.sealog.backend.domain.feature.user.entity.User;
+import com.sealog.backend.domain.feature.user.entity.UserSocial;
+import com.sealog.backend.domain.feature.user.enums.SocialType;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.util.List;
 
 public class UserResponse {
 
@@ -22,8 +27,9 @@ public class UserResponse {
         private String position;
         private String about;
         private String profileImageUrl;
+        private List<SocialLinkItem> socialLinks;
 
-        public static MyProfile of(User user, String profileImageUrl) {
+        public static MyProfile of(User user, String profileImageUrl, List<SocialLinkItem> socialLinks) {
             return MyProfile.builder()
                     .id(user.getId())
                     .email(user.getEmail())
@@ -33,6 +39,7 @@ public class UserResponse {
                     .position(user.getPosition())
                     .about(user.getAbout())
                     .profileImageUrl(profileImageUrl)
+                    .socialLinks(socialLinks)
                     .build();
         }
     }
@@ -48,13 +55,37 @@ public class UserResponse {
         private String profileImageUrl;
         private String position;
         private String about;
+        private List<SocialLinkItem> socialLinks;
 
-        public static PublicProfile of(User user, String profileImageUrl) {
+        public static PublicProfile of(User user, String profileImageUrl, List<SocialLinkItem> socialLinks) {
             return PublicProfile.builder()
                     .nickname(user.getNickname())
                     .profileImageUrl(profileImageUrl)
                     .position(user.getPosition())
                     .about(user.getAbout())
+                    .socialLinks(socialLinks)
+                    .build();
+        }
+    }
+
+    /**
+     * 소셜 링크 응답
+     */
+    @Getter
+    @Builder
+    @Schema(description = "소셜 링크 정보")
+    public static class SocialLinkItem {
+
+        @Schema(description = "소셜 타입", example = "GITHUB")
+        private SocialType socialType;
+
+        @Schema(description = "소셜 링크 URL", example = "https://github.com/username")
+        private String url;
+
+        public static SocialLinkItem from(UserSocial link) {
+            return SocialLinkItem.builder()
+                    .socialType(link.getSocialType())
+                    .url(link.getUrl())
                     .build();
         }
     }

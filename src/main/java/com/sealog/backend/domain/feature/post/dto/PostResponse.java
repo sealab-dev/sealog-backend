@@ -11,44 +11,6 @@ import java.util.List;
 public class PostResponse {
 
     /**
-     * 작성자 정보
-     */
-    @Getter
-    @Builder
-    @Schema(name = "PostUserInfo")
-    public static class AuthorInfo {
-        private String nickname;
-        private String profileImageUrl;
-
-        public static AuthorInfo of(String nickname, String profileImageUrl) {
-            return AuthorInfo.builder()
-                    .nickname(nickname)
-                    .profileImageUrl(profileImageUrl)
-                    .build();
-        }
-    }
-
-    /**
-     * 스택 정보 (post 도메인 내부 관리)
-     */
-    @Getter
-    @Builder
-    @Schema(name = "PostStackItem")
-    public static class StackItem {
-        private Long id;
-        private String name;
-        private Integer sortOrder;
-
-        public static StackItem of(Long id, String name, Integer sortOrder) {
-            return StackItem.builder()
-                    .id(id)
-                    .name(name)
-                    .sortOrder(sortOrder)
-                    .build();
-        }
-    }
-
-    /**
      * 게시글 목록 응답 (요약 정보)
      */
     @Getter
@@ -190,6 +152,44 @@ public class PostResponse {
                     .stacks(stacks)
                     .createdAt(createdAt)
                     .updatedAt(updatedAt)
+                    .build();
+        }
+    }
+
+    /**
+     * 작성자 정보
+     */
+    @Getter
+    @Builder
+    @Schema(name = "PostUserInfo")
+    public static class AuthorInfo {
+        private String nickname;
+        private String profileImageUrl;
+
+        public static AuthorInfo of(String nickname, String profileImageUrl) {
+            return AuthorInfo.builder()
+                    .nickname(nickname)
+                    .profileImageUrl(profileImageUrl)
+                    .build();
+        }
+    }
+
+    /**
+     * 스택 정보 (post 도메인 내부 관리)
+     */
+    @Getter
+    @Builder
+    @Schema(name = "PostStackItem")
+    public static class StackItem {
+        private Long id;
+        private String name;
+        private Integer sortOrder;
+
+        public static StackItem of(Long id, String name, Integer sortOrder) {
+            return StackItem.builder()
+                    .id(id)
+                    .name(name)
+                    .sortOrder(sortOrder)
                     .build();
         }
     }
