@@ -1,6 +1,5 @@
 package com.sealog.backend.domain.feature.auth.dto;
 
-import com.sealog.backend.domain.feature.user.dto.UserResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import lombok.Builder;
@@ -12,7 +11,7 @@ public class AuthResponse {
      */
     @Getter
     @Builder
-    public static class Profile {
+    public static class AuthProfile {
 
         private Long id;
         private String email;
@@ -21,8 +20,8 @@ public class AuthResponse {
         private UserRole role;
         private String profileImagePath;
 
-        public static AuthResponse.Profile from(User user) {
-            return AuthResponse.Profile.builder()
+        public static AuthProfile from(User user) {
+            return AuthProfile.builder()
                     .id(user.getId())
                     .email(user.getEmail())
                     .name(user.getName())

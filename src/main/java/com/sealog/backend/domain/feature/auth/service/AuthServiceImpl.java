@@ -28,7 +28,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public TokenResponse login(AuthRequest.LoginRequest request) {
+    public TokenResponse login(AuthRequest.Login request) {
         // 이메일로 사용자 조회
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> CustomException.unauthorized("이메일 또는 비밀번호가 일치하지 않습니다"));
@@ -48,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
         return TokenResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .profile(AuthResponse.Profile.from(user))
+                .authProfile(AuthResponse.AuthProfile.from(user))
                 .build();
     }
 
@@ -71,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
 
         return TokenResponse.builder()
                 .accessToken(newAccessToken)
-                .profile(AuthResponse.Profile.from(user))
+                .authProfile(AuthResponse.AuthProfile.from(user))
                 .build();
     }
 
@@ -87,7 +87,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public User signUp(AuthRequest.SignUpRequest request) {
+    public User signUp(AuthRequest.SignUp request) {
         // 이메일 중복 검사
         userValidatorService.validateDuplicateEmail(request.getEmail());
 

@@ -1,6 +1,5 @@
 package com.sealog.backend.domain.feature.auth.dto;
 
-import com.sealog.backend.domain.feature.user.dto.UserResponse;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,5 +14,5 @@ public class TokenResponse {
 
     private final String accessToken;
     private final String refreshToken;
-    private final AuthResponse.Profile profile;
+    private final AuthResponse.AuthProfile authProfile;
 }

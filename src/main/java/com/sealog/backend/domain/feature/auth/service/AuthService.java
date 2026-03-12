@@ -14,7 +14,7 @@ public interface AuthService {
      * @throws CustomException 사용자를 찾을 수 없는 경우 (UNAUTHORIZED)
      * @throws CustomException 비밀번호가 일치하지 않는 경우 (UNAUTHORIZED)
      */
-    TokenResponse login(AuthRequest.LoginRequest request);
+    TokenResponse login(AuthRequest.Login request);
 
     /**
      * 회원가입
@@ -23,7 +23,7 @@ public interface AuthService {
      * @throws CustomException 이메일이 이미 존재하는 경우 (CONFLICT)
      * @throws CustomException 닉네임이 이미 존재하는 경우 (CONFLICT)
      */
-    User signUp(AuthRequest.SignUpRequest request);
+    User signUp(AuthRequest.SignUp request);
 
     /**
      * 토큰 재발급

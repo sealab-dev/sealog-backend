@@ -23,5 +23,5 @@ public interface AuthAdminControllerDocs {
             @ApiResponse(responseCode = "409", description = "중복 이메일/닉네임 등",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<Void>> signUp(AuthRequest.SignUpRequest request);
+    ResponseEntity<CustomResponse<Void>> signUp(AuthRequest.SignUp request);
 }
