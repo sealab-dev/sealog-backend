@@ -6,6 +6,8 @@ import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,24 +24,26 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserValidatorService userValidatorService;
     private final UserFileService userFileService;
+    private final UserSocialService userSocialService;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${storage.base-url}")
     private String storageBaseUrl;
 
     @Override
-    public UserResponse.MyProfile getMyInfo(Long userId) {
+    public UserResponse.MyProfile getMyProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
 
-        return UserResponse.MyProfile.of(user, toProfileImageUrl(user.getProfileImagePath()));
+        List<UserResponse.SocialLinkItem> socialLinks = userSocialService.getMyLinks(userId);
+        return UserResponse.MyProfile.of(user, toProfileImageUrl(user.getProfileImagePath()), socialLinks);
     }
 
     @Override
     @Transactional
     public UserResponse.MyProfile updateProfile(
             Long userId,
-            UserRequest.UpdateProfileRequest request,
+            UserRequest.UpdateProfile request,
             MultipartFile profileImage
     ) {
         log.info("프로필 수정 시작: userId={}", userId);
@@ -64,15 +68,20 @@ public class UserServiceImpl implements UserService {
 
         handleProfileImage(user, request, profileImage);
 
+        if (request.getSocialLinks() != null) {
+            userSocialService.update(userId, request.getSocialLinks());
+        }
+
         userRepository.save(user);
         log.info("프로필 수정 완료: userId={}", userId);
 
-        return UserResponse.MyProfile.of(user, toProfileImageUrl(user.getProfileImagePath()));
+        List<UserResponse.SocialLinkItem> socialLinks = userSocialService.getMyLinks(userId);
+        return UserResponse.MyProfile.of(user, toProfileImageUrl(user.getProfileImagePath()), socialLinks);
     }
 
     @Override
     @Transactional
-    public void changePassword(Long userId, UserRequest.ChangePasswordRequest request) {
+    public void updatePassword(Long userId, UserRequest.UpdatePassword request) {
         log.info("비밀번호 변경 시작: userId={}", userId);
 
         User user = userRepository.findById(userId)
@@ -98,11 +107,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse.PublicProfile getBlogUser(String nickname) {
+    public UserResponse.PublicProfile getPublicProfile(String nickname) {
         User user = userRepository.findByNickname(nickname)
                 .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
 
-        return UserResponse.PublicProfile.of(user, toProfileImageUrl(user.getProfileImagePath()));
+        List<UserResponse.SocialLinkItem> socialLinks = userSocialService.getPublicLinks(nickname);
+        return UserResponse.PublicProfile.of(user, toProfileImageUrl(user.getProfileImagePath()), socialLinks);
     }
 
     // ========== 프로필 이미지 처리 ========== //
@@ -113,7 +123,7 @@ public class UserServiceImpl implements UserService {
      * 2. 새 이미지 파일이 있으면 → 기존 매핑 삭제(고아 파일 전환) + 새 이미지 업로드/매핑 저장 + path 업데이트
      * 3. 둘 다 없으면 → 변경 없음
      */
-    private void handleProfileImage(User user, UserRequest.UpdateProfileRequest request, MultipartFile profileImage) {
+    private void handleProfileImage(User user, UserRequest.UpdateProfile request, MultipartFile profileImage) {
         if (Boolean.TRUE.equals(request.getRemoveProfileImage())) {
             userFileService.deleteProfile(user.getId());
             user.removeProfileImage();

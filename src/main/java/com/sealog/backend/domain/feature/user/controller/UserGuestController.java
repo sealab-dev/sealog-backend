@@ -23,7 +23,7 @@ public class UserGuestController implements UserGuestControllerDocs {
     public ResponseEntity<CustomResponse<UserResponse.PublicProfile>> getBlogUserInfo(
             @PathVariable String nickname
     ) {
-        UserResponse.PublicProfile blogUser = userService.getBlogUser(nickname);
+        UserResponse.PublicProfile blogUser = userService.getPublicProfile(nickname);
         return ResponseEntity.ok(CustomResponse.success(blogUser, "정보 조회가 성공적으로 완료되었습니다."));
     }
 }

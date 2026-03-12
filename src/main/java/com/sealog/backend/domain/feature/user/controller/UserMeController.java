@@ -30,7 +30,7 @@ public class UserMeController implements UserMeControllerDocs {
     public ResponseEntity<CustomResponse<UserResponse.MyProfile>> getMyInfo(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        UserResponse.MyProfile response = userService.getMyInfo(userDetails.getUserId());
+        UserResponse.MyProfile response = userService.getMyProfile(userDetails.getUserId());
         return ResponseEntity.ok(CustomResponse.success(response));
     }
 
@@ -45,7 +45,7 @@ public class UserMeController implements UserMeControllerDocs {
     @PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CustomResponse<UserResponse.MyProfile>> updateProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestPart("request") @Valid UserRequest.UpdateProfileRequest request,
+            @RequestPart("request") @Valid UserRequest.UpdateProfile request,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
     ) {
         UserResponse.MyProfile response = userService.updateProfile(
@@ -67,9 +67,9 @@ public class UserMeController implements UserMeControllerDocs {
     @PatchMapping("/password")
     public ResponseEntity<CustomResponse<Void>> changePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody UserRequest.ChangePasswordRequest request
+            @Valid @RequestBody UserRequest.UpdatePassword request
     ) {
-        userService.changePassword(userDetails.getUserId(), request);
+        userService.updatePassword(userDetails.getUserId(), request);
         return ResponseEntity.ok(CustomResponse.success(null, "비밀번호가 변경되었습니다"));
     }
 }

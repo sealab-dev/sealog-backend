@@ -2,7 +2,6 @@ package com.sealog.backend.domain.feature.user.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sealog.backend.domain.feature.user.dto.UserRequest;
-import com.sealog.backend.domain.feature.user.dto.UserSocialLinkRequest;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.SocialType;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
@@ -78,7 +77,7 @@ class UserIntegrationTest extends TestIntegrationBase {
         void 닉네임_수정_성공() throws Exception {
             // given
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserRequest.UpdateProfileRequest request = UserRequest.UpdateProfileRequest.builder()
+            UserRequest.UpdateProfile request = UserRequest.UpdateProfile.builder()
                     .nickname("새닉네임")
                     .build();
 
@@ -97,7 +96,7 @@ class UserIntegrationTest extends TestIntegrationBase {
         void 포지션_소개_수정_성공() throws Exception {
             // given
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserRequest.UpdateProfileRequest request = UserRequest.UpdateProfileRequest.builder()
+            UserRequest.UpdateProfile request = UserRequest.UpdateProfile.builder()
                     .nickname(testUser.getNickname())
                     .position("Backend Developer")
                     .about("Java/Spring 개발자입니다")
@@ -119,7 +118,7 @@ class UserIntegrationTest extends TestIntegrationBase {
             // given
             User anotherUser = testDataFactory.createUser(UserRole.USER);
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserRequest.UpdateProfileRequest request = UserRequest.UpdateProfileRequest.builder()
+            UserRequest.UpdateProfile request = UserRequest.UpdateProfile.builder()
                     .nickname(anotherUser.getNickname())
                     .build();
 
@@ -135,7 +134,7 @@ class UserIntegrationTest extends TestIntegrationBase {
         void 닉네임_없음() throws Exception {
             // given
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserRequest.UpdateProfileRequest request = UserRequest.UpdateProfileRequest.builder()
+            UserRequest.UpdateProfile request = UserRequest.UpdateProfile.builder()
                     .build(); // nickname = null
 
             // when & then
@@ -150,7 +149,7 @@ class UserIntegrationTest extends TestIntegrationBase {
         void 닉네임_유효성_실패() throws Exception {
             // given
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserRequest.UpdateProfileRequest request = UserRequest.UpdateProfileRequest.builder()
+            UserRequest.UpdateProfile request = UserRequest.UpdateProfile.builder()
                     .nickname("a") // 1자 → 최솟값(2) 미만
                     .build();
 
@@ -165,7 +164,7 @@ class UserIntegrationTest extends TestIntegrationBase {
         @DisplayName("실패 - 인증 없이 요청 → 401")
         void 인증_없음() throws Exception {
             // given
-            UserRequest.UpdateProfileRequest request = UserRequest.UpdateProfileRequest.builder()
+            UserRequest.UpdateProfile request = UserRequest.UpdateProfile.builder()
                     .nickname("새닉네임")
                     .build();
 
@@ -189,7 +188,7 @@ class UserIntegrationTest extends TestIntegrationBase {
         void 성공() throws Exception {
             // given
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserRequest.ChangePasswordRequest request = UserRequest.ChangePasswordRequest.builder()
+            UserRequest.UpdatePassword request = UserRequest.UpdatePassword.builder()
                     .currentPassword("password")       // TestDataFactory 기본 패스워드
                     .newPassword("newPassword123")
                     .newPasswordConfirm("newPassword123")
@@ -210,7 +209,7 @@ class UserIntegrationTest extends TestIntegrationBase {
         void 현재_비밀번호_불일치() throws Exception {
             // given
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserRequest.ChangePasswordRequest request = UserRequest.ChangePasswordRequest.builder()
+            UserRequest.UpdatePassword request = UserRequest.UpdatePassword.builder()
                     .currentPassword("wrongPassword")
                     .newPassword("newPassword123")
                     .newPasswordConfirm("newPassword123")
@@ -229,7 +228,7 @@ class UserIntegrationTest extends TestIntegrationBase {
         void 새_비밀번호_확인_불일치() throws Exception {
             // given
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserRequest.ChangePasswordRequest request = UserRequest.ChangePasswordRequest.builder()
+            UserRequest.UpdatePassword request = UserRequest.UpdatePassword.builder()
                     .currentPassword("password")
                     .newPassword("newPassword123")
                     .newPasswordConfirm("differentPassword")
@@ -248,7 +247,7 @@ class UserIntegrationTest extends TestIntegrationBase {
         void 새_비밀번호_현재와_동일() throws Exception {
             // given
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserRequest.ChangePasswordRequest request = UserRequest.ChangePasswordRequest.builder()
+            UserRequest.UpdatePassword request = UserRequest.UpdatePassword.builder()
                     .currentPassword("password")
                     .newPassword("password")           // 현재 비밀번호와 동일
                     .newPasswordConfirm("password")
@@ -267,7 +266,7 @@ class UserIntegrationTest extends TestIntegrationBase {
         void 새_비밀번호_유효성_실패() throws Exception {
             // given
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserRequest.ChangePasswordRequest request = UserRequest.ChangePasswordRequest.builder()
+            UserRequest.UpdatePassword request = UserRequest.UpdatePassword.builder()
                     .currentPassword("password")
                     .newPassword("short")              // 8자 미만
                     .newPasswordConfirm("short")
@@ -285,7 +284,7 @@ class UserIntegrationTest extends TestIntegrationBase {
         @DisplayName("실패 - 인증 없이 요청 → 401")
         void 인증_없음() throws Exception {
             // given
-            UserRequest.ChangePasswordRequest request = UserRequest.ChangePasswordRequest.builder()
+            UserRequest.UpdatePassword request = UserRequest.UpdatePassword.builder()
                     .currentPassword("password")
                     .newPassword("newPassword123")
                     .newPasswordConfirm("newPassword123")
@@ -375,8 +374,8 @@ class UserIntegrationTest extends TestIntegrationBase {
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
             UserSocialLinkRequest.UpsertRequest request = new UserSocialLinkRequest.UpsertRequest(
                     List.of(
-                            new UserSocialLinkRequest.LinkItem(SocialType.GITHUB, "https://github.com/testuser"),
-                            new UserSocialLinkRequest.LinkItem(SocialType.LINKEDIN, "https://linkedin.com/in/testuser")
+                            new UserSocialLinkRequest.SocialLinkItem(SocialType.GITHUB, "https://github.com/testuser"),
+                            new UserSocialLinkRequest.SocialLinkItem(SocialType.LINKEDIN, "https://linkedin.com/in/testuser")
                     )
             );
 
@@ -417,8 +416,8 @@ class UserIntegrationTest extends TestIntegrationBase {
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
             UserSocialLinkRequest.UpsertRequest request = new UserSocialLinkRequest.UpsertRequest(
                     List.of(
-                            new UserSocialLinkRequest.LinkItem(SocialType.GITHUB, "https://github.com/user1"),
-                            new UserSocialLinkRequest.LinkItem(SocialType.GITHUB, "https://github.com/user2") // 중복 타입
+                            new UserSocialLinkRequest.SocialLinkItem(SocialType.GITHUB, "https://github.com/user1"),
+                            new UserSocialLinkRequest.SocialLinkItem(SocialType.GITHUB, "https://github.com/user2") // 중복 타입
                     )
             );
 
@@ -435,7 +434,7 @@ class UserIntegrationTest extends TestIntegrationBase {
         void 인증_없음() throws Exception {
             // given
             UserSocialLinkRequest.UpsertRequest request = new UserSocialLinkRequest.UpsertRequest(
-                    List.of(new UserSocialLinkRequest.LinkItem(SocialType.GITHUB, "https://github.com/testuser"))
+                    List.of(new UserSocialLinkRequest.SocialLinkItem(SocialType.GITHUB, "https://github.com/testuser"))
             );
 
             // when & then
@@ -460,7 +459,7 @@ class UserIntegrationTest extends TestIntegrationBase {
             // given: 소셜 링크 저장
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
             UserSocialLinkRequest.UpsertRequest upsertRequest = new UserSocialLinkRequest.UpsertRequest(
-                    List.of(new UserSocialLinkRequest.LinkItem(SocialType.GITHUB, "https://github.com/testuser"))
+                    List.of(new UserSocialLinkRequest.SocialLinkItem(SocialType.GITHUB, "https://github.com/testuser"))
             );
             mockMvc.perform(put("/api/user/me/social")
                     .with(SecurityMockMvcRequestPostProcessors.user(userDetails))
