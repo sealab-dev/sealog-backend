@@ -27,6 +27,12 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
+    public AuthResponse.AuthProfile getMe(Long userId) {
+        User user = getUserById(userId);
+        return AuthResponse.AuthProfile.from(user);
+    }
+
+    @Override
     @Transactional
     public TokenResponse login(AuthRequest.Login request) {
         // 이메일로 사용자 조회

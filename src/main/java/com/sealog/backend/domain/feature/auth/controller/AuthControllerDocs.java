@@ -3,11 +3,13 @@ package com.sealog.backend.domain.feature.auth.controller;
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
 import com.sealog.backend.global.response.CustomResponse;
+import com.sealog.backend.security.auth.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +18,15 @@ import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Auth", description = "인증 API")
 public interface AuthControllerDocs {
+
+    @Operation(summary = "내 정보 조회", description = "로그인한 사용자의 인증 프로필을 조회합니다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema(hidden = true))),
+    })
+    ResponseEntity<CustomResponse<AuthResponse.AuthProfile>> getMe(CustomUserDetails userDetails);
 
     @Operation(summary = "로그인", description = "로그인 후 JWT 발급 (HttpOnly 쿠키로 전달)")
     @SecurityRequirements()
