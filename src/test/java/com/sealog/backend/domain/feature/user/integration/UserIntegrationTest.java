@@ -39,12 +39,12 @@ class UserIntegrationTest extends TestIntegrationBase {
     }
 
     // =========================================================
-    // 내 정보 조회
+    // 내 프로필 조회
     // =========================================================
 
     @Nested
-    @DisplayName("내 정보 조회 GET /api/user/me")
-    class 내_정보_조회 {
+    @DisplayName("내 프로필 조회 GET /api/user/me/profile")
+    class 내_프로필_조회 {
 
         @Test
         @DisplayName("성공 - 인증된 사용자 요청 → 200, 내 정보 반환")
@@ -53,14 +53,22 @@ class UserIntegrationTest extends TestIntegrationBase {
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
 
             // when & then
-            mockMvc.perform(get("/api/user/me")
+            mockMvc.perform(get("/api/user/me/profile")
                             .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.id").value(testUser.getId()))
                     .andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
                     .andExpect(jsonPath("$.data.nickname").value(testUser.getNickname()))
-                    .andExpect(jsonPath("$.data.role").value("USER"));
+                    .andExpect(jsonPath("$.data.role").value("USER"))
+                    .andExpect(jsonPath("$.data.socialLinks").isArray());
+        }
+
+        @Test
+        @DisplayName("실패 - 인증 없이 요청 → 401")
+        void 인증_없음() throws Exception {
+            mockMvc.perform(get("/api/user/me/profile"))
+                    .andExpect(status().isUnauthorized());
         }
     }
 
@@ -97,7 +105,6 @@ class UserIntegrationTest extends TestIntegrationBase {
             // given
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
             UserRequest.UpdateProfile request = UserRequest.UpdateProfile.builder()
-                    .nickname(testUser.getNickname())
                     .position("Backend Developer")
                     .about("Java/Spring 개발자입니다")
                     .build();
@@ -110,6 +117,83 @@ class UserIntegrationTest extends TestIntegrationBase {
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.position").value("Backend Developer"))
                     .andExpect(jsonPath("$.data.about").value("Java/Spring 개발자입니다"));
+        }
+
+        @Test
+        @DisplayName("성공 - 소셜 링크 포함 수정 → 200, 소셜 링크 반환")
+        void 소셜_링크_수정_성공() throws Exception {
+            // given
+            CustomUserDetails userDetails = new CustomUserDetails(testUser);
+            UserRequest.UpdateProfile request = UserRequest.UpdateProfile.builder()
+                    .socialLinks(List.of(
+                            new UserRequest.UpdateSocialLink(SocialType.GITHUB, "https://github.com/testuser"),
+                            new UserRequest.UpdateSocialLink(SocialType.LINKEDIN, "https://linkedin.com/in/testuser")
+                    ))
+                    .build();
+
+            // when & then
+            mockMvc.perform(multipart(HttpMethod.PATCH, "/api/user/me/profile")
+                            .file(toMultipartJson("request", request))
+                            .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.socialLinks.length()").value(2));
+        }
+
+        @Test
+        @DisplayName("성공 - socialLinks null → 소셜 링크 변경 없음 → 200")
+        void 소셜_링크_null_변경없음() throws Exception {
+            // given: 소셜 링크 먼저 저장
+            CustomUserDetails userDetails = new CustomUserDetails(testUser);
+            UserRequest.UpdateProfile setupRequest = UserRequest.UpdateProfile.builder()
+                    .socialLinks(List.of(
+                            new UserRequest.UpdateSocialLink(SocialType.GITHUB, "https://github.com/testuser")
+                    ))
+                    .build();
+            mockMvc.perform(multipart(HttpMethod.PATCH, "/api/user/me/profile")
+                    .file(toMultipartJson("request", setupRequest))
+                    .with(SecurityMockMvcRequestPostProcessors.user(userDetails)));
+
+            // when: socialLinks = null로 요청
+            UserRequest.UpdateProfile request = UserRequest.UpdateProfile.builder()
+                    .nickname("새닉네임")
+                    .build(); // socialLinks = null
+
+            // then: 소셜 링크 변경 없이 1개 유지
+            mockMvc.perform(multipart(HttpMethod.PATCH, "/api/user/me/profile")
+                            .file(toMultipartJson("request", request))
+                            .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.socialLinks.length()").value(1));
+        }
+
+        @Test
+        @DisplayName("성공 - socialLinks 빈 배열 → 전체 삭제 → 200")
+        void 소셜_링크_빈배열_전체삭제() throws Exception {
+            // given: 소셜 링크 먼저 저장
+            CustomUserDetails userDetails = new CustomUserDetails(testUser);
+            UserRequest.UpdateProfile setupRequest = UserRequest.UpdateProfile.builder()
+                    .socialLinks(List.of(
+                            new UserRequest.UpdateSocialLink(SocialType.GITHUB, "https://github.com/testuser")
+                    ))
+                    .build();
+            mockMvc.perform(multipart(HttpMethod.PATCH, "/api/user/me/profile")
+                    .file(toMultipartJson("request", setupRequest))
+                    .with(SecurityMockMvcRequestPostProcessors.user(userDetails)));
+
+            // when: socialLinks = [] 빈 배열
+            UserRequest.UpdateProfile request = UserRequest.UpdateProfile.builder()
+                    .socialLinks(List.of())
+                    .build();
+
+            // then: 소셜 링크 전체 삭제 → 빈 배열 반환
+            mockMvc.perform(multipart(HttpMethod.PATCH, "/api/user/me/profile")
+                            .file(toMultipartJson("request", request))
+                            .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.socialLinks.length()").value(0));
         }
 
         @Test
@@ -130,7 +214,7 @@ class UserIntegrationTest extends TestIntegrationBase {
         }
 
         @Test
-        @DisplayName("실패 - 닉네임 없이 요청 → 400")
+        @DisplayName("성공 - 닉네임 없이 요청 → 200, 기존 닉네임 유지")
         void 닉네임_없음() throws Exception {
             // given
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
@@ -141,7 +225,9 @@ class UserIntegrationTest extends TestIntegrationBase {
             mockMvc.perform(multipart(HttpMethod.PATCH, "/api/user/me/profile")
                             .file(toMultipartJson("request", request))
                             .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.nickname").value(testUser.getNickname()));
         }
 
         @Test
@@ -151,6 +237,25 @@ class UserIntegrationTest extends TestIntegrationBase {
             CustomUserDetails userDetails = new CustomUserDetails(testUser);
             UserRequest.UpdateProfile request = UserRequest.UpdateProfile.builder()
                     .nickname("a") // 1자 → 최솟값(2) 미만
+                    .build();
+
+            // when & then
+            mockMvc.perform(multipart(HttpMethod.PATCH, "/api/user/me/profile")
+                            .file(toMultipartJson("request", request))
+                            .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("실패 - 중복 소셜 타입 → 400")
+        void 중복_소셜_타입() throws Exception {
+            // given
+            CustomUserDetails userDetails = new CustomUserDetails(testUser);
+            UserRequest.UpdateProfile request = UserRequest.UpdateProfile.builder()
+                    .socialLinks(List.of(
+                            new UserRequest.UpdateSocialLink(SocialType.GITHUB, "https://github.com/user1"),
+                            new UserRequest.UpdateSocialLink(SocialType.GITHUB, "https://github.com/user2") // 중복 타입
+                    ))
                     .build();
 
             // when & then
@@ -303,24 +408,25 @@ class UserIntegrationTest extends TestIntegrationBase {
     // =========================================================
 
     @Nested
-    @DisplayName("공개 프로필 조회 GET /api/guest/user/{nickname}")
+    @DisplayName("공개 프로필 조회 GET /api/guest/user/{nickname}/profile")
     class 공개_프로필_조회 {
 
         @Test
         @DisplayName("성공 - 존재하는 닉네임 → 200, 공개 프로필 반환")
         void 성공() throws Exception {
             // when & then
-            mockMvc.perform(get("/api/guest/user/{nickname}", testUser.getNickname()))
+            mockMvc.perform(get("/api/guest/user/{nickname}/profile", testUser.getNickname()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.nickname").value(testUser.getNickname()));
+                    .andExpect(jsonPath("$.data.nickname").value(testUser.getNickname()))
+                    .andExpect(jsonPath("$.data.socialLinks").isArray());
         }
 
         @Test
         @DisplayName("성공 - 응답에 민감 정보(email, password) 미포함")
         void 민감_정보_미포함() throws Exception {
             // when & then
-            mockMvc.perform(get("/api/guest/user/{nickname}", testUser.getNickname()))
+            mockMvc.perform(get("/api/guest/user/{nickname}/profile", testUser.getNickname()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.email").doesNotExist())
                     .andExpect(jsonPath("$.data.password").doesNotExist());
@@ -330,161 +436,8 @@ class UserIntegrationTest extends TestIntegrationBase {
         @DisplayName("실패 - 존재하지 않는 닉네임 → 404")
         void 존재하지_않는_닉네임() throws Exception {
             // when & then
-            mockMvc.perform(get("/api/guest/user/{nickname}", "nobody"))
+            mockMvc.perform(get("/api/guest/user/{nickname}/profile", "nobody"))
                     .andExpect(status().isNotFound());
-        }
-    }
-
-    // =========================================================
-    // 내 소셜 링크 조회
-    // =========================================================
-
-    @Nested
-    @DisplayName("내 소셜 링크 조회 GET /api/user/me/social")
-    class 내_소셜_링크_조회 {
-
-        @Test
-        @DisplayName("성공 - 인증된 사용자 요청 → 200, 소셜 링크 목록 반환")
-        void 성공() throws Exception {
-            // given
-            CustomUserDetails userDetails = new CustomUserDetails(testUser);
-
-            // when & then
-            mockMvc.perform(get("/api/user/me/social")
-                            .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data").isArray());
-        }
-        
-    }
-
-    // =========================================================
-    // 소셜 링크 전체 upsert
-    // =========================================================
-
-    @Nested
-    @DisplayName("소셜 링크 upsert PUT /api/user/me/social")
-    class 소셜_링크_upsert {
-
-        @Test
-        @DisplayName("성공 - 유효한 링크 목록 저장 → 200, 저장된 링크 반환")
-        void 성공() throws Exception {
-            // given
-            CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserSocialLinkRequest.UpsertRequest request = new UserSocialLinkRequest.UpsertRequest(
-                    List.of(
-                            new UserSocialLinkRequest.SocialLinkItem(SocialType.GITHUB, "https://github.com/testuser"),
-                            new UserSocialLinkRequest.SocialLinkItem(SocialType.LINKEDIN, "https://linkedin.com/in/testuser")
-                    )
-            );
-
-            // when & then
-            mockMvc.perform(put("/api/user/me/social")
-                            .with(SecurityMockMvcRequestPostProcessors.user(userDetails))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data").isArray())
-                    .andExpect(jsonPath("$.data.length()").value(2))
-                    .andExpect(jsonPath("$.message").value("소셜 링크가 저장되었습니다"));
-        }
-
-        @Test
-        @DisplayName("성공 - 빈 배열 전송 시 전체 삭제 → 200, 빈 배열 반환")
-        void 전체_삭제() throws Exception {
-            // given
-            CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserSocialLinkRequest.UpsertRequest request = new UserSocialLinkRequest.UpsertRequest(List.of());
-
-            // when & then
-            mockMvc.perform(put("/api/user/me/social")
-                            .with(SecurityMockMvcRequestPostProcessors.user(userDetails))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data").isArray())
-                    .andExpect(jsonPath("$.data.length()").value(0));
-        }
-
-        @Test
-        @DisplayName("실패 - 동일 소셜 타입 중복 → 400")
-        void 중복_소셜_타입() throws Exception {
-            // given
-            CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserSocialLinkRequest.UpsertRequest request = new UserSocialLinkRequest.UpsertRequest(
-                    List.of(
-                            new UserSocialLinkRequest.SocialLinkItem(SocialType.GITHUB, "https://github.com/user1"),
-                            new UserSocialLinkRequest.SocialLinkItem(SocialType.GITHUB, "https://github.com/user2") // 중복 타입
-                    )
-            );
-
-            // when & then
-            mockMvc.perform(put("/api/user/me/social")
-                            .with(SecurityMockMvcRequestPostProcessors.user(userDetails))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        @DisplayName("실패 - 인증 없이 요청 → 401")
-        void 인증_없음() throws Exception {
-            // given
-            UserSocialLinkRequest.UpsertRequest request = new UserSocialLinkRequest.UpsertRequest(
-                    List.of(new UserSocialLinkRequest.SocialLinkItem(SocialType.GITHUB, "https://github.com/testuser"))
-            );
-
-            // when & then
-            mockMvc.perform(put("/api/user/me/social")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isUnauthorized());
-        }
-    }
-
-    // =========================================================
-    // 공개 소셜 링크 조회
-    // =========================================================
-
-    @Nested
-    @DisplayName("공개 소셜 링크 조회 GET /api/guest/user/{nickname}/social")
-    class 공개_소셜_링크_조회 {
-
-        @Test
-        @DisplayName("성공 - 소셜 링크가 있는 사용자 → 200, 링크 목록 반환")
-        void 성공() throws Exception {
-            // given: 소셜 링크 저장
-            CustomUserDetails userDetails = new CustomUserDetails(testUser);
-            UserSocialLinkRequest.UpsertRequest upsertRequest = new UserSocialLinkRequest.UpsertRequest(
-                    List.of(new UserSocialLinkRequest.SocialLinkItem(SocialType.GITHUB, "https://github.com/testuser"))
-            );
-            mockMvc.perform(put("/api/user/me/social")
-                    .with(SecurityMockMvcRequestPostProcessors.user(userDetails))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(upsertRequest)));
-
-            // when & then
-            mockMvc.perform(get("/api/guest/user/{nickname}/social", testUser.getNickname()))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data").isArray())
-                    .andExpect(jsonPath("$.data.length()").value(1))
-                    .andExpect(jsonPath("$.data[0].socialType").value("GITHUB"))
-                    .andExpect(jsonPath("$.data[0].url").value("https://github.com/testuser"));
-        }
-
-        @Test
-        @DisplayName("성공 - 소셜 링크 없는 사용자 → 200, 빈 배열 반환")
-        void 소셜_링크_없음() throws Exception {
-            // when & then
-            mockMvc.perform(get("/api/guest/user/{nickname}/social", testUser.getNickname()))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data").isArray())
-                    .andExpect(jsonPath("$.data.length()").value(0));
         }
     }
 
