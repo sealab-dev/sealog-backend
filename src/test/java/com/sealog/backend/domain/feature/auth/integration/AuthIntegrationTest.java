@@ -54,7 +54,7 @@ class AuthIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("성공 - 올바른 이메일/비밀번호 → 200, access/refresh 쿠키 발급, 프로필 반환")
         void 성공() throws Exception {
-            AuthRequest.LoginRequest request = AuthRequest.LoginRequest.builder()
+            AuthRequest.Login request = AuthRequest.Login.builder()
                     .email(testUser.getEmail())
                     .password("password")  // TestDataFactory 기본 패스워드
                     .build();
@@ -75,7 +75,7 @@ class AuthIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 존재하지 않는 이메일 → 401")
         void 이메일_없음() throws Exception {
-            AuthRequest.LoginRequest request = AuthRequest.LoginRequest.builder()
+            AuthRequest.Login request = AuthRequest.Login.builder()
                     .email("nobody@local.com")
                     .password("password")
                     .build();
@@ -89,7 +89,7 @@ class AuthIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 잘못된 비밀번호 → 401")
         void 비밀번호_불일치() throws Exception {
-            AuthRequest.LoginRequest request = AuthRequest.LoginRequest.builder()
+            AuthRequest.Login request = AuthRequest.Login.builder()
                     .email(testUser.getEmail())
                     .password("pass")
                     .build();
@@ -103,7 +103,7 @@ class AuthIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 유효하지 않은 이메일 형식 → 400")
         void 이메일_형식_오류() throws Exception {
-            AuthRequest.LoginRequest request = AuthRequest.LoginRequest.builder()
+            AuthRequest.Login request = AuthRequest.Login.builder()
                     .email("not-an-email")
                     .password("password")
                     .build();
@@ -206,7 +206,7 @@ class AuthIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("성공 - ADMIN 권한으로 회원가입 → 200, DB에 사용자 저장")
         void 성공() throws Exception {
-            AuthRequest.SignUpRequest request = AuthRequest.SignUpRequest.builder()
+            AuthRequest.SignUp request = AuthRequest.SignUp.builder()
                     .email("newuser@local.com")
                     .password("password")
                     .name("새유저")
@@ -227,7 +227,7 @@ class AuthIntegrationTest extends TestIntegrationBase {
         @DisplayName("실패 - 이미 존재하는 이메일로 가입 시도 → 409")
         void 이메일_중복() throws Exception {
             // setUp()에서 TEST_EMAIL 사용자가 이미 저장되어 있음
-            AuthRequest.SignUpRequest request = AuthRequest.SignUpRequest.builder()
+            AuthRequest.SignUp request = AuthRequest.SignUp.builder()
                     .email(testUser.getEmail())
                     .password("password")
                     .name("중복유저")
@@ -244,7 +244,7 @@ class AuthIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - USER 권한으로 회원가입 요청 → 403")
         void 권한_없음() throws Exception {
-            AuthRequest.SignUpRequest request = AuthRequest.SignUpRequest.builder()
+            AuthRequest.SignUp request = AuthRequest.SignUp.builder()
                     .email("someone@local.com")
                     .password("password")
                     .name("유저")
@@ -261,7 +261,7 @@ class AuthIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 유효성 검사 위반 (짧은 비밀번호, 잘못된 이메일) → 400")
         void 유효성_검사_실패() throws Exception {
-            AuthRequest.SignUpRequest request = AuthRequest.SignUpRequest.builder()
+            AuthRequest.SignUp request = AuthRequest.SignUp.builder()
                     .email("not-an-email")  // 이메일 형식 아님
                     .password("short")      // 8자 미만
                     .name("a")              // 2자 미만

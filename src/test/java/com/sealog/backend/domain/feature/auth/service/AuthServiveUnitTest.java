@@ -72,14 +72,14 @@ class AuthServiveUnitTest extends TestUnitBase {
             given(jwtTokenProvider.createAccessToken(1L, TEST_EMAIL)).willReturn(ACCESS_TOKEN);
             given(jwtTokenProvider.createRefreshToken(1L, TEST_EMAIL)).willReturn(REFRESH_TOKEN);
 
-            AuthRequest.LoginRequest request = AuthRequest.LoginRequest.builder()
+            AuthRequest.Login request = AuthRequest.Login.builder()
                     .email(TEST_EMAIL).password(TEST_PASSWORD).build();
 
             TokenResponse result = authService.login(request);
 
             assertThat(result.getAccessToken()).isEqualTo(ACCESS_TOKEN);
             assertThat(result.getRefreshToken()).isEqualTo(REFRESH_TOKEN);
-            assertThat(result.getProfile().getEmail()).isEqualTo(TEST_EMAIL);
+            assertThat(result.getAuthProfile().getEmail()).isEqualTo(TEST_EMAIL);
             // DB에 리프레시 토큰이 저장되었는지 확인
             assertThat(testUser.getRefreshToken()).isEqualTo(REFRESH_TOKEN);
         }
@@ -89,7 +89,7 @@ class AuthServiveUnitTest extends TestUnitBase {
         void 이메일_없음() {
             given(userRepository.findByEmail(anyString())).willReturn(Optional.empty());
 
-            AuthRequest.LoginRequest request = AuthRequest.LoginRequest.builder()
+            AuthRequest.Login request = AuthRequest.Login.builder()
                     .email("nobody@local.com").password(TEST_PASSWORD).build();
 
             assertThatThrownBy(() -> authService.login(request))
@@ -107,7 +107,7 @@ class AuthServiveUnitTest extends TestUnitBase {
             given(userRepository.findByEmail(TEST_EMAIL)).willReturn(Optional.of(testUser));
             given(passwordEncoder.matches("wrongPw", ENCODED_PW)).willReturn(false);
 
-            AuthRequest.LoginRequest request = AuthRequest.LoginRequest.builder()
+            AuthRequest.Login request = AuthRequest.Login.builder()
                     .email(TEST_EMAIL).password("wrongPw").build();
 
             assertThatThrownBy(() -> authService.login(request))
@@ -144,7 +144,7 @@ class AuthServiveUnitTest extends TestUnitBase {
 
             assertThat(result.getAccessToken()).isEqualTo("new.access.token");
             assertThat(result.getRefreshToken()).isNull();   // refresh 시 리프레시 토큰은 재발급 안 함
-            assertThat(result.getProfile().getEmail()).isEqualTo(TEST_EMAIL);
+            assertThat(result.getAuthProfile().getEmail()).isEqualTo(TEST_EMAIL);
         }
 
         @Test
@@ -224,7 +224,7 @@ class AuthServiveUnitTest extends TestUnitBase {
             given(passwordEncoder.encode(TEST_PASSWORD)).willReturn(ENCODED_PW);
             given(userRepository.save(any(User.class))).willReturn(testUser);
 
-            AuthRequest.SignUpRequest request = AuthRequest.SignUpRequest.builder()
+            AuthRequest.SignUp request = AuthRequest.SignUp.builder()
                     .email(TEST_EMAIL)
                     .password(TEST_PASSWORD)
                     .name("테스트유저")
@@ -245,7 +245,7 @@ class AuthServiveUnitTest extends TestUnitBase {
             doThrow(CustomException.conflict("이미 사용 중인 이메일입니다"))
                     .when(userValidatorService).validateDuplicateEmail(TEST_EMAIL);
 
-            AuthRequest.SignUpRequest request = AuthRequest.SignUpRequest.builder()
+            AuthRequest.SignUp request = AuthRequest.SignUp.builder()
                     .email(TEST_EMAIL).password(TEST_PASSWORD)
                     .name("테스트유저").nickname("tester").build();
 
@@ -264,7 +264,7 @@ class AuthServiveUnitTest extends TestUnitBase {
             doThrow(CustomException.conflict("이미 사용 중인 닉네임입니다"))
                     .when(userValidatorService).validateDuplicateNickname("tester");
 
-            AuthRequest.SignUpRequest request = AuthRequest.SignUpRequest.builder()
+            AuthRequest.SignUp request = AuthRequest.SignUp.builder()
                     .email(TEST_EMAIL).password(TEST_PASSWORD)
                     .name("테스트유저").nickname("tester").build();
 

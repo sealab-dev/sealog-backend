@@ -35,8 +35,8 @@ public class AuthController implements AuthControllerDocs {
      */
     @Override
     @PostMapping("/login")
-    public ResponseEntity<CustomResponse<AuthResponse.Profile>> login(
-            @Valid @RequestBody AuthRequest.LoginRequest request,
+    public ResponseEntity<CustomResponse<AuthResponse.AuthProfile>> login(
+            @Valid @RequestBody AuthRequest.Login request,
             HttpServletResponse response
     ) {
         log.info("[Auth] Login attempt - Email: {}", request.getEmail());
@@ -45,9 +45,9 @@ public class AuthController implements AuthControllerDocs {
         cookieUtil.addAccessTokenCookie(response, tokenResponse.getAccessToken());
         cookieUtil.addRefreshTokenCookie(response, tokenResponse.getRefreshToken());
 
-        log.info("[Auth] Login success - UserID: {}", tokenResponse.getProfile().getId());
+        log.info("[Auth] Login success - UserID: {}", tokenResponse.getAuthProfile().getId());
 
-        return ResponseEntity.ok(CustomResponse.success(tokenResponse.getProfile(), "로그인 성공"));
+        return ResponseEntity.ok(CustomResponse.success(tokenResponse.getAuthProfile(), "로그인 성공"));
     }
 
     /**
@@ -59,7 +59,7 @@ public class AuthController implements AuthControllerDocs {
      */
     @Override
     @PostMapping("/refresh")
-    public ResponseEntity<CustomResponse<AuthResponse.Profile>> refresh(
+    public ResponseEntity<CustomResponse<AuthResponse.AuthProfile>> refresh(
             HttpServletRequest request,
             HttpServletResponse response
     ) {
@@ -69,11 +69,11 @@ public class AuthController implements AuthControllerDocs {
 
         TokenResponse tokenResponse = authService.refresh(refreshToken);
 
-        log.info("[Auth] Refreshing token for UserID: {}", tokenResponse.getProfile().getId());
+        log.info("[Auth] Refreshing token for UserID: {}", tokenResponse.getAuthProfile().getId());
 
         cookieUtil.addAccessTokenCookie(response, tokenResponse.getAccessToken());
 
-        return ResponseEntity.ok(CustomResponse.success(tokenResponse.getProfile(), "토큰이 재발급되었습니다"));
+        return ResponseEntity.ok(CustomResponse.success(tokenResponse.getAuthProfile(), "토큰이 재발급되었습니다"));
     }
 
     /**

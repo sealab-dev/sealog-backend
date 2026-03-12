@@ -26,7 +26,7 @@ public class AuthAdminController implements AuthAdminControllerDocs {
     @Override
     @PostMapping("/signup")
     public ResponseEntity<CustomResponse<Void>> signUp(
-            @Valid @RequestBody AuthRequest.SignUpRequest request
+            @Valid @RequestBody AuthRequest.SignUp request
     ) {
         authService.signUp(request);
         return ResponseEntity.ok(CustomResponse.success(null, "회원가입이 성공적으로 완료되었습니다."));
