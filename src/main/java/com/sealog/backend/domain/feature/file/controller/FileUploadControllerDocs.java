@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.file.controller;
 
 import com.sealog.backend.global.response.CustomResponse;
-import com.sealog.backend.domain.feature.file.dto.FileUploadResponse;
+import com.sealog.backend.domain.feature.file.dto.FileResponse;
 import com.sealog.backend.security.auth.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -37,7 +37,7 @@ public interface FileUploadControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 필요"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    ResponseEntity<CustomResponse<FileUploadResponse>> uploadFile(
+    ResponseEntity<CustomResponse<FileResponse>> uploadFile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "업로드할 파일", required = true,
                     content = @Content(mediaType = "application/octet-stream",

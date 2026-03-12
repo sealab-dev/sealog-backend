@@ -1,7 +1,7 @@
 package com.sealog.backend.infra.storage.config;
 
-import com.sealog.backend.infra.storage.properties.LocalStorageProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -19,11 +19,13 @@ import java.nio.file.Paths;
 @RequiredArgsConstructor
 public class LocalStorageConfig implements WebMvcConfigurer {
 
-    private final LocalStorageProperties localStorageProperties;
+    // 사용 상수
+    @Value("${file.local.upload-dir}")
+    private String uploadDir;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        Path uploadPath = Paths.get(localStorageProperties.getUploadDir()).toAbsolutePath().normalize();
+        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
 
         registry.addResourceHandler("/files/**")
                 .addResourceLocations("file:" + uploadPath.toString() + "/");

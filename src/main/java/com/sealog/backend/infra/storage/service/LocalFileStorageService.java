@@ -3,11 +3,11 @@ package com.sealog.backend.infra.storage.service;
 import com.sealog.backend.infra.storage.constant.StoragePath;
 import com.sealog.backend.infra.storage.dto.FileUploadResult;
 import com.sealog.backend.infra.storage.exception.FileStorageException;
-import com.sealog.backend.infra.storage.properties.LocalStorageProperties;
 import com.sealog.backend.infra.storage.util.FileKeyGenerator;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,13 +34,20 @@ import static com.sealog.backend.infra.storage.util.FileTypeResolver.*;
 @RequiredArgsConstructor
 public class LocalFileStorageService implements FileStorageService {
 
-    private final LocalStorageProperties localStorageProperties;
+    // 사용 의존성
     private final FileKeyGenerator fileKeyGenerator;
+
+    // 사용 상수
+    @Value("${file.local.upload-dir}")
+    private String uploadDir;
+
+    @Value("${file.local.base-url}")
+    private String baseUrl;
 
     @PostConstruct
     public void init() {
         try {
-            Path uploadPath = Paths.get(localStorageProperties.getUploadDir()).toAbsolutePath().normalize();
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
             Files.createDirectories(uploadPath);
             log.info("로컬 업로드 디렉토리 생성 완료: {}", uploadPath);
         } catch (IOException e) {
@@ -97,6 +104,7 @@ public class LocalFileStorageService implements FileStorageService {
 
     @Override
     public void deleteFile(String fileKey) {
+
         if (fileKey == null || fileKey.isBlank()) {
             log.warn("파일 키가 null 또는 비어있음");
             return;
@@ -118,6 +126,7 @@ public class LocalFileStorageService implements FileStorageService {
 
     @Override
     public List<String> deleteFiles(List<String> fileKeys) {
+
         if (fileKeys == null || fileKeys.isEmpty()) {
             log.warn("삭제할 파일 키 목록이 비어있음");
             return List.of();
@@ -158,16 +167,17 @@ public class LocalFileStorageService implements FileStorageService {
 
     @Override
     public String getPresignedUrl(String fileKey, int minutes) {
-        if (fileKey == null || fileKey.isBlank()) {
-            log.warn("파일 키가 null 또는 비어있음");
-            throw FileStorageException.badRequest("파일 키가 유효하지 않습니다.");
-        }
+        return getFullFileUrl(fileKey); // 로컬은 getFileUrl과 같은 결과 반환
+    }
 
-        // 로컬 환경에서는 직접 접근 URL 반환
-        String baseUrl = localStorageProperties.getBaseUrl();
-        String url = baseUrl + "/" + fileKey;
-        log.info("로컬 파일 URL 생성 완료: path={}", url);
-        return url;
+    @Override
+    public String getFileUrl(String fileKey) {
+        return getFullFileUrl(fileKey);
+    }
+
+    @Override
+    public String getBaseUrl() {
+        return baseUrl;
     }
 
     /* ========== Private 메서드 ============ */
@@ -209,9 +219,30 @@ public class LocalFileStorageService implements FileStorageService {
      * 파일 키를 로컬 파일 시스템 경로로 변환
      */
     private Path resolveFilePath(String fileKey) {
-        return Paths.get(localStorageProperties.getUploadDir())
+        return Paths.get(uploadDir)
                 .toAbsolutePath()
                 .normalize()
                 .resolve(fileKey);
     }
+
+    /**
+     * 파일 full url 조립 및 반환
+     */
+    private String getFullFileUrl(String fileKey) {
+
+        // 1. 주소 유효성 검증
+        if (fileKey == null || fileKey.isBlank()) {
+            log.warn("파일 키가 null 또는 비어있음");
+            return null;
+        }
+
+        // 2. 로컬 환경에서는 직접 접근 URL 반환
+        String url = fileKey.startsWith("/")
+                ? "%s%s".formatted(baseUrl, fileKey)
+                : "%s/%s".formatted(baseUrl, fileKey);
+
+        log.info("로컬 파일 URL 생성 완료: path={}", url);
+        return url;
+    }
+
 }

@@ -118,4 +118,19 @@ public interface FileStorageService {
      * @return 접근 가능한 URL
      */
     String getPresignedUrl(String fileKey, int minutes);
+
+    /**
+     * 현재 로컬/배포 상태에 맞는 파일 접근이 가능한 URL 생성
+     *
+     * @param fileKey 조회할 파일의 키
+     * @return 파일 URL
+     */
+    String getFileUrl(String fileKey);
+
+    /**
+     * 현재 로컬/배포 상태에 맞는 파일 기본 경로 반환
+     *
+     * @return 파일 기본 경로 URL
+     */
+    String getBaseUrl();
 }

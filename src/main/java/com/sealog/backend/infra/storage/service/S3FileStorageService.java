@@ -109,6 +109,7 @@ public class S3FileStorageService implements FileStorageService {
 
     @Override
     public String getPresignedUrl(String fileKey, int minutes) {
+
         if (fileKey == null || fileKey.isBlank()) {
             log.warn("파일 키가 null 또는 비어있음");
             throw FileStorageException.badRequest("파일 키가 유효하지 않습니다.");
@@ -205,7 +206,38 @@ public class S3FileStorageService implements FileStorageService {
         }
     }
 
+    @Override
+    public String getFileUrl(String fileKey) {
+
+        // 1. 주소 유효성 검증
+        if (fileKey == null || fileKey.isBlank()) {
+            log.warn("파일 키가 null 또는 비어있음");
+            throw FileStorageException.badRequest("파일 키가 유효하지 않습니다.");
+        }
+
+        // 2. 로컬 환경에서는 직접 접근 URL 반환
+        String url = generatePublicUrl(fileKey);
+        log.info("S3 클라우드 파일 Public URL 생성 완료: path={}", url);
+        return url;
+    }
+
+    @Override
+    public String getBaseUrl() {
+        return generatePublicBaseUrl();
+    }
+
     /* ========== Private 메서드 ============ */
+
+    /**
+     * 파일 주소 유효성 검증
+     */
+    private void validateFileKey(String fileKey) {
+
+        if (fileKey == null || fileKey.isBlank()) {
+            log.warn("파일 키가 null 또는 비어있음");
+            throw FileStorageException.badRequest("파일 키가 유효하지 않습니다.");
+        }
+    }
 
     /**
      * 파일을 S3에 업로드하고 메타데이터 반환
@@ -429,12 +461,24 @@ public class S3FileStorageService implements FileStorageService {
      * 공개 URL 생성 (CloudFront 우선)
      */
     private String generatePublicUrl(String fileKey) {
-        if (cloudFrontDomain != null && !cloudFrontDomain.isBlank()) {
-            return String.format("https://%s/%s", cloudFrontDomain, fileKey);
-        } else {
-            return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, fileKey);
-        }
+
+        String baseUrl = generatePublicBaseUrl();
+
+        return fileKey.startsWith("/")
+                ? "%s%s".formatted(baseUrl, fileKey)
+                : "%s/%s".formatted(baseUrl, fileKey);
     }
+
+    /**
+     * 공개 Base URL 생성 (CloudFront 우선)
+     */
+    private String generatePublicBaseUrl() {
+
+        return cloudFrontDomain != null && !cloudFrontDomain.isBlank()
+                ? "https://%s".formatted(cloudFrontDomain)
+                : "https://%s.s3.%s.amazonaws.com".formatted(bucketName, region);
+    }
+
 
     /**
      * 파일 키에서 저장된 파일명 추출
