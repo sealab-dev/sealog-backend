@@ -74,11 +74,11 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
      */
     @Override
     @PostMapping
-    public ResponseEntity<CustomResponse<Void>> add(
+    public ResponseEntity<CustomResponse<Void>> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody @Valid ArchiveRequest.Add request
+            @RequestBody @Valid ArchiveRequest.Create request
     ) {
-        archiveService.add(userDetails.getUserId(), request);
+        archiveService.create(userDetails.getUserId(), request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(CustomResponse.success(null, "아카이브가 생성되었습니다"));
@@ -90,13 +90,13 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
      */
     @Override
     @PutMapping("/{nickname}/{slug}")
-    public ResponseEntity<CustomResponse<Void>> edit(
+    public ResponseEntity<CustomResponse<Void>> update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String nickname,
             @PathVariable String slug,
-            @RequestBody @Valid ArchiveRequest.Edit request
+            @RequestBody @Valid ArchiveRequest.Update request
     ) {
-        archiveService.edit(userDetails.getUserId(), nickname, slug, request);
+        archiveService.update(userDetails.getUserId(), nickname, slug, request);
         return ResponseEntity.ok(CustomResponse.success(null, "아카이브가 수정되었습니다"));
     }
 
@@ -136,12 +136,12 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
      */
     @Override
     @DeleteMapping("/{nickname}/{slug}")
-    public ResponseEntity<CustomResponse<Void>> remove(
+    public ResponseEntity<CustomResponse<Void>> delete(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String nickname,
             @PathVariable String slug
     ) {
-        archiveService.remove(userDetails.getUserId(), nickname, slug);
+        archiveService.delete(userDetails.getUserId(), nickname, slug);
         return ResponseEntity.ok(CustomResponse.success(null, "아카이브가 삭제되었습니다"));
     }
 
@@ -168,11 +168,11 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
      */
     @Override
     @DeleteMapping("/post/{postId}")
-    public ResponseEntity<CustomResponse<Void>> removePostArchive(
+    public ResponseEntity<CustomResponse<Void>> deletePostArchive(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId
     ) {
-        archiveService.removePostArchive(userDetails.getUserId(), postId);
+        archiveService.deletePostArchive(userDetails.getUserId(), postId);
         return ResponseEntity.ok(CustomResponse.success(null, "게시글 아카이브 배정이 해제되었습니다"));
     }
 }

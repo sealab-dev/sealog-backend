@@ -69,9 +69,9 @@ public interface ArchiveUserControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true)))
     })
-    ResponseEntity<CustomResponse<Void>> add(
+    ResponseEntity<CustomResponse<Void>> create(
             @Parameter(hidden = true) CustomUserDetails userDetails,
-            ArchiveRequest.Add request
+            ArchiveRequest.Create request
     );
 
     @Operation(
@@ -87,11 +87,11 @@ public interface ArchiveUserControllerDocs {
             @ApiResponse(responseCode = "403", description = "권한 없음 (소유자 아님)",
                     content = @Content(schema = @Schema(hidden = true)))
     })
-    ResponseEntity<CustomResponse<Void>> edit(
+    ResponseEntity<CustomResponse<Void>> update(
             @Parameter(hidden = true) CustomUserDetails userDetails,
             @Parameter(description = "소유자 닉네임", example = "테스터") String nickname,
             @Parameter(description = "아카이브 slug", example = "spring-boot-study") String slug,
-            ArchiveRequest.Edit request
+            ArchiveRequest.Update request
     );
 
     @Operation(
@@ -139,7 +139,7 @@ public interface ArchiveUserControllerDocs {
             @ApiResponse(responseCode = "403", description = "권한 없음 (소유자 아님)",
                     content = @Content(schema = @Schema(hidden = true)))
     })
-    ResponseEntity<CustomResponse<Void>> remove(
+    ResponseEntity<CustomResponse<Void>> delete(
             @Parameter(hidden = true) CustomUserDetails userDetails,
             @Parameter(description = "소유자 닉네임", example = "테스터") String nickname,
             @Parameter(description = "아카이브 slug", example = "spring-boot-study") String slug
@@ -173,7 +173,7 @@ public interface ArchiveUserControllerDocs {
             @ApiResponse(responseCode = "403", description = "권한 없음 (게시글 소유자 아님)",
                     content = @Content(schema = @Schema(hidden = true)))
     })
-    ResponseEntity<CustomResponse<Void>> removePostArchive(
+    ResponseEntity<CustomResponse<Void>> deletePostArchive(
             @Parameter(hidden = true) CustomUserDetails userDetails,
             @Parameter(description = "해제할 게시글 ID", example = "1") Long postId
     );

@@ -38,7 +38,7 @@ public class ArchiveResponse {
     @Builder
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    @Schema(description = "아카이브에 속하는 블로그 게시글 목록 조회")
+    @Schema(name = "ArchivePostItem", description = "아카이브에 속하는 블로그 게시글 목록 조회")
     public static class PostItems {
 
         private Long postId;

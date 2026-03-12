@@ -20,8 +20,8 @@ public class ArchiveRequest {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @Schema(description = "아카이브 생성 요청")
-    public static class Add {
+    @Schema(name = "ArchiveCreate", description = "아카이브 생성 요청")
+    public static class Create {
 
         @CheckStringSize(max = 100)
         @Schema(description = "이름", example = "Spring Boot 프로젝트", maxLength = 100)
@@ -35,8 +35,8 @@ public class ArchiveRequest {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @Schema(description = "아카이브 수정 요청")
-    public static class Edit {
+    @Schema(name = "ArchiveUpdate", description = "아카이브 수정 요청")
+    public static class Update {
 
         @CheckStringSize(max = 100)
         @Schema(description = "이름", example = "Spring Boot 프로젝트", maxLength = 100)

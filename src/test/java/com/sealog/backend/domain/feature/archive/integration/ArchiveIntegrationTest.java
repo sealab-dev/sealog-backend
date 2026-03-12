@@ -167,7 +167,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("성공 → 201")
         void 성공() throws Exception {
-            ArchiveRequest.Add request = ArchiveRequest.Add.builder()
+            ArchiveRequest.Create request = ArchiveRequest.Create.builder()
                     .name("새로운 아카이브")
                     .build();
 
@@ -182,7 +182,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 이름 중복 → 400")
         void 이름_중복() throws Exception {
-            ArchiveRequest.Add request = ArchiveRequest.Add.builder()
+            ArchiveRequest.Create request = ArchiveRequest.Create.builder()
                     .name(testArchive.getName())
                     .build();
 
@@ -196,7 +196,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 미인증 → 401")
         void 미인증() throws Exception {
-            ArchiveRequest.Add request = ArchiveRequest.Add.builder()
+            ArchiveRequest.Create request = ArchiveRequest.Create.builder()
                     .name("새로운 아카이브")
                     .build();
 
@@ -218,7 +218,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("성공 → 200")
         void 성공() throws Exception {
-            ArchiveRequest.Edit request = ArchiveRequest.Edit.builder()
+            ArchiveRequest.Update request = ArchiveRequest.Update.builder()
                     .name("수정된 이름")
                     .build();
 
@@ -233,7 +233,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 같은 이름으로 수정 → 400")
         void 같은_이름() throws Exception {
-            ArchiveRequest.Edit request = ArchiveRequest.Edit.builder()
+            ArchiveRequest.Update request = ArchiveRequest.Update.builder()
                     .name(testArchive.getName())
                     .build();
 
@@ -247,7 +247,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 다른 아카이브와 이름 중복 → 409")
         void 이름_중복() throws Exception {
-            ArchiveRequest.Edit request = ArchiveRequest.Edit.builder()
+            ArchiveRequest.Update request = ArchiveRequest.Update.builder()
                     .name(privateArchive.getName())
                     .build();
 
@@ -261,7 +261,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 타인 아카이브 수정 → 403")
         void 권한_없음() throws Exception {
-            ArchiveRequest.Edit request = ArchiveRequest.Edit.builder()
+            ArchiveRequest.Update request = ArchiveRequest.Update.builder()
                     .name("수정된 이름")
                     .build();
 
