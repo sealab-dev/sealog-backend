@@ -54,7 +54,7 @@ public class TestDataFactory {
      */
     public User createUser(UserRole role) {
         return userRepository.save(
-                createEntity(postRepository::count, idx -> buildUser(idx, "password", role))
+                createEntity(userRepository::count, idx -> buildUser(idx, "password", role))
         );
     }
 
