@@ -36,7 +36,7 @@ public interface UserMeControllerDocs {
     })
     ResponseEntity<CustomResponse<UserResponse.MyProfile>> updateProfile(
             CustomUserDetails userDetails,
-            UserRequest.UpdateProfileRequest request,
+            UserRequest.UpdateProfile request,
             MultipartFile profileImage
     );
 
@@ -50,6 +50,6 @@ public interface UserMeControllerDocs {
     })
     ResponseEntity<CustomResponse<Void>> changePassword(
             CustomUserDetails userDetails,
-            UserRequest.ChangePasswordRequest request
+            UserRequest.UpdatePassword request
     );
 }

@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.user.service;
 
-import com.sealog.backend.domain.feature.user.dto.UserSocialLinkRequest;
-import com.sealog.backend.domain.feature.user.dto.UserSocialLinkResponse;
+import com.sealog.backend.domain.feature.user.dto.UserRequest;
+import com.sealog.backend.domain.feature.user.dto.UserResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.entity.UserSocial;
 import com.sealog.backend.domain.feature.user.enums.SocialType;
@@ -26,24 +26,23 @@ public class UserSocialServiceImpl implements UserSocialService {
     private final UserRepository userRepository;
 
     @Override
-    public List<UserSocialLinkResponse.LinkInfo> getMyLinks(Long userId) {
+    public List<UserResponse.SocialLinkItem> getMyLinks(Long userId) {
         return userSocialRepository.findAllByUserId(userId).stream()
-                .map(UserSocialLinkResponse.LinkInfo::from)
+                .map(UserResponse.SocialLinkItem::from)
                 .toList();
     }
 
     @Override
     @Transactional
-    public List<UserSocialLinkResponse.LinkInfo> upsert(Long userId, UserSocialLinkRequest.UpsertRequest request) {
-        log.info("소셜 링크 upsert 시작: userId={}, count={}", userId, request.getLinks().size());
+    public List<UserResponse.SocialLinkItem> update(Long userId, List<UserRequest.UpdateSocialLink> links) {
 
         // 1. 사용자 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
 
         // 2. 중복 소셜 타입 검증
-        List<SocialType> socialTypes = request.getLinks().stream()
-                .map(UserSocialLinkRequest.LinkItem::getSocialType)
+        List<SocialType> socialTypes = links.stream()
+                .map(UserRequest.UpdateSocialLink::getSocialType)
                 .toList();
 
         Set<SocialType> uniqueTypes = Set.copyOf(socialTypes);
@@ -56,7 +55,7 @@ public class UserSocialServiceImpl implements UserSocialService {
         log.info("기존 소셜 링크 삭제 완료: userId={}", userId);
 
         // 4. 새 소셜 링크 저장
-        List<UserSocial> newLinks = request.getLinks().stream()
+        List<UserSocial> newLinks = links.stream()
                 .map(item -> UserSocial.builder()
                         .user(user)
                         .socialType(item.getSocialType())
@@ -68,12 +67,12 @@ public class UserSocialServiceImpl implements UserSocialService {
         log.info("소셜 링크 upsert 완료: userId={}, count={}", userId, savedLinks.size());
 
         return savedLinks.stream()
-                .map(UserSocialLinkResponse.LinkInfo::from)
+                .map(UserResponse.SocialLinkItem::from)
                 .toList();
     }
 
     @Override
-    public List<UserSocialLinkResponse.LinkInfo> getPublicLinks(String nickname) {
+    public List<UserResponse.SocialLinkItem> getPublicLinks(String nickname) {
         List<UserSocial> links = userSocialRepository.findAllByUser_Nickname(nickname);
 
         if (links.isEmpty()) {
@@ -81,7 +80,7 @@ public class UserSocialServiceImpl implements UserSocialService {
         }
 
         return links.stream()
-                .map(UserSocialLinkResponse.LinkInfo::from)
+                .map(UserResponse.SocialLinkItem::from)
                 .toList();
     }
 }
