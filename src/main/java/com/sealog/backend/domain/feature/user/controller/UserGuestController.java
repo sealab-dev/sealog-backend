@@ -15,11 +15,11 @@ public class UserGuestController implements UserGuestControllerDocs {
     private final UserService userService;
 
     /**
-     * 특정 사용자 정보 조회
-     * GET /api/guest/user/{nickname}
+     * 특정 사용자 프로필 정보 조회
+     * GET /api/guest/user/{nickname}/profile
      */
     @Override
-    @GetMapping("/{nickname}")
+    @GetMapping("/{nickname}/profile")
     public ResponseEntity<CustomResponse<UserResponse.PublicProfile>> getBlogUserInfo(
             @PathVariable String nickname
     ) {

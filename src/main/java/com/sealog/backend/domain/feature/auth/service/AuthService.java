@@ -1,11 +1,20 @@
 package com.sealog.backend.domain.feature.auth.service;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
+import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
 import com.sealog.backend.domain.feature.auth.dto.TokenResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.global.exception.CustomException;
 
 public interface AuthService {
+
+    /**
+     * 내 정보 조회
+     * @param userId 사용자 ID
+     * @return 사용자 프로필
+     * @throws CustomException 사용자를 찾을 수 없는 경우 (UNAUTHORIZED)
+     */
+    AuthResponse.AuthProfile getMe(Long userId);
 
     /**
      * 로그인

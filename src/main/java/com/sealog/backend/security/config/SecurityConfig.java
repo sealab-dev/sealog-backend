@@ -69,6 +69,7 @@ public class SecurityConfig {
                 // URL별 접근 권한 설정
                 .authorizeHttpRequests(authorize -> authorize
                         // 인증 없이 접근 가능한 경로
+                        .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/user/**").hasRole("USER")

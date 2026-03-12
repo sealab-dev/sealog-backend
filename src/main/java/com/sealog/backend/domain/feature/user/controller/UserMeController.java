@@ -21,12 +21,12 @@ public class UserMeController implements UserMeControllerDocs {
     private final UserService userService;
 
     /**
-     * 내 정보 조회
-     * GET /api/user/me
+     * 내 프로필 조회
+     * GET /api/user/me/profile
      * user
      */
     @Override
-    @GetMapping
+    @GetMapping("/profile")
     public ResponseEntity<CustomResponse<UserResponse.MyProfile>> getMyInfo(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {

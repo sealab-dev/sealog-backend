@@ -6,6 +6,7 @@ import com.sealog.backend.domain.feature.auth.dto.TokenResponse;
 import com.sealog.backend.domain.feature.auth.service.AuthService;
 import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.global.response.CustomResponse;
+import com.sealog.backend.security.auth.CustomUserDetails;
 import com.sealog.backend.security.util.CookieUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -27,6 +29,19 @@ public class AuthController implements AuthControllerDocs {
 
     private final AuthService authService;
     private final CookieUtil cookieUtil;
+
+    /**
+     * 내 정보 조회
+     * GET /api/auth/me
+     * user
+     */
+    @Override
+    @GetMapping("/me")
+    public ResponseEntity<CustomResponse<AuthResponse.AuthProfile>> getMe(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.ok(CustomResponse.success(authService.getMe(userDetails.getUserId())));
+    }
 
     /**
      * 로그인
