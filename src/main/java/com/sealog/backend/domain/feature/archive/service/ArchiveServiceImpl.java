@@ -68,7 +68,7 @@ public class ArchiveServiceImpl implements ArchiveService {
 
     @Transactional
     @Override
-    public void add(Long userId, ArchiveRequest.Add request) {
+    public void create(Long userId, ArchiveRequest.Create request) {
 
         // 1. 회원 엔티티 조회
         User user = userRepository
@@ -97,7 +97,7 @@ public class ArchiveServiceImpl implements ArchiveService {
 
     @Transactional
     @Override
-    public void edit(Long userId, String nickname, String slug, ArchiveRequest.Edit request) {
+    public void update(Long userId, String nickname, String slug, ArchiveRequest.Update request) {
 
         // 1. entity 조회
         Archive archive = findArchiveByNicknameAndSlug(nickname, slug);
@@ -149,7 +149,7 @@ public class ArchiveServiceImpl implements ArchiveService {
 
     @Transactional
     @Override
-    public void remove(Long userId, String nickname, String slug) {
+    public void delete(Long userId, String nickname, String slug) {
 
         // 1. 조회 및 검증
         Archive archive = findArchiveByNicknameAndSlug(nickname, slug);
@@ -177,7 +177,7 @@ public class ArchiveServiceImpl implements ArchiveService {
 
     @Transactional
     @Override
-    public void removePostArchive(Long userId, Long postId) {
+    public void deletePostArchive(Long userId, Long postId) {
 
         // 1. Post 조회 및 검증
         Post post = findPostById(postId);

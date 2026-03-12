@@ -64,7 +64,7 @@ public interface ArchiveService {
      * @param request 생성 요청 데이터
      * @throws CustomException 사용자 없음, 동일 이름 이미 존재
      */
-    void add(Long userId, ArchiveRequest.Add request);
+    void create(Long userId, ArchiveRequest.Create request);
 
     /**
      * 아카이브 이름 수정
@@ -76,7 +76,7 @@ public interface ArchiveService {
      * @param request  수정 요청 데이터
      * @throws CustomException 아카이브 없음, 권한 없음, 동일 이름으로 수정 시도
      */
-    void edit(Long userId, String nickname, String slug, ArchiveRequest.Edit request);
+    void update(Long userId, String nickname, String slug, ArchiveRequest.Update request);
 
     /**
      * 아카이브 공개 처리
@@ -106,7 +106,7 @@ public interface ArchiveService {
      * @param slug     삭제할 아카이브 slug
      * @throws CustomException 아카이브 없음, 권한 없음
      */
-    void remove(Long userId, String nickname, String slug);
+    void delete(Long userId, String nickname, String slug);
 
     /**
      * 게시글의 소속 아카이브 변경 (배정/재배정)
@@ -127,6 +127,6 @@ public interface ArchiveService {
      * @param postId 해제 대상 게시글 ID
      * @throws CustomException 게시글 없음, 권한 없음
      */
-    void removePostArchive(Long userId, Long postId);
+    void deletePostArchive(Long userId, Long postId);
 
 }
