@@ -13,7 +13,7 @@ public class StackResponse {
 
     @Getter
     @Builder
-    @Schema(description = "스택 기본 정보")
+    @Schema(name = "StackItem", description = "스택 기본 정보")
     public static class StackItem {
 
         @Schema(description = "스택 ID", example = "1")
@@ -36,7 +36,7 @@ public class StackResponse {
 
     @Getter
     @Builder
-    @Schema(description = "스택 + 게시글 수")
+    @Schema(name = "StackWithCount", description = "스택 + 게시글 수")
     public static class StackWithCount {
 
         @Schema(description = "스택 ID", example = "1")
@@ -63,7 +63,7 @@ public class StackResponse {
 
     @Getter
     @Builder
-    @Schema(description = "그룹별 스택 목록")
+    @Schema(name = "GroupedStacks", description = "그룹별 스택 목록")
     public static class GroupedStacks {
 
         @Schema(description = "그룹명 → 스택 목록 맵")
