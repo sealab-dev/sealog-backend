@@ -14,7 +14,7 @@ public class StackRequest {
     @Getter
     @Builder
     @NoArgsConstructor@AllArgsConstructor
-    @Schema(description = "스택 생성/수정 요청")
+    @Schema(name = "StackCreate", description = "스택 생성 요청")
     public static class Create {
 
         @NotBlank(message = "스택명을 입력해주세요")
@@ -32,7 +32,7 @@ public class StackRequest {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @Schema(description = "스택 생성/수정 요청")
+    @Schema(name = "StackUpdate", description = "스택 수정 요청")
     public static class Update {
 
         @NotBlank(message = "스택명을 입력해주세요")
