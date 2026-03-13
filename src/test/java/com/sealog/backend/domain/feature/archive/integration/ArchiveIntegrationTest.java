@@ -118,14 +118,13 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
     // 내 아카이브 게시글 목록 조회 (User)
     // =====================================================================
     @Nested
-    @DisplayName("내 아카이브 게시글 목록 조회 (User GET /{nickname}/{slug}/posts)")
+    @DisplayName("내 아카이브 게시글 목록 조회 (User GET /{slug}/posts)")
     class 내_아카이브_게시글_목록_조회 {
 
         @Test
         @DisplayName("성공 → 200")
         void 성공() throws Exception {
-            mockMvc.perform(get("/api/user/archive/{nickname}/{slug}/posts",
-                            testUser.getNickname(), testArchive.getSlug())
+            mockMvc.perform(get("/api/user/archive/{slug}/posts", testArchive.getSlug())
                             .with(user(myDetails)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -135,8 +134,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 타인 아카이브 접근 → 403")
         void 권한_없음() throws Exception {
-            mockMvc.perform(get("/api/user/archive/{nickname}/{slug}/posts",
-                            testUser.getNickname(), testArchive.getSlug())
+            mockMvc.perform(get("/api/user/archive/{slug}/posts", testArchive.getSlug())
                             .with(user(otherDetails)))
                     .andExpect(status().isForbidden());
         }
@@ -144,8 +142,7 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 미인증 → 401")
         void 미인증() throws Exception {
-            mockMvc.perform(get("/api/user/archive/{nickname}/{slug}/posts",
-                            testUser.getNickname(), testArchive.getSlug())
+            mockMvc.perform(get("/api/user/archive/{slug}/posts", testArchive.getSlug())
                             .with(anonymous()))
                     .andExpect(status().isUnauthorized());
         }

@@ -56,7 +56,6 @@ public interface ArchiveUserControllerDocs {
     })
     ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.PostItems>>> getPagedPostItems(
             @Parameter(hidden = true) CustomUserDetails userDetails,
-            @Parameter(description = "아카이브 소유자 닉네임", example = "테스터") String nickname,
             @Parameter(description = "아카이브 slug", example = "spring-boot-study") String slug,
             Pageable pageable
     );

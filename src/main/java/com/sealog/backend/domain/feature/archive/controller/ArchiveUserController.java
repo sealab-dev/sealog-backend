@@ -51,18 +51,17 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
 
     /**
      * 내 아카이브 게시글 목록 조회
-     * GET /api/user/archive/{nickname}/{slug}/posts
+     * GET /api/user/archive/{slug}/posts
      */
     @Override
-    @GetMapping("/{nickname}/{slug}/posts")
+    @GetMapping("/{slug}/posts")
     public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.PostItems>>> getPagedPostItems(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable String nickname,
             @PathVariable String slug,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<ArchiveResponse.PostItems> result = archiveService.getPagedPostItems(
-                userDetails.getUserId(), nickname, slug, pageable
+                userDetails.getUserId(), userDetails.getUser().getNickname(), slug, pageable
         );
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
     }
