@@ -64,8 +64,8 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Page<PostResponse.PostItems> searchPosts(Long requesterId, String keyword, Pageable pageable) {
-        Specification<Post> spec = PostCondition.search(requesterId, keyword);
+    public Page<PostResponse.PostItems> searchPosts(String nickname, String keyword, Pageable pageable) {
+        Specification<Post> spec = PostCondition.search(nickname, keyword);
         return postRepository
                 .findAll(spec, pageable)
                 .map(this::buildPostItemsResponse);
@@ -96,9 +96,17 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Page<PostResponse.PostItems> getPostsByStack(String stackName, Pageable pageable) {
+    public Page<PostResponse.PostItems> searchPostsByNickname(String nickname, String keyword, Pageable pageable) {
+        Specification<Post> spec = PostCondition.searchByNickname(nickname, keyword);
         return postRepository
-                .findPublishedByStackName(stackName, pageable)
+                .findAll(spec, pageable)
+                .map(this::buildPostItemsResponse);
+    }
+
+    @Override
+    public Page<PostResponse.PostItems> getPostsByStack(String nickname, String stackName, Pageable pageable) {
+        return postRepository
+                .findPublishedByNicknameAndStackName(nickname, stackName, pageable)
                 .map(this::buildPostItemsResponse);
     }
 
@@ -279,6 +287,7 @@ public class PostServiceImpl implements PostService {
 
         String displayContent = PostHtmlParser.injectSrcAttributes(post.getContent(), fileStorageService.getBaseUrl());
         String archiveSlug = Objects.nonNull(post.getArchive()) ? post.getArchive().getSlug() : null;
+        String archiveName = Objects.nonNull(post.getArchive()) ? post.getArchive().getName() : null;
 
         return PostResponse.Detail.of(
                 post.getId(),
@@ -292,6 +301,7 @@ public class PostServiceImpl implements PostService {
                 stackItems,
                 author,
                 archiveSlug,
+                archiveName,
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );

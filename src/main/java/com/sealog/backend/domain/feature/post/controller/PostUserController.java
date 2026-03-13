@@ -130,7 +130,7 @@ public class PostUserController implements PostUserControllerDocs {
             @RequestParam(required = false, defaultValue = "") String keyword,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<PostResponse.PostItems> results = postService.searchPosts(userDetails.getUserId(), keyword, pageable);
+        Page<PostResponse.PostItems> results = postService.searchPosts(userDetails.getUser().getNickname(), keyword, pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(results)));
     }
 

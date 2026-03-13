@@ -74,6 +74,7 @@ public class PostResponse {
         private List<StackItem> stacks;
         private AuthorInfo author;
         private String archiveSlug;
+        private String archiveName;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
@@ -89,6 +90,7 @@ public class PostResponse {
                 List<StackItem> stacks,
                 AuthorInfo author,
                 String archiveSlug,
+                String archiveName,
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt
         ) {
@@ -104,6 +106,7 @@ public class PostResponse {
                     .stacks(stacks)
                     .author(author)
                     .archiveSlug(archiveSlug)
+                    .archiveName(archiveName)
                     .createdAt(createdAt)
                     .updatedAt(updatedAt)
                     .build();

@@ -68,21 +68,21 @@ public class PostGuestController implements PostGuestControllerDocs {
 
 
     /**
-     * 스택별 공개 게시글 목록 조회
-     * GET /api/guest/posts?stackName={stackName}
+     * 특정 사용자의 스택별 공개 게시글 목록 조회
+     * GET /api/guest/{nickname}/posts?stackName={stackName}
      *
      * - PUBLISHED 상태만 조회
      */
     @Override
-    @GetMapping(value = "/posts", params = "stackName")
+    @GetMapping(value = "/{nickname}/posts", params = "stackName")
     public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getPostsByStack(
+            @PathVariable String nickname,
             @RequestParam String stackName,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<PostResponse.PostItems> posts = postService.getPostsByStack(stackName, pageable);
+        Page<PostResponse.PostItems> posts = postService.getPostsByStack(nickname, stackName, pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
     }
-
 
     /**
      * 공개 게시글 검색
@@ -97,6 +97,23 @@ public class PostGuestController implements PostGuestControllerDocs {
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<PostResponse.PostItems> results = postService.searchPosts(null, keyword, pageable);
+        return ResponseEntity.ok(CustomResponse.success(PageResponse.from(results)));
+    }
+
+    /**
+     * 특정 사용자의 공개 게시글 검색
+     * GET /api/guest/{nickname}/posts/search?keyword=검색어
+     *
+     * - PUBLISHED 상태만 검색
+     */
+    @Override
+    @GetMapping("/{nickname}/posts/search")
+    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> searchPostsByNickname(
+            @PathVariable String nickname,
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<PostResponse.PostItems> results = postService.searchPostsByNickname(nickname, keyword, pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(results)));
     }
 }

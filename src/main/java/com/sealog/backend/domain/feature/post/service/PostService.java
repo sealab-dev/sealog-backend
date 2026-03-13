@@ -48,25 +48,37 @@ public interface PostService {
 
     /**
      * 게시글 검색
-     * - requesterId = null  → Guest: PUBLISHED 상태만, 전체 사용자 대상
-     * - requesterId != null → User:  전체 상태(PUBLISHED+DRAFT), 본인 게시글만
+     * - nickname = null  → Guest: PUBLISHED 상태만, 전체 사용자 대상
+     * - nickname != null → User:  전체 상태(PUBLISHED+DRAFT), 본인 게시글만
      *
-     * @param requesterId 요청자 ID (null = Guest, non-null = User)
-     * @param keyword     검색 키워드
-     * @param pageable    페이지네이션 정보
+     * @param nickname 요청자 닉네임 (null = Guest, non-null = User)
+     * @param keyword  검색 키워드
+     * @param pageable 페이지네이션 정보
      * @return 검색된 게시글 목록
      */
-    Page<PostResponse.PostItems> searchPosts(Long requesterId, String keyword, Pageable pageable);
+    Page<PostResponse.PostItems> searchPosts(String nickname, String keyword, Pageable pageable);
 
     /**
-     * 스택별 공개 게시글 목록 조회
-     * - PUBLISHED 상태만 조회
+     * 특정 사용자의 공개 게시글 검색
+     * - PUBLISHED 상태만, 닉네임 일치하는 사용자의 게시글만
      *
+     * @param nickname 검색 대상 사용자 닉네임
+     * @param keyword  검색 키워드
+     * @param pageable 페이지네이션 정보
+     * @return 검색된 게시글 목록
+     */
+    Page<PostResponse.PostItems> searchPostsByNickname(String nickname, String keyword, Pageable pageable);
+
+    /**
+     * 특정 사용자의 스택별 공개 게시글 목록 조회
+     * - PUBLISHED 상태만, 닉네임 일치하는 사용자의 게시글만
+     *
+     * @param nickname  조회할 사용자 닉네임
      * @param stackName 조회할 스택 이름 (Stack.name, unique)
      * @param pageable  페이지네이션 정보
      * @return 해당 스택이 적용된 게시글 목록
      */
-    Page<PostResponse.PostItems> getPostsByStack(String stackName, Pageable pageable);
+    Page<PostResponse.PostItems> getPostsByStack(String nickname, String stackName, Pageable pageable);
 
     // ========== Create, Update, Delete ========== //
 

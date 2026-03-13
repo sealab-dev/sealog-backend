@@ -98,13 +98,15 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     // ========== 스택 기반 조회 ========== //
 
     /**
-     * 스택 이름으로 PUBLISHED 게시글 목록 조회
+     * 닉네임 + 스택 이름으로 특정 유저의 PUBLISHED 게시글 목록 조회
      * 조인으로만 작성 시, DISTINCT가 필요하므로 페이징 쿼리 불가능
      */
     @Query("""
         SELECT p
         FROM Post p
-        WHERE p.status = 'PUBLISHED'
+        JOIN FETCH p.user u
+        WHERE u.nickname = :nickname
+          AND p.status = 'PUBLISHED'
           AND p.deletedAt IS NULL
           AND EXISTS (
               SELECT 1
@@ -113,7 +115,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
                 AND ps.stack.name = :stackName
           )
     """)
-    Page<Post> findPublishedByStackName(@Param("stackName") String stackName, Pageable pageable);
+    Page<Post> findPublishedByNicknameAndStackName(@Param("nickname") String nickname, @Param("stackName") String stackName, Pageable pageable);
 
     // ========== 아카이브 기반 조회 ========== //
 
