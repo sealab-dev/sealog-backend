@@ -35,35 +35,31 @@ public class ArchiveServiceImpl implements ArchiveService {
     private final UserRepository userRepository;
 
     @Override
-    public Page<ArchiveResponse.ArchiveItems> getPagedItemsByNicknameForGuest(String nickname, Pageable pageable) {
+    public Page<ArchiveResponse.PostItems> getPagedPostItems(Long requesterId, String nickname, String slug, Pageable pageable) {
 
-        return archiveRepository
-                .findByUserNicknameAndIsPublic(nickname, true, pageable)
-                .map(this::toItems);
-    }
+        // 1. 아카이브 조회
+        Archive archive = findArchiveByNicknameAndSlug(nickname, slug);
 
-    @Override
-    public Page<ArchiveResponse.PostItems> getPagedPostItemsByArchiveIdForGuest(Long archiveId, Pageable pageable) {
+        // 2. User: 소유자 검증 후 전체 상태 반환
+        if (Objects.nonNull(requesterId)) {
+            verifyOwner(archive, requesterId);
+            return postRepository
+                    .findByUserIdAndArchiveId(requesterId, archive.getId(), pageable)
+                    .map(this::toPostItems);
+        }
 
+        // 3. Guest: PUBLISHED만 반환
         return postRepository
-                .findByArchiveIdAndStatus(archiveId, PostStatus.PUBLISHED, pageable)
+                .findByArchiveIdAndStatus(archive.getId(), PostStatus.PUBLISHED, pageable)
                 .map(this::toPostItems);
     }
 
     @Override
-    public Page<ArchiveResponse.ArchiveItems> getPagedItemsForUser(Long userId, Pageable pageable) {
+    public Page<ArchiveResponse.ArchiveItems> getPagedItems(Long userId, Pageable pageable) {
 
         return archiveRepository
                 .findByUserId(userId, pageable)
                 .map(this::toItems);
-    }
-
-    @Override
-    public Page<ArchiveResponse.PostItems> getPagedPostItemsByUserIdAndArchiveIdForUser(Long userId, Long archiveId, Pageable pageable) {
-
-        return postRepository
-                .findByUserIdAndArchiveId(userId, archiveId, pageable)
-                .map(this::toPostItems);
     }
 
     @Transactional

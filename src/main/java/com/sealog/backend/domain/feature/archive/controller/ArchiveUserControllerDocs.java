@@ -38,7 +38,7 @@ public interface ArchiveUserControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true)))
     })
-    ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.ArchiveItems>>> getPagedItemsForUser(
+    ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.ArchiveItems>>> getPagedItems(
             @Parameter(hidden = true) CustomUserDetails userDetails,
             Pageable pageable
     );
@@ -50,11 +50,14 @@ public interface ArchiveUserControllerDocs {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema(hidden = true))),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (소유자 아님)",
                     content = @Content(schema = @Schema(hidden = true)))
     })
-    ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.PostItems>>> getPagedPostItemsByUserIdAndArchiveIdForUser(
+    ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.PostItems>>> getPagedPostItems(
             @Parameter(hidden = true) CustomUserDetails userDetails,
-            @Parameter(description = "아카이브 ID", example = "1") Long archiveId,
+            @Parameter(description = "아카이브 소유자 닉네임", example = "테스터") String nickname,
+            @Parameter(description = "아카이브 slug", example = "spring-boot-study") String slug,
             Pageable pageable
     );
 

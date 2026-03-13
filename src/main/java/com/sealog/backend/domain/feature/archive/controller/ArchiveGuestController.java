@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
  * 아카이브 공개 컨트롤러 (인증 불필요)
  *
  * 역할:
- * - 공개 아카이브 목록 조회 (닉네임 기준)
  * - 아카이브에 속한 공개 게시글 목록 조회
  */
 @RestController
@@ -32,30 +31,17 @@ public class ArchiveGuestController implements ArchiveGuestControllerDocs {
     // ========== 조회 ========== //
 
     /**
-     * 사용자의 공개 아카이브 목록 조회
-     * GET /api/guest/archive/{nickname}
-     */
-    @Override
-    @GetMapping("/{nickname}")
-    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.ArchiveItems>>> getPagedItemsByNicknameForGuest(
-            @PathVariable String nickname,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
-        Page<ArchiveResponse.ArchiveItems> result = archiveService.getPagedItemsByNicknameForGuest(nickname, pageable);
-        return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
-    }
-
-    /**
      * 아카이브에 속한 공개 게시글 목록 조회
-     * GET /api/guest/archive/{archiveId}/posts
+     * GET /api/guest/archive/{nickname}/{slug}/posts
      */
     @Override
-    @GetMapping("/{archiveId}/posts")
-    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.PostItems>>> getPagedPostItemsByArchiveIdForGuest(
-            @PathVariable Long archiveId,
+    @GetMapping("/{nickname}/{slug}/posts")
+    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.PostItems>>> getPagedPostItems(
+            @PathVariable String nickname,
+            @PathVariable String slug,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ArchiveResponse.PostItems> result = archiveService.getPagedPostItemsByArchiveIdForGuest(archiveId, pageable);
+        Page<ArchiveResponse.PostItems> result = archiveService.getPagedPostItems(null, nickname, slug, pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
     }
 }

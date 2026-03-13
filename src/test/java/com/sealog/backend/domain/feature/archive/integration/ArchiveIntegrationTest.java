@@ -70,34 +70,17 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
     }
 
     // =====================================================================
-    // 공개 아카이브 목록 조회 (Guest)
-    // =====================================================================
-    @Nested
-    @DisplayName("공개 아카이브 목록 조회 (Guest GET /{nickname})")
-    class 공개_아카이브_목록_조회 {
-
-        @Test
-        @DisplayName("성공 - 공개 아카이브만 반환 → 200, 비공개 미포함")
-        void 성공() throws Exception {
-            mockMvc.perform(get("/api/guest/archive/{nickname}", testUser.getNickname()))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.totalElements").value(1))
-                    .andExpect(jsonPath("$.data.content[0].slug").value(testArchive.getSlug()));
-        }
-    }
-
-    // =====================================================================
     // 아카이브 내 공개 게시글 조회 (Guest)
     // =====================================================================
     @Nested
-    @DisplayName("아카이브 내 공개 게시글 조회 (Guest GET /{archiveId}/posts)")
+    @DisplayName("아카이브 내 공개 게시글 조회 (Guest GET /{nickname}/{slug}/posts)")
     class 아카이브_내_공개_게시글_조회 {
 
         @Test
         @DisplayName("성공 - PUBLISHED 게시글 반환 → 200")
         void 성공() throws Exception {
-            mockMvc.perform(get("/api/guest/archive/{archiveId}/posts", testArchive.getId()))
+            mockMvc.perform(get("/api/guest/archive/{nickname}/{slug}/posts",
+                            testUser.getNickname(), testArchive.getSlug()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.totalElements").value(1))
@@ -135,13 +118,14 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
     // 내 아카이브 게시글 목록 조회 (User)
     // =====================================================================
     @Nested
-    @DisplayName("내 아카이브 게시글 목록 조회 (User GET /{archiveId}/posts)")
+    @DisplayName("내 아카이브 게시글 목록 조회 (User GET /{nickname}/{slug}/posts)")
     class 내_아카이브_게시글_목록_조회 {
 
         @Test
         @DisplayName("성공 → 200")
         void 성공() throws Exception {
-            mockMvc.perform(get("/api/user/archive/{archiveId}/posts", testArchive.getId())
+            mockMvc.perform(get("/api/user/archive/{nickname}/{slug}/posts",
+                            testUser.getNickname(), testArchive.getSlug())
                             .with(user(myDetails)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -149,9 +133,19 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         }
 
         @Test
+        @DisplayName("실패 - 타인 아카이브 접근 → 403")
+        void 권한_없음() throws Exception {
+            mockMvc.perform(get("/api/user/archive/{nickname}/{slug}/posts",
+                            testUser.getNickname(), testArchive.getSlug())
+                            .with(user(otherDetails)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
         @DisplayName("실패 - 미인증 → 401")
         void 미인증() throws Exception {
-            mockMvc.perform(get("/api/user/archive/{archiveId}/posts", testArchive.getId())
+            mockMvc.perform(get("/api/user/archive/{nickname}/{slug}/posts",
+                            testUser.getNickname(), testArchive.getSlug())
                             .with(anonymous()))
                     .andExpect(status().isUnauthorized());
         }

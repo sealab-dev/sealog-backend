@@ -41,27 +41,28 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
      */
     @Override
     @GetMapping
-    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.ArchiveItems>>> getPagedItemsForUser(
+    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.ArchiveItems>>> getPagedItems(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ArchiveResponse.ArchiveItems> result = archiveService.getPagedItemsForUser(userDetails.getUserId(), pageable);
+        Page<ArchiveResponse.ArchiveItems> result = archiveService.getPagedItems(userDetails.getUserId(), pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
     }
 
     /**
      * 내 아카이브 게시글 목록 조회
-     * GET /api/user/archive/{archiveId}/posts
+     * GET /api/user/archive/{nickname}/{slug}/posts
      */
     @Override
-    @GetMapping("/{archiveId}/posts")
-    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.PostItems>>> getPagedPostItemsByUserIdAndArchiveIdForUser(
+    @GetMapping("/{nickname}/{slug}/posts")
+    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.PostItems>>> getPagedPostItems(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long archiveId,
+            @PathVariable String nickname,
+            @PathVariable String slug,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ArchiveResponse.PostItems> result = archiveService.getPagedPostItemsByUserIdAndArchiveIdForUser(
-                userDetails.getUserId(), archiveId, pageable
+        Page<ArchiveResponse.PostItems> result = archiveService.getPagedPostItems(
+                userDetails.getUserId(), nickname, slug, pageable
         );
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
     }
