@@ -6,6 +6,7 @@ import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
 import com.sealog.backend.domain.feature.post.repository.PostRepository;
+import com.sealog.backend.domain.feature.post.repository.condition.PostCondition;
 import com.sealog.backend.domain.feature.post.util.PostHtmlParser;
 import com.sealog.backend.domain.feature.post.util.PostHtmlSanitizer;
 import com.sealog.backend.domain.feature.post.util.PostSlugGenerator;
@@ -15,14 +16,15 @@ import com.sealog.backend.infra.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Slf4j
@@ -54,17 +56,19 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostResponse.Detail getDetail(String nickname, String slug) {
-        Post post = postRepository.findPublishedByNicknameAndSlug(nickname, slug)
-                .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
 
-        return buildPostDetailResponse(post);
+        return postRepository
+                .findPublishedByNicknameAndSlug(nickname, slug)
+                .map(this::buildPostDetailResponse)
+                .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
     }
 
     @Override
-    public List<PostResponse.PostItems> autocomplete(String keyword) {
-        return postRepository.findPublishedByKeyword(keyword, PageRequest.of(0, 10)).stream()
-                .map(this::buildPostItemsResponse)
-                .toList();
+    public Page<PostResponse.PostItems> searchPosts(Long requesterId, String keyword, Pageable pageable) {
+        Specification<Post> spec = PostCondition.search(requesterId, keyword);
+        return postRepository
+                .findAll(spec, pageable)
+                .map(this::buildPostItemsResponse);
     }
 
     @Override
@@ -92,8 +96,16 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public Page<PostResponse.PostItems> getPostsByStack(String stackName, Pageable pageable) {
+        return postRepository
+                .findPublishedByStackName(stackName, pageable)
+                .map(this::buildPostItemsResponse);
+    }
+
+    @Override
     public Page<PostResponse.PostItems> getDeleted(Long userId, Pageable pageable) {
-        return postRepository.findDeletedPostsByUserId(userId, pageable)
+        return postRepository
+                .findDeletedPostsByUserId(userId, pageable)
                 .map(this::buildPostItemsResponse);
     }
 
@@ -266,6 +278,7 @@ public class PostServiceImpl implements PostService {
         );
 
         String displayContent = PostHtmlParser.injectSrcAttributes(post.getContent(), fileStorageService.getBaseUrl());
+        String archiveSlug = Objects.nonNull(post.getArchive()) ? post.getArchive().getSlug() : null;
 
         return PostResponse.Detail.of(
                 post.getId(),
@@ -278,6 +291,7 @@ public class PostServiceImpl implements PostService {
                 tagNames,
                 stackItems,
                 author,
+                archiveSlug,
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );

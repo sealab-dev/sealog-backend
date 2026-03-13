@@ -14,8 +14,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
-import java.util.List;
-
 @Tag(name = "Post", description = "공개 게시글 API (인증 불필요)")
 @SecurityRequirements()
 public interface PostGuestControllerDocs {
@@ -48,11 +46,21 @@ public interface PostGuestControllerDocs {
             Pageable pageable
     );
 
-    @Operation(summary = "게시글 자동완성", description = "keyword로 자동완성 검색(최대 10개)을 수행합니다.")
+    @Operation(summary = "스택별 게시글 목록 조회", description = "stackName으로 PUBLISHED 게시글 목록을 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
     })
-    ResponseEntity<CustomResponse<List<PostResponse.PostItems>>> autocomplete(
-            @Parameter(description = "검색 키워드", example = "spring") String keyword
+    ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getPostsByStack(
+            @Parameter(description = "스택 이름", example = "Java") String stackName,
+            Pageable pageable
+    );
+
+    @Operation(summary = "공개 게시글 검색", description = "keyword로 PUBLISHED 게시글을 검색합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+    })
+    ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> searchPosts(
+            @Parameter(description = "검색 키워드", example = "spring") String keyword,
+            Pageable pageable
     );
 }

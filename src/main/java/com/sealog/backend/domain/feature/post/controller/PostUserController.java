@@ -118,6 +118,23 @@ public class PostUserController implements PostUserControllerDocs {
     // ========== 조회 ========== //
 
     /**
+     * 내 게시글 검색
+     * GET /api/user/posts/search?keyword=검색어
+     *
+     * - PUBLISHED + DRAFT 상태 포함, 본인 게시글만
+     */
+    @Override
+    @GetMapping("/posts/search")
+    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> searchPosts(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<PostResponse.PostItems> results = postService.searchPosts(userDetails.getUserId(), keyword, pageable);
+        return ResponseEntity.ok(CustomResponse.success(PageResponse.from(results)));
+    }
+
+    /**
      * 삭제된 게시글 목록 조회
      * GET /api/user/posts/deleted
      */

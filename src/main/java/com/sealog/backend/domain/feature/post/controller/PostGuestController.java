@@ -12,8 +12,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 /**
  * 공개 게시글 컨트롤러 (인증 불필요)
  *
@@ -68,19 +66,37 @@ public class PostGuestController implements PostGuestControllerDocs {
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
     }
 
+
     /**
-     * 게시글 자동완성 검색
-     * GET /api/guest/posts/autocomplete?keyword=검색어
+     * 스택별 공개 게시글 목록 조회
+     * GET /api/guest/posts?stackName={stackName}
      *
-     * - PUBLISHED 상태만 검색
-     * - 최대 10개 반환
+     * - PUBLISHED 상태만 조회
      */
     @Override
-    @GetMapping("/posts/autocomplete")
-    public ResponseEntity<CustomResponse<List<PostResponse.PostItems>>> autocomplete(
-            @RequestParam(required = false, defaultValue = "") String keyword
+    @GetMapping(value = "/posts", params = "stackName")
+    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> getPostsByStack(
+            @RequestParam String stackName,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        List<PostResponse.PostItems> results = postService.autocomplete(keyword);
-        return ResponseEntity.ok(CustomResponse.success(results));
+        Page<PostResponse.PostItems> posts = postService.getPostsByStack(stackName, pageable);
+        return ResponseEntity.ok(CustomResponse.success(PageResponse.from(posts)));
+    }
+
+
+    /**
+     * 공개 게시글 검색
+     * GET /api/guest/posts/search?keyword=검색어
+     *
+     * - PUBLISHED 상태만 검색
+     */
+    @Override
+    @GetMapping("/posts/search")
+    public ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> searchPosts(
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<PostResponse.PostItems> results = postService.searchPosts(null, keyword, pageable);
+        return ResponseEntity.ok(CustomResponse.success(PageResponse.from(results)));
     }
 }
