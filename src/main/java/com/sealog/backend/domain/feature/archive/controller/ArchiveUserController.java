@@ -149,16 +149,17 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
 
     /**
      * 게시글 아카이브 배정
-     * PATCH /api/user/archive/{archiveId}/post/{postId}
+     * PATCH /api/user/archive/{nickname}/{slug}/post/{postId}
      */
     @Override
-    @PatchMapping("/{archiveId}/post/{postId}")
+    @PatchMapping("/{nickname}/{slug}/post/{postId}")
     public ResponseEntity<CustomResponse<Void>> changePostArchive(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long archiveId,
+            @PathVariable String nickname,
+            @PathVariable String slug,
             @PathVariable Long postId
     ) {
-        archiveService.changePostArchive(userDetails.getUserId(), archiveId, postId);
+        archiveService.changePostArchive(userDetails.getUserId(), postId, nickname, slug);
         return ResponseEntity.ok(CustomResponse.success(null, "게시글이 아카이브에 배정되었습니다"));
     }
 

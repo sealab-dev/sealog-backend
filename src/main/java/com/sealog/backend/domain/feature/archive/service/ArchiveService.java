@@ -112,12 +112,13 @@ public interface ArchiveService {
      * 게시글의 소속 아카이브 변경 (배정/재배정)
      * - 이미 다른 아카이브에 속해 있는 경우 교체됨
      *
-     * @param userId    요청 사용자 ID
-     * @param archiveId 지정할 아카이브 ID
-     * @param postId    변경 대상 게시글 ID
+     * @param userId   요청 사용자 ID
+     * @param postId   변경 대상 게시글 ID
+     * @param nickname 소유자 닉네임
+     * @param slug     삭제할 아카이브 slug
      * @throws CustomException 게시글 없음, 아카이브 없음, 권한 없음
      */
-    void changePostArchive(Long userId, Long archiveId, Long postId);
+    void changePostArchive(Long userId, Long postId, String nickname, String slug);
 
     /**
      * 게시글의 아카이브 배정 해제

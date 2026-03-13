@@ -358,14 +358,14 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
     // 게시글 아카이브 배정
     // =====================================================================
     @Nested
-    @DisplayName("게시글 아카이브 배정 (PATCH /{archiveId}/post/{postId})")
+    @DisplayName("게시글 아카이브 배정 (PATCH /{nickname}/{slug}/post/{postId})")
     class 게시글_아카이브_배정 {
 
         @Test
         @DisplayName("성공 → 200")
         void 성공() throws Exception {
-            mockMvc.perform(patch("/api/user/archive/{archiveId}/post/{postId}",
-                            testArchive.getId(), unassignedPost.getId())
+            mockMvc.perform(patch("/api/user/archive/{nickname}/{slug}/post/{postId}",
+                            testUser.getNickname(), testArchive.getSlug(), unassignedPost.getId())
                             .with(user(myDetails)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
@@ -374,8 +374,8 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 타인 게시글 배정 시도 → 403")
         void 타인_게시글() throws Exception {
-            mockMvc.perform(patch("/api/user/archive/{archiveId}/post/{postId}",
-                            testArchive.getId(), otherPost.getId())
+            mockMvc.perform(patch("/api/user/archive/{nickname}/{slug}/post/{postId}",
+                            testUser.getNickname(), testArchive.getSlug(), otherPost.getId())
                             .with(user(myDetails)))
                     .andExpect(status().isForbidden());
         }
@@ -383,8 +383,8 @@ class ArchiveIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("실패 - 타인 아카이브에 배정 시도 → 403")
         void 타인_아카이브() throws Exception {
-            mockMvc.perform(patch("/api/user/archive/{archiveId}/post/{postId}",
-                            otherArchive.getId(), unassignedPost.getId())
+            mockMvc.perform(patch("/api/user/archive/{nickname}/{slug}/post/{postId}",
+                            otherUser.getNickname(), otherArchive.getSlug(), unassignedPost.getId())
                             .with(user(myDetails)))
                     .andExpect(status().isForbidden());
         }

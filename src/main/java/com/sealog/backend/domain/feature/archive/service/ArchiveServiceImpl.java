@@ -161,14 +161,14 @@ public class ArchiveServiceImpl implements ArchiveService {
 
     @Transactional
     @Override
-    public void changePostArchive(Long userId, Long archiveId, Long postId) {
+    public void changePostArchive(Long userId, Long postId, String nickname, String slug) {
 
         // 1. Post 조회 및 검증
         Post post = findPostById(postId);
         verifyOwner(post, userId);
 
         // 2. Archive 조회 및 검증
-        Archive archive = findArchiveById(archiveId);
+        Archive archive = findArchiveByNicknameAndSlug(nickname, slug);
         verifyOwner(archive, userId);
 
         // 3. 변경
@@ -210,12 +210,6 @@ public class ArchiveServiceImpl implements ArchiveService {
                 .orElseThrow(() -> CustomException.notFound("존재하지 않거나 이미 삭제된 아카이브입니다."));
     }
 
-    private Archive findArchiveById(Long id) {
-
-        return archiveRepository
-                .findById(id)
-                .orElseThrow(() -> CustomException.notFound("존재하지 않거나 이미 삭제된 아카이브입니다."));
-    }
 
     private Post findPostById(Long postId) {
 
