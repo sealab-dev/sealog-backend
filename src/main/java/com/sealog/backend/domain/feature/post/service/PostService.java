@@ -8,8 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 /**
  * 게시글 서비스 인터페이스
  *
@@ -49,13 +47,38 @@ public interface PostService {
     PostResponse.Detail getDetail(String nickname, String slug);
 
     /**
-     * 게시글 전체 자동완성 검색
-     * - PUBLISHED 상태만 검색
+     * 게시글 검색
+     * - nickname = null  → Guest: PUBLISHED 상태만, 전체 사용자 대상
+     * - nickname != null → User:  전체 상태(PUBLISHED+DRAFT), 본인 게시글만
      *
-     * @param keyword 검색 키워드
-     * @return 검색된 게시글 목록 (최대 10개)
+     * @param nickname 요청자 닉네임 (null = Guest, non-null = User)
+     * @param keyword  검색 키워드
+     * @param pageable 페이지네이션 정보
+     * @return 검색된 게시글 목록
      */
-    List<PostResponse.PostItems> autocomplete(String keyword);
+    Page<PostResponse.PostItems> searchPosts(String nickname, String keyword, Pageable pageable);
+
+    /**
+     * 특정 사용자의 공개 게시글 검색
+     * - PUBLISHED 상태만, 닉네임 일치하는 사용자의 게시글만
+     *
+     * @param nickname 검색 대상 사용자 닉네임
+     * @param keyword  검색 키워드
+     * @param pageable 페이지네이션 정보
+     * @return 검색된 게시글 목록
+     */
+    Page<PostResponse.PostItems> searchPostsByNickname(String nickname, String keyword, Pageable pageable);
+
+    /**
+     * 특정 사용자의 스택별 공개 게시글 목록 조회
+     * - PUBLISHED 상태만, 닉네임 일치하는 사용자의 게시글만
+     *
+     * @param nickname  조회할 사용자 닉네임
+     * @param stackName 조회할 스택 이름 (Stack.name, unique)
+     * @param pageable  페이지네이션 정보
+     * @return 해당 스택이 적용된 게시글 목록
+     */
+    Page<PostResponse.PostItems> getPostsByStack(String nickname, String stackName, Pageable pageable);
 
     // ========== Create, Update, Delete ========== //
 

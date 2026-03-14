@@ -62,29 +62,19 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     /**
      * 닉네임 + slug로 공개 게시글 상세 조회
      * - PUBLISHED 상태 + 삭제되지 않은 게시글
+     * - archive는 nullable이므로 LEFT JOIN FETCH 사용
      */
-    @Query("SELECT p FROM Post p " +
-            "JOIN FETCH p.user u " +
-            "WHERE u.nickname = :nickname " +
-            "AND p.slug = :slug " +
-            "AND p.status = 'PUBLISHED' " +
-            "AND p.deletedAt IS NULL")
+    @Query("""
+        SELECT p
+        FROM Post p
+        JOIN FETCH p.user u
+        LEFT JOIN FETCH p.archive
+        WHERE u.nickname = :nickname
+          AND p.slug = :slug
+          AND p.status = 'PUBLISHED'
+          AND p.deletedAt IS NULL
+    """)
     Optional<Post> findPublishedByNicknameAndSlug(@Param("nickname") String nickname, @Param("slug") String slug);
-
-    /**
-     * 키워드로 공개 게시글 자동완성 검색
-     * - 제목 우선 매칭, PUBLISHED + 삭제되지 않은 게시글
-     * - Pageable로 최대 개수 제한 (서비스에서 PageRequest.of(0, 10) 전달)
-     */
-    @Query("SELECT p FROM Post p " +
-            "JOIN FETCH p.user " +
-            "WHERE p.status = 'PUBLISHED' " +
-            "AND p.deletedAt IS NULL " +
-            "AND (p.title LIKE %:keyword% OR p.excerpt LIKE %:keyword%) " +
-            "ORDER BY " +
-            "CASE WHEN p.title LIKE %:keyword% THEN 0 ELSE 1 END, " +
-            "p.createdAt DESC")
-    List<Post> findPublishedByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
     // ========== 내 게시글 조회 (인증) ========== //
 
@@ -104,6 +94,28 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
             "AND p.deletedAt IS NOT NULL")
     Page<Post> findDeletedPostsByUserId(@Param("userId") Long userId, Pageable pageable);
 
+
+    // ========== 스택 기반 조회 ========== //
+
+    /**
+     * 닉네임 + 스택 이름으로 특정 유저의 PUBLISHED 게시글 목록 조회
+     * 조인으로만 작성 시, DISTINCT가 필요하므로 페이징 쿼리 불가능
+     */
+    @Query("""
+        SELECT p
+        FROM Post p
+        JOIN FETCH p.user u
+        WHERE u.nickname = :nickname
+          AND p.status = 'PUBLISHED'
+          AND p.deletedAt IS NULL
+          AND EXISTS (
+              SELECT 1
+              FROM PostStack ps
+              WHERE ps.post = p
+                AND ps.stack.name = :stackName
+          )
+    """)
+    Page<Post> findPublishedByNicknameAndStackName(@Param("nickname") String nickname, @Param("stackName") String stackName, Pageable pageable);
 
     // ========== 아카이브 기반 조회 ========== //
 

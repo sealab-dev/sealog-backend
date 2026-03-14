@@ -102,6 +102,18 @@ public interface PostUserControllerDocs {
             @Parameter(description = "게시글 ID", example = "1") Long postId
     );
 
+    @Operation(summary = "내 게시글 검색", description = "keyword로 본인의 게시글(PUBLISHED + DRAFT)을 검색합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema(hidden = true))),
+    })
+    ResponseEntity<CustomResponse<PageResponse<PostResponse.PostItems>>> searchPosts(
+            CustomUserDetails userDetails,
+            @Parameter(description = "검색 키워드", example = "spring") String keyword,
+            Pageable pageable
+    );
+
     @Operation(summary = "삭제된 내 게시글 목록 조회", description = "소프트 삭제된 게시글 목록을 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),

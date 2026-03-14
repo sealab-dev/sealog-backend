@@ -73,6 +73,8 @@ public class PostResponse {
         private List<String> tags;
         private List<StackItem> stacks;
         private AuthorInfo author;
+        private String archiveSlug;
+        private String archiveName;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
@@ -87,6 +89,8 @@ public class PostResponse {
                 List<String> tags,
                 List<StackItem> stacks,
                 AuthorInfo author,
+                String archiveSlug,
+                String archiveName,
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt
         ) {
@@ -101,6 +105,8 @@ public class PostResponse {
                     .tags(tags)
                     .stacks(stacks)
                     .author(author)
+                    .archiveSlug(archiveSlug)
+                    .archiveName(archiveName)
                     .createdAt(createdAt)
                     .updatedAt(updatedAt)
                     .build();
