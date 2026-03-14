@@ -73,8 +73,9 @@ public class PostResponse {
         private List<String> tags;
         private List<StackItem> stacks;
         private AuthorInfo author;
-        private String archiveSlug;
-        private String archiveName;
+        private Long seriesId;
+        private String seriesSlug;
+        private String seriesName;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
@@ -89,8 +90,9 @@ public class PostResponse {
                 List<String> tags,
                 List<StackItem> stacks,
                 AuthorInfo author,
-                String archiveSlug,
-                String archiveName,
+                Long seriesId,
+                String seriesSlug,
+                String seriesName,
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt
         ) {
@@ -105,8 +107,9 @@ public class PostResponse {
                     .tags(tags)
                     .stacks(stacks)
                     .author(author)
-                    .archiveSlug(archiveSlug)
-                    .archiveName(archiveName)
+                    .seriesId(seriesId)
+                    .seriesSlug(seriesSlug)
+                    .seriesName(seriesName)
                     .createdAt(createdAt)
                     .updatedAt(updatedAt)
                     .build();
@@ -130,6 +133,7 @@ public class PostResponse {
         private String thumbnailUrl;
         private List<String> tags;
         private List<StackItem> stacks;
+        private Long seriesId;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
@@ -143,6 +147,7 @@ public class PostResponse {
                 String thumbnailUrl,
                 List<String> tags,
                 List<StackItem> stacks,
+                Long seriesId,
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt
         ) {
@@ -156,6 +161,7 @@ public class PostResponse {
                     .thumbnailUrl(thumbnailUrl)
                     .tags(tags)
                     .stacks(stacks)
+                    .seriesId(seriesId)
                     .createdAt(createdAt)
                     .updatedAt(updatedAt)
                     .build();

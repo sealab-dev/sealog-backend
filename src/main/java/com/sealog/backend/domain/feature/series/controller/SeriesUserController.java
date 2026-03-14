@@ -1,8 +1,8 @@
-package com.sealog.backend.domain.feature.archive.controller;
+package com.sealog.backend.domain.feature.series.controller;
 
-import com.sealog.backend.domain.feature.archive.dto.ArchiveRequest;
-import com.sealog.backend.domain.feature.archive.dto.ArchiveResponse;
-import com.sealog.backend.domain.feature.archive.service.ArchiveService;
+import com.sealog.backend.domain.feature.series.dto.SeriesRequest;
+import com.sealog.backend.domain.feature.series.dto.SeriesResponse;
+import com.sealog.backend.domain.feature.series.service.SeriesService;
 import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.global.response.PageResponse;
 import com.sealog.backend.security.auth.CustomUserDetails;
@@ -27,40 +27,40 @@ import org.springframework.web.bind.annotation.*;
  * - 게시글-아카이브 배정/해제
  */
 @RestController
-@RequestMapping("/api/user/archive")
+@RequestMapping("/api/me/series")
 @RequiredArgsConstructor
-public class ArchiveUserController implements ArchiveUserControllerDocs {
+public class SeriesUserController implements SeriesUserControllerDocs {
 
-    private final ArchiveService archiveService;
+    private final SeriesService seriesService;
 
     // ========== 조회 ========== //
 
     /**
      * 내 아카이브 목록 조회
-     * GET /api/user/archive
+     * GET /api/me/series
      */
     @Override
     @GetMapping
-    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.ArchiveItems>>> getPagedItems(
+    public ResponseEntity<CustomResponse<PageResponse<SeriesResponse.SeriesItems>>> getPagedItems(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ArchiveResponse.ArchiveItems> result = archiveService.getPagedItems(userDetails.getUserId(), pageable);
+        Page<SeriesResponse.SeriesItems> result = seriesService.getPagedItems(userDetails.getUserId(), pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
     }
 
     /**
      * 내 아카이브 게시글 목록 조회
-     * GET /api/user/archive/{slug}/posts
+     * GET /api/me/series/{slug}/posts
      */
     @Override
     @GetMapping("/{slug}/posts")
-    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.PostItems>>> getPagedPostItems(
+    public ResponseEntity<CustomResponse<PageResponse<SeriesResponse.PostItems>>> getPagedPostItems(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String slug,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ArchiveResponse.PostItems> result = archiveService.getPagedPostItems(
+        Page<SeriesResponse.PostItems> result = seriesService.getPagedPostItems(
                 userDetails.getUserId(), userDetails.getUser().getNickname(), slug, pageable
         );
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
@@ -70,15 +70,15 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
 
     /**
      * 아카이브 생성
-     * POST /api/user/archive
+     * POST /api/me/series
      */
     @Override
     @PostMapping
     public ResponseEntity<CustomResponse<Void>> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody @Valid ArchiveRequest.Create request
+            @RequestBody @Valid SeriesRequest.Create request
     ) {
-        archiveService.create(userDetails.getUserId(), request);
+        seriesService.create(userDetails.getUserId(), request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(CustomResponse.success(null, "아카이브가 생성되었습니다"));
@@ -86,94 +86,58 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
 
     /**
      * 아카이브 수정
-     * PUT /api/user/archive/{nickname}/{slug}
+     * PUT /api/me/series/{seriesId}
      */
     @Override
-    @PutMapping("/{nickname}/{slug}")
+    @PutMapping("/{seriesId}")
     public ResponseEntity<CustomResponse<Void>> update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable String nickname,
-            @PathVariable String slug,
-            @RequestBody @Valid ArchiveRequest.Update request
+            @PathVariable Long seriesId,
+            @RequestBody @Valid SeriesRequest.Update request
     ) {
-        archiveService.update(userDetails.getUserId(), nickname, slug, request);
+        seriesService.update(userDetails.getUserId(), seriesId, request);
         return ResponseEntity.ok(CustomResponse.success(null, "아카이브가 수정되었습니다"));
     }
 
     /**
      * 아카이브 공개
-     * PATCH /api/user/archive/{nickname}/{slug}/show
+     * PATCH /api/user/series/{seriesId}/show
      */
     @Override
-    @PatchMapping("/{nickname}/{slug}/show")
+    @PatchMapping("/{seriesId}/show")
     public ResponseEntity<CustomResponse<Void>> show(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable String nickname,
-            @PathVariable String slug
+            @PathVariable Long seriesId
     ) {
-        archiveService.show(userDetails.getUserId(), nickname, slug);
+        seriesService.show(userDetails.getUserId(), seriesId);
         return ResponseEntity.ok(CustomResponse.success(null, "아카이브가 공개되었습니다"));
     }
 
     /**
      * 아카이브 비공개
-     * PATCH /api/user/archive/{nickname}/{slug}/hide
+     * PATCH /api/user/series/{seriesId}/hide
      */
     @Override
-    @PatchMapping("/{nickname}/{slug}/hide")
+    @PatchMapping("/{seriesId}/hide")
     public ResponseEntity<CustomResponse<Void>> hide(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable String nickname,
-            @PathVariable String slug
+            @PathVariable Long seriesId
     ) {
-        archiveService.hide(userDetails.getUserId(), nickname, slug);
+        seriesService.hide(userDetails.getUserId(), seriesId);
         return ResponseEntity.ok(CustomResponse.success(null, "아카이브가 비공개되었습니다"));
     }
 
     /**
      * 아카이브 삭제
-     * DELETE /api/user/archive/{nickname}/{slug}
+     * DELETE /api/user/series/{seriesId}
      */
     @Override
-    @DeleteMapping("/{nickname}/{slug}")
+    @DeleteMapping("/{seriesId}")
     public ResponseEntity<CustomResponse<Void>> delete(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable String nickname,
-            @PathVariable String slug
+            @PathVariable Long seriesId
     ) {
-        archiveService.delete(userDetails.getUserId(), nickname, slug);
+        seriesService.delete(userDetails.getUserId(), seriesId);
         return ResponseEntity.ok(CustomResponse.success(null, "아카이브가 삭제되었습니다"));
-    }
-
-    // ========== 게시글 연결 ========== //
-
-    /**
-     * 게시글 아카이브 배정
-     * PATCH /api/user/archive/{nickname}/{slug}/post/{postId}
-     */
-    @Override
-    @PatchMapping("/{nickname}/{slug}/post/{postId}")
-    public ResponseEntity<CustomResponse<Void>> changePostArchive(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable String nickname,
-            @PathVariable String slug,
-            @PathVariable Long postId
-    ) {
-        archiveService.changePostArchive(userDetails.getUserId(), postId, nickname, slug);
-        return ResponseEntity.ok(CustomResponse.success(null, "게시글이 아카이브에 배정되었습니다"));
-    }
-
-    /**
-     * 게시글 아카이브 해제
-     * DELETE /api/user/archive/post/{postId}
-     */
-    @Override
-    @DeleteMapping("/post/{postId}")
-    public ResponseEntity<CustomResponse<Void>> deletePostArchive(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long postId
-    ) {
-        archiveService.deletePostArchive(userDetails.getUserId(), postId);
-        return ResponseEntity.ok(CustomResponse.success(null, "게시글 아카이브 배정이 해제되었습니다"));
     }
 }

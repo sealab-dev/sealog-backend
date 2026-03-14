@@ -8,6 +8,7 @@ import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.domain.feature.user.service.UserValidatorService;
 import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
+import com.sealog.backend.infra.storage.service.FileStorageService;
 import com.sealog.backend.support.base.TestUnitBase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +34,7 @@ class AuthServiveUnitTest extends TestUnitBase {
     @Mock PasswordEncoder passwordEncoder;
     @Mock UserValidatorService userValidatorService;
     @Mock JwtTokenProvider jwtTokenProvider;
+    @Mock FileStorageService fileStorageService;
 
     @InjectMocks
     AuthServiceImpl authService;
@@ -208,72 +210,6 @@ class AuthServiveUnitTest extends TestUnitBase {
 
             // userId 추출 → DB 조회까지 진행되면 안 됨
             verify(userRepository, never()).findById(anyLong());
-        }
-    }
-
-    // =====================================================================
-    // 회원가입
-    // =====================================================================
-    @Nested
-    @DisplayName("회원가입")
-    class SignUp {
-
-        @Test
-        @DisplayName("성공 - 올바른 정보로 회원가입하면 저장된 User를 반환한다")
-        void 성공() {
-            given(passwordEncoder.encode(TEST_PASSWORD)).willReturn(ENCODED_PW);
-            given(userRepository.save(any(User.class))).willReturn(testUser);
-
-            AuthRequest.SignUp request = AuthRequest.SignUp.builder()
-                    .email(TEST_EMAIL)
-                    .password(TEST_PASSWORD)
-                    .name("테스트유저")
-                    .nickname("tester")
-                    .build();
-
-            User result = authService.signUp(request);
-
-            assertThat(result.getEmail()).isEqualTo(TEST_EMAIL);
-            verify(userValidatorService).validateDuplicateEmail(TEST_EMAIL);
-            verify(userValidatorService).validateDuplicateNickname("tester");
-            verify(userRepository).save(any(User.class));
-        }
-
-        @Test
-        @DisplayName("실패 - 중복 이메일로 회원가입하면 409 예외가 발생한다")
-        void 이메일_중복() {
-            doThrow(CustomException.conflict("이미 사용 중인 이메일입니다"))
-                    .when(userValidatorService).validateDuplicateEmail(TEST_EMAIL);
-
-            AuthRequest.SignUp request = AuthRequest.SignUp.builder()
-                    .email(TEST_EMAIL).password(TEST_PASSWORD)
-                    .name("테스트유저").nickname("tester").build();
-
-            assertThatThrownBy(() -> authService.signUp(request))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(ex -> assertThat(((CustomException) ex).getStatus())
-                            .isEqualTo(HttpStatus.CONFLICT));
-
-            // 중복 이메일이므로 save까지 가면 안 됨
-            verify(userRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("실패 - 중복 닉네임으로 회원가입하면 409 예외가 발생한다")
-        void 닉네임_중복() {
-            doThrow(CustomException.conflict("이미 사용 중인 닉네임입니다"))
-                    .when(userValidatorService).validateDuplicateNickname("tester");
-
-            AuthRequest.SignUp request = AuthRequest.SignUp.builder()
-                    .email(TEST_EMAIL).password(TEST_PASSWORD)
-                    .name("테스트유저").nickname("tester").build();
-
-            assertThatThrownBy(() -> authService.signUp(request))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(ex -> assertThat(((CustomException) ex).getStatus())
-                            .isEqualTo(HttpStatus.CONFLICT));
-
-            verify(userRepository, never()).save(any());
         }
     }
 }

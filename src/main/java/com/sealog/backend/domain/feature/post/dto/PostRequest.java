@@ -38,6 +38,9 @@ public class PostRequest {
         @Schema(description = "본문", example = "여기에 본문을 작성합니다.", maxLength = 150000)
         private String content;
 
+        @Schema(description = "시리즈 ID", example = "1")
+        private Long seriesId;
+
         @Size(max = 3, message = "태그는 최대 3개까지 등록할 수 있습니다")
         @Schema(description = "태그 목록", example = "[\"spring\", \"jwt\"]")
         private List<String> tags;
@@ -73,6 +76,9 @@ public class PostRequest {
         @Size(max = 150000, message = "본문이 최대길이를 초과했습니다.")
         @Schema(description = "본문", example = "내용 여기에 본문을 작성합니다.", maxLength = 150000)
         private String content;
+
+        @Schema(description = "시리즈 ID", example = "1")
+        private Long seriesId;
 
         @Size(max = 3, message = "태그는 최대 3개까지 등록할 수 있습니다")
         @Schema(description = "태그 목록", example = "[\"spring\", \"jwt\"]")

@@ -62,13 +62,13 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     /**
      * 닉네임 + slug로 공개 게시글 상세 조회
      * - PUBLISHED 상태 + 삭제되지 않은 게시글
-     * - archive는 nullable이므로 LEFT JOIN FETCH 사용
+     * - series는 nullable이므로 LEFT JOIN FETCH 사용
      */
     @Query("""
         SELECT p
         FROM Post p
         JOIN FETCH p.user u
-        LEFT JOIN FETCH p.archive
+        LEFT JOIN FETCH p.series
         WHERE u.nickname = :nickname
           AND p.slug = :slug
           AND p.status = 'PUBLISHED'
@@ -117,22 +117,22 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     """)
     Page<Post> findPublishedByNicknameAndStackName(@Param("nickname") String nickname, @Param("stackName") String stackName, Pageable pageable);
 
-    // ========== 아카이브 기반 조회 ========== //
+    // ========== 시리즈 기반 조회 ========== //
 
     /**
-     * 특정 아카이브에 속하는 목록 조회 (특정 회원이 가지는 목록)
+     * 특정 시리즈에 속하는 목록 조회 (특정 회원이 가지는 목록)
      */
-    Page<Post> findByUserIdAndArchiveId(
+    Page<Post> findByUserIdAndSeriesId(
             @Param("userId") Long userId,
-            @Param("archiveId") Long archiveId,
+            @Param("seriesId") Long seriesId,
             Pageable pageable
     );
 
     /**
-     * 특정 아카이브에 속하는 목록 조회 (상태 값 기준)
+     * 특정 시리즈에 속하는 목록 조회 (상태 값 기준)
      */
-    Page<Post> findByArchiveIdAndStatus(
-            @Param("archiveId") Long archiveId,
+    Page<Post> findBySeriesIdAndStatus(
+            @Param("seriesId") Long seriesId,
             @Param("status") PostStatus status,
             Pageable pageable
     );

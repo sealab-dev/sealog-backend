@@ -8,15 +8,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/guest/user")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
-public class UserGuestController implements UserGuestControllerDocs {
+public class UserController implements UserControllerDocs {
 
     private final UserService userService;
 
     /**
      * 특정 사용자 프로필 정보 조회
-     * GET /api/guest/user/{nickname}/profile
+     * GET /api/user/{nickname}/profile
      */
     @Override
     @GetMapping("/{nickname}/profile")

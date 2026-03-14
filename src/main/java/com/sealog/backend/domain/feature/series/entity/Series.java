@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.archive.entity;
+package com.sealog.backend.domain.feature.series.entity;
 
 import com.sealog.backend.domain.base.entity.BaseTimeEntity;
 import com.sealog.backend.domain.feature.user.entity.User;
@@ -7,14 +7,14 @@ import lombok.*;
 
 @Entity
 @Table(
-    name = "archives",
+    name = "seriess",
     uniqueConstraints = {
         @UniqueConstraint(name = "uk_user_id_name", columnNames = {"user_id", "name"})
     }
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Archive extends BaseTimeEntity {
+public class Series extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,7 +34,7 @@ public class Archive extends BaseTimeEntity {
     private boolean isPublic;
 
     @Builder
-    public Archive(User user, String name, String slug, boolean isPublic) {
+    public Series(User user, String name, String slug, boolean isPublic) {
         this.user = user;
         this.name = name;
         this.slug = slug;

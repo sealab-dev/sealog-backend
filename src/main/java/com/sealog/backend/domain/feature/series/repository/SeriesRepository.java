@@ -1,6 +1,6 @@
-package com.sealog.backend.domain.feature.archive.repository;
+package com.sealog.backend.domain.feature.series.repository;
 
-import com.sealog.backend.domain.feature.archive.entity.Archive;
+import com.sealog.backend.domain.feature.series.entity.Series;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,9 +11,9 @@ import java.util.Optional;
 
 
 /**
- * Archive Entity Spring Data JPA 인터페이스
+ * Series Entity Spring Data JPA 인터페이스
  */
-public interface ArchiveRepository extends JpaRepository<Archive, Long> {
+public interface SeriesRepository extends JpaRepository<Series, Long> {
 
     // ========== 존재 여부 확인 ========== //
 
@@ -22,7 +22,7 @@ public interface ArchiveRepository extends JpaRepository<Archive, Long> {
      */
     @Query("""
         SELECT COUNT(a) > 0
-        FROM Archive a
+        FROM Series a
         WHERE a.name = :name AND a.user.id = :userId
     """)
     boolean existsByNameAndUserId(
@@ -35,7 +35,7 @@ public interface ArchiveRepository extends JpaRepository<Archive, Long> {
     /**
      * 특정 회원이 가진 아카이브 페이징 목록 조회
      */
-    Page<Archive> findByUserId(Long userId, Pageable pageable);
+    Page<Series> findByUserId(Long userId, Pageable pageable);
 
 
     /**
@@ -43,10 +43,10 @@ public interface ArchiveRepository extends JpaRepository<Archive, Long> {
      */
     @Query("""
         SELECT a
-        FROM Archive a
+        FROM Series a
         WHERE a.user.nickname = :nickname AND a.isPublic = :isPublic
     """)
-    Page<Archive> findByUserNicknameAndIsPublic(
+    Page<Series> findByUserNicknameAndIsPublic(
             @Param("nickname") String nickname,
             @Param("isPublic") boolean isPublic,
             Pageable pageable
@@ -58,11 +58,11 @@ public interface ArchiveRepository extends JpaRepository<Archive, Long> {
      */
     @Query("""
         SELECT a
-        FROM Archive a
+        FROM Series a
         LEFT JOIN a.user u
         WHERE a.user.nickname = :nickname AND a.slug = :slug
     """)
-    Optional<Archive> findByNicknameAndSlug(
+    Optional<Series> findByNicknameAndSlug(
             @Param("nickname") String nickname,
             @Param("slug") String slug
     );

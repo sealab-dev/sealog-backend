@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.archive.dto;
+package com.sealog.backend.domain.feature.series.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -6,10 +6,10 @@ import lombok.experimental.UtilityClass;
 
 
 /**
- * Archive Entity 관련 응답 DTO
+ * Series Entity 관련 응답 DTO
  */
 @UtilityClass
-public class ArchiveResponse {
+public class SeriesResponse {
 
 
     @Getter
@@ -17,15 +17,15 @@ public class ArchiveResponse {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     @Schema(description = "아카이브 목록 조회")
-    public static class ArchiveItems {
+    public static class SeriesItems {
 
         private Long id;
         private String slug;
         private String name;
 
-        public static ArchiveItems of(Long id, String slug, String name) {
+        public static SeriesItems of(Long id, String slug, String name) {
 
-            return ArchiveItems.builder()
+            return SeriesItems.builder()
                     .id(id)
                     .slug(slug)
                     .name(name)
@@ -38,7 +38,7 @@ public class ArchiveResponse {
     @Builder
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    @Schema(name = "ArchivePostItem", description = "아카이브에 속하는 블로그 게시글 목록 조회")
+    @Schema(name = "SeriesPostItem", description = "아카이브에 속하는 블로그 게시글 목록 조회")
     public static class PostItems {
 
         private Long postId;

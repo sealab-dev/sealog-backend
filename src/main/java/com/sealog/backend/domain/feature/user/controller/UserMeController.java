@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/user/me")
+@RequestMapping("/api/me")
 @RequiredArgsConstructor
 public class UserMeController implements UserMeControllerDocs {
 
@@ -22,7 +22,7 @@ public class UserMeController implements UserMeControllerDocs {
 
     /**
      * 내 프로필 조회
-     * GET /api/user/me/profile
+     * GET /api/me/profile
      * user
      */
     @Override
@@ -36,7 +36,7 @@ public class UserMeController implements UserMeControllerDocs {
 
     /**
      * 프로필 수정
-     * PATCH /api/user/me/profile
+     * PATCH /api/me/profile
      * - 닉네임 및/또는 프로필 이미지 수정
      * - MultipartFile과 JSON을 함께 전송하기 위해 @RequestPart 사용
      * user
@@ -59,7 +59,7 @@ public class UserMeController implements UserMeControllerDocs {
 
     /**
      * 비밀번호 변경
-     * PATCH /api/user/me/password
+     * PATCH /api/me/password
      * - 현재 비밀번호 확인 후 새 비밀번호로 변경
      * user
      */

@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.archive.dto;
+package com.sealog.backend.domain.feature.series.dto;
 
 import com.sealog.backend.domain.base.validation.annotation.CheckStringSize;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -8,10 +8,10 @@ import lombok.experimental.UtilityClass;
 
 
 /**
- * Archive Entity 관련 요청 DTO
+ * Series Entity 관련 요청 DTO
  */
 @UtilityClass
-public class ArchiveRequest {
+public class SeriesRequest {
 
     /**
      * 아카이브 생성 요청
@@ -20,7 +20,7 @@ public class ArchiveRequest {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @Schema(name = "ArchiveCreate", description = "아카이브 생성 요청")
+    @Schema(name = "SeriesCreate", description = "아카이브 생성 요청")
     public static class Create {
 
         @CheckStringSize(max = 100)
@@ -35,7 +35,7 @@ public class ArchiveRequest {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @Schema(name = "ArchiveUpdate", description = "아카이브 수정 요청")
+    @Schema(name = "SeriesUpdate", description = "아카이브 수정 요청")
     public static class Update {
 
         @CheckStringSize(max = 100)

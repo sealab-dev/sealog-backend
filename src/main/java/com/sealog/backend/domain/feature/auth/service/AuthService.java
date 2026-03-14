@@ -25,15 +25,6 @@ public interface AuthService {
     AuthResponse.Token login(AuthRequest.Login request);
 
     /**
-     * 회원가입
-     * @param request 회원가입 요청 DTO
-     * @return 생성된 사용자 엔티티
-     * @throws CustomException 이메일이 이미 존재하는 경우 (CONFLICT)
-     * @throws CustomException 닉네임이 이미 존재하는 경우 (CONFLICT)
-     */
-    User signUp(AuthRequest.SignUp request);
-
-    /**
      * 토큰 재발급
      * - JWT 검증 및 DB 비교 포함
      * @param refreshToken 쿠키에서 추출한 Refresh Token
