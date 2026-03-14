@@ -40,6 +40,7 @@ out/
 
 ### Local Upload Files ###
 /uploads
+/uploads/test
 
 ### Claude Code ###
 CLAUDE.md
