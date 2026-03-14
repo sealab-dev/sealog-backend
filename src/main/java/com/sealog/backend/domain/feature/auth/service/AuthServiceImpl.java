@@ -2,7 +2,7 @@ package com.sealog.backend.domain.feature.auth.service;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
-import com.sealog.backend.domain.feature.auth.dto.TokenResponse;
+import com.sealog.backend.infra.storage.service.FileStorageService;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
@@ -25,16 +25,17 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserValidatorService userValidatorService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final FileStorageService fileStorageService;
 
     @Override
     public AuthResponse.AuthProfile getMe(Long userId) {
         User user = getUserById(userId);
-        return AuthResponse.AuthProfile.from(user);
+        return AuthResponse.AuthProfile.from(user, fileStorageService.getFileUrl(user.getProfileImagePath()));
     }
 
     @Override
     @Transactional
-    public TokenResponse login(AuthRequest.Login request) {
+    public AuthResponse.Token login(AuthRequest.Login request) {
         // 이메일로 사용자 조회
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> CustomException.unauthorized("이메일 또는 비밀번호가 일치하지 않습니다"));
@@ -51,15 +52,17 @@ public class AuthServiceImpl implements AuthService {
         //  Refresh Token DB 저장
         user.updateRefreshToken(refreshToken);
 
-        return TokenResponse.builder()
+        AuthResponse.AuthProfile authProfile = AuthResponse.AuthProfile.from(user, fileStorageService.getFileUrl(user.getProfileImagePath()));
+
+        return AuthResponse.Token.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .authProfile(AuthResponse.AuthProfile.from(user))
+                .authProfile(authProfile)
                 .build();
     }
 
     @Override
-    public TokenResponse refresh(String refreshToken) {
+    public AuthResponse.Token refresh(String refreshToken) {
         // JWT 서명 및 만료 검증
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw CustomException.unauthorized("유효하지 않은 Refresh Token입니다");
@@ -75,9 +78,11 @@ public class AuthServiceImpl implements AuthService {
         // 새 Access Token 생성
         String newAccessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
 
-        return TokenResponse.builder()
+        AuthResponse.AuthProfile authProfile = AuthResponse.AuthProfile.from(user, fileStorageService.getFileUrl(user.getProfileImagePath()));
+
+        return AuthResponse.Token.builder()
                 .accessToken(newAccessToken)
-                .authProfile(AuthResponse.AuthProfile.from(user))
+                .authProfile(authProfile)
                 .build();
     }
 
