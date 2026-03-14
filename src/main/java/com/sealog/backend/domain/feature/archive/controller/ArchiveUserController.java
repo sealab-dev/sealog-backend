@@ -41,27 +41,27 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
      */
     @Override
     @GetMapping
-    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.ArchiveItems>>> getPagedItemsForUser(
+    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.ArchiveItems>>> getPagedItems(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ArchiveResponse.ArchiveItems> result = archiveService.getPagedItemsForUser(userDetails.getUserId(), pageable);
+        Page<ArchiveResponse.ArchiveItems> result = archiveService.getPagedItems(userDetails.getUserId(), pageable);
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
     }
 
     /**
      * 내 아카이브 게시글 목록 조회
-     * GET /api/user/archive/{archiveId}/posts
+     * GET /api/user/archive/{slug}/posts
      */
     @Override
-    @GetMapping("/{archiveId}/posts")
-    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.PostItems>>> getPagedPostItemsByUserIdAndArchiveIdForUser(
+    @GetMapping("/{slug}/posts")
+    public ResponseEntity<CustomResponse<PageResponse<ArchiveResponse.PostItems>>> getPagedPostItems(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long archiveId,
+            @PathVariable String slug,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ArchiveResponse.PostItems> result = archiveService.getPagedPostItemsByUserIdAndArchiveIdForUser(
-                userDetails.getUserId(), archiveId, pageable
+        Page<ArchiveResponse.PostItems> result = archiveService.getPagedPostItems(
+                userDetails.getUserId(), userDetails.getUser().getNickname(), slug, pageable
         );
         return ResponseEntity.ok(CustomResponse.success(PageResponse.from(result)));
     }
@@ -149,16 +149,17 @@ public class ArchiveUserController implements ArchiveUserControllerDocs {
 
     /**
      * 게시글 아카이브 배정
-     * PATCH /api/user/archive/{archiveId}/post/{postId}
+     * PATCH /api/user/archive/{nickname}/{slug}/post/{postId}
      */
     @Override
-    @PatchMapping("/{archiveId}/post/{postId}")
+    @PatchMapping("/{nickname}/{slug}/post/{postId}")
     public ResponseEntity<CustomResponse<Void>> changePostArchive(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long archiveId,
+            @PathVariable String nickname,
+            @PathVariable String slug,
             @PathVariable Long postId
     ) {
-        archiveService.changePostArchive(userDetails.getUserId(), archiveId, postId);
+        archiveService.changePostArchive(userDetails.getUserId(), postId, nickname, slug);
         return ResponseEntity.ok(CustomResponse.success(null, "게시글이 아카이브에 배정되었습니다"));
     }
 

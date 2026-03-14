@@ -35,35 +35,31 @@ public class ArchiveServiceImpl implements ArchiveService {
     private final UserRepository userRepository;
 
     @Override
-    public Page<ArchiveResponse.ArchiveItems> getPagedItemsByNicknameForGuest(String nickname, Pageable pageable) {
+    public Page<ArchiveResponse.PostItems> getPagedPostItems(Long requesterId, String nickname, String slug, Pageable pageable) {
 
-        return archiveRepository
-                .findByUserNicknameAndIsPublic(nickname, true, pageable)
-                .map(this::toItems);
-    }
+        // 1. 아카이브 조회
+        Archive archive = findArchiveByNicknameAndSlug(nickname, slug);
 
-    @Override
-    public Page<ArchiveResponse.PostItems> getPagedPostItemsByArchiveIdForGuest(Long archiveId, Pageable pageable) {
+        // 2. User: 소유자 검증 후 전체 상태 반환
+        if (Objects.nonNull(requesterId)) {
+            verifyOwner(archive, requesterId);
+            return postRepository
+                    .findByUserIdAndArchiveId(requesterId, archive.getId(), pageable)
+                    .map(this::toPostItems);
+        }
 
+        // 3. Guest: PUBLISHED만 반환
         return postRepository
-                .findByArchiveIdAndStatus(archiveId, PostStatus.PUBLISHED, pageable)
+                .findByArchiveIdAndStatus(archive.getId(), PostStatus.PUBLISHED, pageable)
                 .map(this::toPostItems);
     }
 
     @Override
-    public Page<ArchiveResponse.ArchiveItems> getPagedItemsForUser(Long userId, Pageable pageable) {
+    public Page<ArchiveResponse.ArchiveItems> getPagedItems(Long userId, Pageable pageable) {
 
         return archiveRepository
                 .findByUserId(userId, pageable)
                 .map(this::toItems);
-    }
-
-    @Override
-    public Page<ArchiveResponse.PostItems> getPagedPostItemsByUserIdAndArchiveIdForUser(Long userId, Long archiveId, Pageable pageable) {
-
-        return postRepository
-                .findByUserIdAndArchiveId(userId, archiveId, pageable)
-                .map(this::toPostItems);
     }
 
     @Transactional
@@ -161,14 +157,14 @@ public class ArchiveServiceImpl implements ArchiveService {
 
     @Transactional
     @Override
-    public void changePostArchive(Long userId, Long archiveId, Long postId) {
+    public void changePostArchive(Long userId, Long postId, String nickname, String slug) {
 
         // 1. Post 조회 및 검증
         Post post = findPostById(postId);
         verifyOwner(post, userId);
 
         // 2. Archive 조회 및 검증
-        Archive archive = findArchiveById(archiveId);
+        Archive archive = findArchiveByNicknameAndSlug(nickname, slug);
         verifyOwner(archive, userId);
 
         // 3. 변경
@@ -210,12 +206,6 @@ public class ArchiveServiceImpl implements ArchiveService {
                 .orElseThrow(() -> CustomException.notFound("존재하지 않거나 이미 삭제된 아카이브입니다."));
     }
 
-    private Archive findArchiveById(Long id) {
-
-        return archiveRepository
-                .findById(id)
-                .orElseThrow(() -> CustomException.notFound("존재하지 않거나 이미 삭제된 아카이브입니다."));
-    }
 
     private Post findPostById(Long postId) {
 

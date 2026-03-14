@@ -14,24 +14,18 @@ public interface ArchiveService {
     // ========== Guest (공개) ========== //
 
     /**
-     * 닉네임 기준 공개 아카이브 목록 페이징 조회
-     * - isPublic = true인 아카이브만 반환
-     *
-     * @param nickname 소유자 닉네임
-     * @param pageable 페이징 정보
-     * @return 공개 아카이브 목록
-     */
-    Page<ArchiveResponse.ArchiveItems> getPagedItemsByNicknameForGuest(String nickname, Pageable pageable);
-
-    /**
      * 아카이브에 속한 게시글 목록 페이징 조회
-     * - PUBLISHED 상태 게시글만 반환
+     * - requesterId null → PUBLISHED 상태만 반환 (Guest)
+     * - requesterId non-null → 소유자 검증 후 전체 상태 반환 (User)
      *
-     * @param archiveId 아카이브 ID
-     * @param pageable  페이징 정보
-     * @return 공개 게시글 목록
+     * @param requesterId 요청 사용자 ID (null = 비인증 Guest)
+     * @param nickname    아카이브 소유자 닉네임
+     * @param slug        아카이브 slug
+     * @param pageable    페이징 정보
+     * @return 게시글 목록
+     * @throws CustomException 아카이브 없음, 권한 없음 (User 요청 시)
      */
-    Page<ArchiveResponse.PostItems> getPagedPostItemsByArchiveIdForGuest(Long archiveId, Pageable pageable);
+    Page<ArchiveResponse.PostItems> getPagedPostItems(Long requesterId, String nickname, String slug, Pageable pageable);
 
     // ========== User (인증) ========== //
 
@@ -43,18 +37,7 @@ public interface ArchiveService {
      * @param pageable 페이징 정보
      * @return 전체 아카이브 목록 (공개·비공개 포함)
      */
-    Page<ArchiveResponse.ArchiveItems> getPagedItemsForUser(Long userId, Pageable pageable);
-
-    /**
-     * 사용자 본인의 아카이브에 속한 게시글 목록 페이징 조회
-     * - PUBLISHED/DRAFT 상태 무관하게 모두 반환
-     *
-     * @param userId    조회 대상 사용자 ID
-     * @param archiveId 아카이브 ID
-     * @param pageable  페이징 정보
-     * @return 전체 게시글 목록 (게시/임시저장 포함)
-     */
-    Page<ArchiveResponse.PostItems> getPagedPostItemsByUserIdAndArchiveIdForUser(Long userId, Long archiveId, Pageable pageable);
+    Page<ArchiveResponse.ArchiveItems> getPagedItems(Long userId, Pageable pageable);
 
     /**
      * 아카이브 생성
@@ -112,12 +95,13 @@ public interface ArchiveService {
      * 게시글의 소속 아카이브 변경 (배정/재배정)
      * - 이미 다른 아카이브에 속해 있는 경우 교체됨
      *
-     * @param userId    요청 사용자 ID
-     * @param archiveId 지정할 아카이브 ID
-     * @param postId    변경 대상 게시글 ID
+     * @param userId   요청 사용자 ID
+     * @param postId   변경 대상 게시글 ID
+     * @param nickname 소유자 닉네임
+     * @param slug     삭제할 아카이브 slug
      * @throws CustomException 게시글 없음, 아카이브 없음, 권한 없음
      */
-    void changePostArchive(Long userId, Long archiveId, Long postId);
+    void changePostArchive(Long userId, Long postId, String nickname, String slug);
 
     /**
      * 게시글의 아카이브 배정 해제
