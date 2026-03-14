@@ -1,5 +1,7 @@
 package com.sealog.backend.domain.feature.post.service;
 
+import com.sealog.backend.domain.feature.series.entity.Series;
+import com.sealog.backend.domain.feature.series.service.SeriesService;
 import com.sealog.backend.domain.feature.file.service.FileMetadataService;
 import com.sealog.backend.domain.feature.post.dto.PostRequest;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
@@ -34,6 +36,7 @@ import java.util.Set;
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
+    private final SeriesService seriesService;
     private final PostStackService postStackService;
     private final PostTagService postTagService;
     private final PostFileService postFileService;
@@ -79,6 +82,7 @@ public class PostServiceImpl implements PostService {
         List<PostResponse.StackItem> stackItems = postStackService.getStackItemsByPostId(post.getId());
         List<String> tagNames = postTagService.getTagNamesByPostId(post.getId());
         String displayContent = PostHtmlParser.injectSrcAttributes(post.getContent(), fileStorageService.getBaseUrl());
+        Long seriesId = Objects.nonNull(post.getSeries()) ? post.getSeries().getId() : null;
 
         return PostResponse.Edit.of(
                 post.getId(),
@@ -90,6 +94,7 @@ public class PostServiceImpl implements PostService {
                 fileStorageService.getFileUrl(post.getThumbnailPath()),
                 tagNames,
                 stackItems,
+                seriesId,
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );
@@ -131,7 +136,13 @@ public class PostServiceImpl implements PostService {
         // 3. slug 생성
         String slug = generateUniqueSlug(user.getId(), request.getTitle());
 
-        // 4. 게시글 저장
+        // 4. 시리즈 조회 (있는 경우)
+        Series series = null;
+        if (request.getSeriesId() != null) {
+            series = seriesService.getByIdAndUserId(request.getSeriesId(), user.getId());
+        }
+
+        // 5. 게시글 저장
         Post savedPost = postRepository.save(Post.builder()
                 .user(user)
                 .title(request.getTitle())
@@ -141,7 +152,12 @@ public class PostServiceImpl implements PostService {
                 .status(PostStatus.PUBLISHED)
                 .build());
 
-        // 5. 스택 / 태그 매핑
+        // 6. 시리즈 연결
+        if (series != null) {
+            savedPost.addToSeries(series);
+        }
+
+        // 7. 스택 / 태그 매핑
         if (request.getStackIds() != null) {
             postStackService.updatePostStacks(savedPost.getId(), request.getStackIds());
         }
@@ -149,13 +165,13 @@ public class PostServiceImpl implements PostService {
             postTagService.updatePostTags(savedPost.getId(), request.getTags());
         }
 
-        // 6. 썸네일 업로드 + 매핑
+        // 8. 썸네일 업로드 + 매핑
         if (thumbnail != null && !thumbnail.isEmpty()) {
             String thumbnailPath = postFileService.saveThumbnailFile(savedPost.getId(), user, thumbnail);
             savedPost.updateThumbnailPath(thumbnailPath);
         }
 
-        // 7. 본문 파일 매핑 (검증 완료된 refinedHtml 기준)
+        // 9. 본문 파일 매핑 (검증 완료된 refinedHtml 기준)
         postFileService.saveContentFileMappings(savedPost.getId(), refinedHtml);
 
         return buildPostDetailResponse(savedPost);
@@ -187,20 +203,28 @@ public class PostServiceImpl implements PostService {
                     post.getId(), post.getSlug(), newSlug);
         }
 
-        // 3. 게시글 업데이트
+        // 3. 시리즈 업데이트
+        if (request.getSeriesId() != null) {
+            Series series = seriesService.getByIdAndUserId(request.getSeriesId(), userId);
+            post.addToSeries(series);
+        } else {
+            post.removeFromSeries();
+        }
+
+        // 4. 게시글 업데이트
         post.update(request.getTitle(), newSlug, request.getExcerpt(), finalContent);
 
-        // 4. 스택 / 태그 매핑
+        // 5. 스택 / 태그 매핑
         postStackService.updatePostStacks(post.getId(), request.getStackIds());
         postTagService.updatePostTags(post.getId(), request.getTags());
 
-        // 5. 썸네일 업로드 + 매핑
+        // 6. 썸네일 업로드 + 매핑
         if (thumbnail != null && !thumbnail.isEmpty()) {
             String thumbnailPath = postFileService.saveThumbnailFile(post.getId(), post.getUser(), thumbnail);
             post.updateThumbnailPath(thumbnailPath);
         }
 
-        // 6. 본문 파일 매핑 증분 업데이트 (검증 완료된 finalContent 기준)
+        // 7. 본문 파일 매핑 증분 업데이트 (검증 완료된 finalContent 기준)
         postFileService.updateContentFileMappings(post.getId(), finalContent);
 
         return buildPostDetailResponse(post);
@@ -286,8 +310,9 @@ public class PostServiceImpl implements PostService {
         );
 
         String displayContent = PostHtmlParser.injectSrcAttributes(post.getContent(), fileStorageService.getBaseUrl());
-        String archiveSlug = Objects.nonNull(post.getArchive()) ? post.getArchive().getSlug() : null;
-        String archiveName = Objects.nonNull(post.getArchive()) ? post.getArchive().getName() : null;
+        Long seriesId = Objects.nonNull(post.getSeries()) ? post.getSeries().getId() : null;
+        String seriesSlug = Objects.nonNull(post.getSeries()) ? post.getSeries().getSlug() : null;
+        String seriesName = Objects.nonNull(post.getSeries()) ? post.getSeries().getName() : null;
 
         return PostResponse.Detail.of(
                 post.getId(),
@@ -300,8 +325,9 @@ public class PostServiceImpl implements PostService {
                 tagNames,
                 stackItems,
                 author,
-                archiveSlug,
-                archiveName,
+                seriesId,
+                seriesSlug,
+                seriesName,
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );

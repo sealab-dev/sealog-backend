@@ -3,6 +3,7 @@ package com.sealog.backend.domain.feature.user.service;
 import com.sealog.backend.domain.feature.user.dto.UserRequest;
 import com.sealog.backend.domain.feature.user.dto.UserResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
+import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.infra.storage.service.FileStorageService;
@@ -115,6 +116,27 @@ public class UserServiceImpl implements UserService {
 
         List<UserResponse.SocialLinkItem> socialLinks = userSocialService.getPublicLinks(nickname);
         return UserResponse.PublicProfile.of(user, fileStorageService.getFileUrl(user.getProfileImagePath()), socialLinks);
+    }
+
+    @Override
+    @Transactional
+    public void createUser(UserRequest.Create request) {
+        // 이메일 중복 검사
+        userValidatorService.validateDuplicateEmail(request.getEmail());
+
+        // 닉네임 중복 검사
+        userValidatorService.validateDuplicateNickname(request.getNickname());
+
+        // 비밀번호 암호화 및 User 생성
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .name(request.getName())
+                .nickname(request.getNickname())
+                .role(UserRole.USER)
+                .build();
+
+        userRepository.save(user);
     }
 
     // ========== 프로필 이미지 처리 ========== //

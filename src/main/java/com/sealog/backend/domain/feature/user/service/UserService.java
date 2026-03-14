@@ -48,4 +48,11 @@ public interface UserService {
      */
     void updatePassword(Long userId, UserRequest.UpdatePassword request);
 
+    /**
+     * 사용자 생성 (Admin용)
+     * @param request 사용자 생성 요청 DTO
+     * @throws CustomException 이메일 또는 닉네임이 이미 존재하는 경우 (CONFLICT)
+     */
+    void createUser(UserRequest.Create request);
+
 }

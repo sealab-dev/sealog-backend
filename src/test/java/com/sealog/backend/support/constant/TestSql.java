@@ -27,13 +27,8 @@ public class TestSql {
         VALUES (?, ?, ?, ?, ?, ?, null, NOW(), NOW())
     """.strip();
 
-    public static final String INSERT_ARCHIVE = """
-        INSERT INTO archives (user_id, name, slug, is_public, created_at, updated_at)
+    public static final String INSERT_SERIES = """
+        INSERT INTO series (user_id, name, slug, is_public, created_at, updated_at)
         VALUES (?, ?, ?, ?, NOW(), NOW())
-    """.strip();
-
-    public static final String INSERT_ARCHIVE_POST = """
-        INSERT INTO archive_posts (archive_id, post_id, sort_order)
-        VALUES (?, ?, ?)
     """.strip();
 }
