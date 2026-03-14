@@ -1,7 +1,7 @@
 package com.sealog.backend.domain.feature.auth.service;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
-import com.sealog.backend.domain.feature.auth.dto.TokenResponse;
+import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
@@ -75,7 +75,7 @@ class AuthServiveUnitTest extends TestUnitBase {
             AuthRequest.Login request = AuthRequest.Login.builder()
                     .email(TEST_EMAIL).password(TEST_PASSWORD).build();
 
-            TokenResponse result = authService.login(request);
+            AuthResponse.Token result = authService.login(request);
 
             assertThat(result.getAccessToken()).isEqualTo(ACCESS_TOKEN);
             assertThat(result.getRefreshToken()).isEqualTo(REFRESH_TOKEN);
@@ -140,7 +140,7 @@ class AuthServiveUnitTest extends TestUnitBase {
             given(userRepository.findById(1L)).willReturn(Optional.of(testUser));
             given(jwtTokenProvider.createAccessToken(1L, TEST_EMAIL)).willReturn("new.access.token");
 
-            TokenResponse result = authService.refresh(REFRESH_TOKEN);
+            AuthResponse.Token result = authService.refresh(REFRESH_TOKEN);
 
             assertThat(result.getAccessToken()).isEqualTo("new.access.token");
             assertThat(result.getRefreshToken()).isNull();   // refresh 시 리프레시 토큰은 재발급 안 함

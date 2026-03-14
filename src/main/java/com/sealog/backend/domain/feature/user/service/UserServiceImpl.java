@@ -5,6 +5,7 @@ import com.sealog.backend.domain.feature.user.dto.UserResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
+import com.sealog.backend.infra.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private final UserFileService userFileService;
     private final UserSocialService userSocialService;
     private final PasswordEncoder passwordEncoder;
+    private final FileStorageService fileStorageService;
 
     @Value("${storage.base-url}")
     private String storageBaseUrl;
@@ -36,7 +38,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
 
         List<UserResponse.SocialLinkItem> socialLinks = userSocialService.getMyLinks(userId);
-        return UserResponse.MyProfile.of(user, toProfileImageUrl(user.getProfileImagePath()), socialLinks);
+        return UserResponse.MyProfile.of(user, fileStorageService.getFileUrl(user.getProfileImagePath()), socialLinks);
     }
 
     @Override
@@ -76,7 +78,7 @@ public class UserServiceImpl implements UserService {
         log.info("프로필 수정 완료: userId={}", userId);
 
         List<UserResponse.SocialLinkItem> socialLinks = userSocialService.getMyLinks(userId);
-        return UserResponse.MyProfile.of(user, toProfileImageUrl(user.getProfileImagePath()), socialLinks);
+        return UserResponse.MyProfile.of(user, fileStorageService.getFileUrl(user.getProfileImagePath()), socialLinks);
     }
 
     @Override
@@ -112,7 +114,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
 
         List<UserResponse.SocialLinkItem> socialLinks = userSocialService.getPublicLinks(nickname);
-        return UserResponse.PublicProfile.of(user, toProfileImageUrl(user.getProfileImagePath()), socialLinks);
+        return UserResponse.PublicProfile.of(user, fileStorageService.getFileUrl(user.getProfileImagePath()), socialLinks);
     }
 
     // ========== 프로필 이미지 처리 ========== //
@@ -135,17 +137,5 @@ public class UserServiceImpl implements UserService {
             String path = userFileService.uploadAndSaveProfile(user, profileImage);
             user.updateProfileImagePath(path);
         }
-    }
-
-    // ========== URL 조립 ========== //
-
-    private String toProfileImageUrl(String path) {
-        if (path == null) {
-            return null;
-        }
-        String base = storageBaseUrl.endsWith("/")
-                ? storageBaseUrl.substring(0, storageBaseUrl.length() - 1)
-                : storageBaseUrl;
-        return path.startsWith("/") ? base + path : base + "/" + path;
     }
 }

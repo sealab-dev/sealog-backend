@@ -2,7 +2,7 @@ package com.sealog.backend.domain.feature.auth.controller;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
-import com.sealog.backend.domain.feature.auth.dto.TokenResponse;
+import com.sealog.backend.domain.feature.auth.dto.AuthResponse.Token;
 import com.sealog.backend.domain.feature.auth.service.AuthService;
 import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.global.response.CustomResponse;
@@ -55,14 +55,14 @@ public class AuthController implements AuthControllerDocs {
             HttpServletResponse response
     ) {
         log.info("[Auth] Login attempt - Email: {}", request.getEmail());
-        TokenResponse tokenResponse = authService.login(request);
+        Token token = authService.login(request);
 
-        cookieUtil.addAccessTokenCookie(response, tokenResponse.getAccessToken());
-        cookieUtil.addRefreshTokenCookie(response, tokenResponse.getRefreshToken());
+        cookieUtil.addAccessTokenCookie(response, token.getAccessToken());
+        cookieUtil.addRefreshTokenCookie(response, token.getRefreshToken());
 
-        log.info("[Auth] Login success - UserID: {}", tokenResponse.getAuthProfile().getId());
+        log.info("[Auth] Login success - UserID: {}", token.getAuthProfile().getId());
 
-        return ResponseEntity.ok(CustomResponse.success(tokenResponse.getAuthProfile(), "로그인 성공"));
+        return ResponseEntity.ok(CustomResponse.success(token.getAuthProfile(), "로그인 성공"));
     }
 
     /**
@@ -82,13 +82,13 @@ public class AuthController implements AuthControllerDocs {
         String refreshToken = cookieUtil.getRefreshToken(request)
                 .orElseThrow(() -> CustomException.unauthorized("Refresh Token이 없습니다"));
 
-        TokenResponse tokenResponse = authService.refresh(refreshToken);
+        Token token = authService.refresh(refreshToken);
 
-        log.info("[Auth] Refreshing token for UserID: {}", tokenResponse.getAuthProfile().getId());
+        log.info("[Auth] Refreshing token for UserID: {}", token.getAuthProfile().getId());
 
-        cookieUtil.addAccessTokenCookie(response, tokenResponse.getAccessToken());
+        cookieUtil.addAccessTokenCookie(response, token.getAccessToken());
 
-        return ResponseEntity.ok(CustomResponse.success(tokenResponse.getAuthProfile(), "토큰이 재발급되었습니다"));
+        return ResponseEntity.ok(CustomResponse.success(token.getAuthProfile(), "토큰이 재발급되었습니다"));
     }
 
     /**

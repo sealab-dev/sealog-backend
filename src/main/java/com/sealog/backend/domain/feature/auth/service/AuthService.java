@@ -2,7 +2,6 @@ package com.sealog.backend.domain.feature.auth.service;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
-import com.sealog.backend.domain.feature.auth.dto.TokenResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.global.exception.CustomException;
 
@@ -23,7 +22,7 @@ public interface AuthService {
      * @throws CustomException 사용자를 찾을 수 없는 경우 (UNAUTHORIZED)
      * @throws CustomException 비밀번호가 일치하지 않는 경우 (UNAUTHORIZED)
      */
-    TokenResponse login(AuthRequest.Login request);
+    AuthResponse.Token login(AuthRequest.Login request);
 
     /**
      * 회원가입
@@ -41,7 +40,7 @@ public interface AuthService {
      * @return 새 Access Token 및 사용자 정보 (refreshToken은 null)
      * @throws CustomException 토큰이 유효하지 않거나 DB 토큰과 불일치 (UNAUTHORIZED)
      */
-    TokenResponse refresh(String refreshToken);
+    AuthResponse.Token refresh(String refreshToken);
 
     /**
      * 로그아웃

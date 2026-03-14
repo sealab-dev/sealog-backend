@@ -6,6 +6,16 @@ import lombok.Builder;
 import lombok.Getter;
 
 public class AuthResponse {
+
+    @Getter
+    @Builder
+    public static class Token {
+
+        private final String accessToken;
+        private final String refreshToken;
+        private final AuthProfile authProfile;
+    }
+
     /**
      * 사용자 정보 응답
      */
@@ -18,16 +28,16 @@ public class AuthResponse {
         private String name;
         private String nickname;
         private UserRole role;
-        private String profileImagePath;
+        private String profileImageUrl;
 
-        public static AuthProfile from(User user) {
+        public static AuthProfile from(User user, String profileImageUrl) {
             return AuthProfile.builder()
                     .id(user.getId())
                     .email(user.getEmail())
                     .name(user.getName())
                     .nickname(user.getNickname())
                     .role(user.getRole())
-                    .profileImagePath(user.getProfileImagePath())
+                    .profileImageUrl(profileImageUrl)
                     .build();
         }
     }
