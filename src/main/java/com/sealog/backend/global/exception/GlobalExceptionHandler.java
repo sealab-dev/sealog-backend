@@ -1,90 +1,74 @@
 package com.sealog.backend.global.exception;
 
-import com.sealog.backend.global.response.ErrorResponse;
+import com.sealog.backend.global.response.CustomResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
-import java.util.Map;
-
+/**
+ * [전역 예외 처리기]
+ * 어플리케이션 전역에서 발생하는 예외를 한곳에서 처리합니다.
+ * 모든 에러 응답은 CustomResponse.error() 형식을 따릅니다.
+ */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Custom 예외 처리
+    /**
+     * 비즈니스 로직 예외 처리 (CustomException)
+     */
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(CustomException e) {
-        log.error("CustomException: {}", e.getMessage());
-
-        ErrorResponse response;
-
-        // 필드 에러가 있는 경우 errors 포함
-        if (e.hasFieldErrors()) {
-            response = ErrorResponse.of(
-                    e.getMessage(),
-                    e.getStatus().value(),
-                    e.getErrors()
-            );
-        } else {
-            response = ErrorResponse.of(
-                    e.getMessage(),
-                    e.getStatus().value()
-            );
-        }
-
-        return ResponseEntity.status(e.getStatus()).body(response);
+    public CustomResponse<Void> handleBusinessException(CustomException e, HttpServletResponse response) {
+        log.error("Business Exception: {}", e.getMessage());
+        response.setStatus(e.getStatus().value());
+        return CustomResponse.error(e.getMessage(), e.getStatus().value());
     }
 
-    // Validation 예외 처리
+    /**
+     * Bean Validation (@Valid) 예외 처리
+     * 여러 에러 중 가장 첫 번째 에러 메시지 하나만 클라이언트에게 전달합니다.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
-        log.error("ValidationException: {}", e.getMessage());
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public CustomResponse<Void> handleValidationException(MethodArgumentNotValidException e) {
+        log.error("Validation Exception: {}", e.getMessage());
 
-        Map<String, String> errors = new HashMap<>();
-        e.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
+        // 첫 번째 에러 메시지 추출
+        String errorMessage = e.getBindingResult().getAllErrors().get(0).getDefaultMessage();
 
-        ErrorResponse response = ErrorResponse.of(
-                "입력값이 올바르지 않습니다",
-                HttpStatus.BAD_REQUEST.value(),
-                errors
-        );
-
-        return ResponseEntity.badRequest().body(response);
+        return CustomResponse.error(errorMessage, HttpStatus.BAD_REQUEST.value());
     }
 
-    // DB 제약 조건 위반 (동시 요청으로 인한 slug/title 충돌 등)
+    /**
+     * DB 제약 조건 위반 (중복 값 등) 예외 처리
+     */
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException e) {
-        log.warn("DataIntegrityViolationException: {}", e.getMessage());
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public CustomResponse<Void> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+        log.warn("Data Integrity Violation: {}", e.getMessage());
 
-        ErrorResponse response = ErrorResponse.of(
-                "요청을 처리할 수 없습니다. 다시 시도해주세요",
+        return CustomResponse.error(
+                "요청을 처리할 수 없습니다. 중복된 값이거나 유효하지 않은 요청입니다.",
                 HttpStatus.CONFLICT.value()
         );
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-    // 그 외 예외 처리
+    /**
+     * 그 외 예상치 못한 모든 예외 처리
+     */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public CustomResponse<Void> handleException(Exception e) {
         log.error("Unexpected Exception: ", e);
 
-        ErrorResponse response = ErrorResponse.of(
-                "서버 오류가 발생했습니다",
+        return CustomResponse.error(
+                "서버 내부에 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
                 HttpStatus.INTERNAL_SERVER_ERROR.value()
         );
-
-        return ResponseEntity.internalServerError().body(response);
     }
 }

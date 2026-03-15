@@ -11,7 +11,7 @@ import lombok.experimental.UtilityClass;
  * Series Entity 관련 요청 DTO
  */
 @UtilityClass
-public class SeriesRequest {
+public class SeriesMeRequest {
 
     /**
      * 아카이브 생성 요청

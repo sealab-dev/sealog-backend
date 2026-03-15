@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-public class PostRequest {
+public class PostMeRequest {
 
     /**
      * 게시글 생성 요청 (multipart/form-data의 JSON 파트)

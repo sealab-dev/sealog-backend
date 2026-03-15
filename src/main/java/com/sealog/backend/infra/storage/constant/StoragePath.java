@@ -7,8 +7,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum StoragePath {
     PUBLIC_IMAGE("public/images"),
-    PUBLIC_THUMBNAIL("public/thumbnails"),
-    PUBLIC_PROFILE("public/profiles"),
     PUBLIC_VIDEO("public/videos"),
     PUBLIC_DOCUMENT("public/documents"),
     PUBLIC_AUDIO("public/audios"),

@@ -11,7 +11,7 @@ import java.lang.annotation.*;
  * 이미지 파일 검증을 위한 어노테이션
  */
 
-@Target({ElementType.FIELD, ElementType.PARAMETER})
+@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE_USE})
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = CheckFileValidator.class)
 public @interface CheckFile {

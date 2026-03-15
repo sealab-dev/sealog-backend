@@ -55,4 +55,5 @@ public class Series extends BaseTimeEntity {
     public boolean isOwnedBy(Long userId) {
         return this.user.getId().equals(userId);
     }
+
 }

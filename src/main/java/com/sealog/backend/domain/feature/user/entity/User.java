@@ -31,9 +31,6 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, length = 30)
     private String nickname;
 
-    @Column(length = 50)
-    private String position;
-
     @Column(length = 500)
     private String about;
 
@@ -69,10 +66,6 @@ public class User extends BaseTimeEntity {
 
     public void updateProfileImagePath(String profileImagePath) {
         this.profileImagePath = profileImagePath;
-    }
-
-    public void updatePosition(String position) {
-        this.position = position;
     }
 
     public void updateAbout(String about) {

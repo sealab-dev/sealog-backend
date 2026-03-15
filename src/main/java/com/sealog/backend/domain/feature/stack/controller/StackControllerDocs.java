@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -22,7 +21,7 @@ public interface StackControllerDocs {
         @ApiResponse(responseCode = "404", description = "사용자 없음",
             content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<StackResponse.GroupedStacks>> getGroupedStacksByUser(
+    StackResponse.GroupedStacks getStacksByUser(
         @Parameter(description = "사용자 닉네임", example = "테스터") String nickname
     );
 
@@ -30,7 +29,7 @@ public interface StackControllerDocs {
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "조회 성공"),
     })
-    ResponseEntity<CustomResponse<List<StackResponse.StackItem>>> autocomplete(
+    List<StackResponse.StackItem> searchStackByName(
         @Parameter(description = "검색 키워드", example = "spring") String keyword
     );
 }

@@ -1,7 +1,9 @@
 package com.sealog.backend.domain.feature.user.service;
 
-import com.sealog.backend.domain.feature.user.dto.UserRequest;
+import com.sealog.backend.domain.feature.user.dto.UserAdminRequest;
+import com.sealog.backend.domain.feature.user.dto.UserMeRequest;
 import com.sealog.backend.domain.feature.user.dto.UserResponse;
+import com.sealog.backend.domain.feature.user.dto.UserMeResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
@@ -30,23 +32,28 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
 
-    @Value("${storage.base-url}")
-    private String storageBaseUrl;
-
     @Override
-    public UserResponse.MyProfile getMyProfile(Long userId) {
+    public UserMeResponse.MyProfile getMyProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
 
-        List<UserResponse.SocialLinkItem> socialLinks = userSocialService.getMyLinks(userId);
-        return UserResponse.MyProfile.of(user, fileStorageService.getFileUrl(user.getProfileImagePath()), socialLinks);
+        List<UserMeResponse.MySocialLinkItem> socialLinks = userSocialService.getMyLinks(userId);
+        return UserMeResponse.MyProfile.of(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getNickname(),
+                user.getAbout(),
+                fileStorageService.getFileUrl(user.getProfileImagePath()),
+                socialLinks
+        );
     }
 
     @Override
     @Transactional
-    public UserResponse.MyProfile updateProfile(
+    public UserMeResponse.MyProfile updateProfile(
             Long userId,
-            UserRequest.UpdateProfile request,
+            UserMeRequest.UpdateProfile request,
             MultipartFile profileImage
     ) {
         log.info("프로필 수정 시작: userId={}", userId);
@@ -59,10 +66,6 @@ public class UserServiceImpl implements UserService {
                 userValidatorService.validateDuplicateNickname(request.getNickname());
                 user.updateNickname(request.getNickname());
             }
-        }
-
-        if (request.getPosition() != null) {
-            user.updatePosition(request.getPosition());
         }
 
         if (request.getAbout() != null) {
@@ -78,13 +81,21 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         log.info("프로필 수정 완료: userId={}", userId);
 
-        List<UserResponse.SocialLinkItem> socialLinks = userSocialService.getMyLinks(userId);
-        return UserResponse.MyProfile.of(user, fileStorageService.getFileUrl(user.getProfileImagePath()), socialLinks);
+        List<UserMeResponse.MySocialLinkItem> socialLinks = userSocialService.getMyLinks(userId);
+        return UserMeResponse.MyProfile.of(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getNickname(),
+                user.getAbout(),
+                fileStorageService.getFileUrl(user.getProfileImagePath()),
+                socialLinks
+        );
     }
 
     @Override
     @Transactional
-    public void updatePassword(Long userId, UserRequest.UpdatePassword request) {
+    public void updatePassword(Long userId, UserMeRequest.UpdatePassword request) {
         log.info("비밀번호 변경 시작: userId={}", userId);
 
         User user = userRepository.findById(userId)
@@ -110,17 +121,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse.PublicProfile getPublicProfile(String nickname) {
+    public UserResponse.UserProfile getPublicProfile(String nickname) {
         User user = userRepository.findByNickname(nickname)
                 .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
 
         List<UserResponse.SocialLinkItem> socialLinks = userSocialService.getPublicLinks(nickname);
-        return UserResponse.PublicProfile.of(user, fileStorageService.getFileUrl(user.getProfileImagePath()), socialLinks);
+        return UserResponse.UserProfile.of(
+                user.getNickname(),
+                fileStorageService.getFileUrl(user.getProfileImagePath()),
+                user.getAbout(),
+                socialLinks
+        );
     }
 
     @Override
     @Transactional
-    public void createUser(UserRequest.Create request) {
+    public void createUser(UserAdminRequest.Create request) {
         // 이메일 중복 검사
         userValidatorService.validateDuplicateEmail(request.getEmail());
 
@@ -141,13 +157,7 @@ public class UserServiceImpl implements UserService {
 
     // ========== 프로필 이미지 처리 ========== //
 
-    /**
-     * 프로필 이미지 처리
-     * 1. removeProfileImage == true → 기존 매핑 삭제 + profileImagePath = null
-     * 2. 새 이미지 파일이 있으면 → 기존 매핑 삭제(고아 파일 전환) + 새 이미지 업로드/매핑 저장 + path 업데이트
-     * 3. 둘 다 없으면 → 변경 없음
-     */
-    private void handleProfileImage(User user, UserRequest.UpdateProfile request, MultipartFile profileImage) {
+    private void handleProfileImage(User user, UserMeRequest.UpdateProfile request, MultipartFile profileImage) {
         if (Boolean.TRUE.equals(request.getRemoveProfileImage())) {
             userFileService.deleteProfile(user.getId());
             user.removeProfileImage();

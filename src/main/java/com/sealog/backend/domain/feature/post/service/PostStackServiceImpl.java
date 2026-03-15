@@ -69,18 +69,11 @@ public class PostStackServiceImpl implements PostStackService {
     }
 
     /**
-     * 게시글에 연결된 스택 목록 조회 (sortOrder 포함)
-     * - PostResponse.StackItem 반환으로 stack 도메인 DTO 의존 제거
+     * 게시글에 연결된 스택 엔티티 목록 조회
      */
     @Override
-    public List<PostResponse.StackItem> getStackItemsByPostId(Long postId) {
-        return postStackRepository.findAllByPostIdOrderBySortOrderAsc(postId).stream()
-                .map(ps -> PostResponse.StackItem.of(
-                        ps.getStack().getId(),
-                        ps.getStack().getName(),
-                        ps.getSortOrder()
-                ))
-                .collect(Collectors.toList());
+    public List<PostStack> getPostStacksByPostId(Long postId) {
+        return postStackRepository.findAllByPostIdOrderBySortOrderAsc(postId);
     }
 
     /**

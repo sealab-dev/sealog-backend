@@ -2,7 +2,6 @@ package com.sealog.backend.domain.feature.user.service;
 
 import com.sealog.backend.domain.feature.file.entity.FileMetadata;
 import com.sealog.backend.domain.feature.file.service.FileMetadataService;
-import com.sealog.backend.domain.feature.file.util.FileValidator;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.entity.UserFile;
 import com.sealog.backend.domain.feature.user.enums.UserFileType;
@@ -41,11 +40,10 @@ public class UserFileServiceImpl implements UserFileService {
     @Override
     @Transactional
     public String uploadAndSaveProfile(User user, MultipartFile profileImage) {
-        FileValidator.validateImageFile(profileImage);
 
         FileUploadResult uploadResult;
         try {
-            uploadResult = fileStorageService.uploadPublicProfileImage(profileImage);
+            uploadResult = fileStorageService.uploadPublicImage(profileImage);
         } catch (IOException e) {
             throw CustomException.badRequest("프로필 이미지 업로드에 실패했습니다: " + e.getMessage());
         }

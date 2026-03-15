@@ -1,7 +1,8 @@
 package com.sealog.backend.domain.feature.user.service;
 
-import com.sealog.backend.domain.feature.user.dto.UserRequest;
+import com.sealog.backend.domain.feature.user.dto.UserMeRequest;
 import com.sealog.backend.domain.feature.user.dto.UserResponse;
+import com.sealog.backend.domain.feature.user.dto.UserMeResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.entity.UserSocial;
 import com.sealog.backend.domain.feature.user.enums.SocialType;
@@ -26,15 +27,15 @@ public class UserSocialServiceImpl implements UserSocialService {
     private final UserRepository userRepository;
 
     @Override
-    public List<UserResponse.SocialLinkItem> getMyLinks(Long userId) {
+    public List<UserMeResponse.MySocialLinkItem> getMyLinks(Long userId) {
         return userSocialRepository.findAllByUserId(userId).stream()
-                .map(UserResponse.SocialLinkItem::from)
+                .map(link -> UserMeResponse.MySocialLinkItem.of(link.getSocialType(), link.getUrl()))
                 .toList();
     }
 
     @Override
     @Transactional
-    public List<UserResponse.SocialLinkItem> update(Long userId, List<UserRequest.UpdateSocialLink> links) {
+    public List<UserMeResponse.MySocialLinkItem> update(Long userId, List<UserMeRequest.UpdateSocialLink> links) {
 
         // 1. 사용자 조회
         User user = userRepository.findById(userId)
@@ -42,7 +43,7 @@ public class UserSocialServiceImpl implements UserSocialService {
 
         // 2. 중복 소셜 타입 검증
         List<SocialType> socialTypes = links.stream()
-                .map(UserRequest.UpdateSocialLink::getSocialType)
+                .map(UserMeRequest.UpdateSocialLink::getSocialType)
                 .toList();
 
         Set<SocialType> uniqueTypes = Set.copyOf(socialTypes);
@@ -67,7 +68,7 @@ public class UserSocialServiceImpl implements UserSocialService {
         log.info("소셜 링크 upsert 완료: userId={}, count={}", userId, savedLinks.size());
 
         return savedLinks.stream()
-                .map(UserResponse.SocialLinkItem::from)
+                .map(link -> UserMeResponse.MySocialLinkItem.of(link.getSocialType(), link.getUrl()))
                 .toList();
     }
 
@@ -80,7 +81,7 @@ public class UserSocialServiceImpl implements UserSocialService {
         }
 
         return links.stream()
-                .map(UserResponse.SocialLinkItem::from)
+                .map(link -> UserResponse.SocialLinkItem.of(link.getSocialType(), link.getUrl()))
                 .toList();
     }
 }

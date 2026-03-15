@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-public class StackRequest {
+public class StackAdminRequest {
 
     /* 태그 생성 요청*/
     @Getter

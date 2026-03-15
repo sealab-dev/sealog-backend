@@ -2,7 +2,6 @@ package com.sealog.backend.domain.feature.auth.controller;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
-import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.security.auth.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,7 +13,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Auth", description = "인증 API")
 public interface AuthControllerDocs {
@@ -26,7 +24,7 @@ public interface AuthControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<AuthResponse.AuthProfile>> getMe(CustomUserDetails userDetails);
+    AuthResponse.AuthProfile getMe(CustomUserDetails userDetails);
 
     @Operation(summary = "로그인", description = "로그인 후 JWT 발급 (HttpOnly 쿠키로 전달)")
     @SecurityRequirements()
@@ -37,7 +35,7 @@ public interface AuthControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<AuthResponse.AuthProfile>>  login(
+    AuthResponse.AuthProfile  login(
             AuthRequest.Login request,
             HttpServletResponse response
     );
@@ -49,7 +47,7 @@ public interface AuthControllerDocs {
             @ApiResponse(responseCode = "401", description = "Refresh Token 없음/유효하지 않음",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<AuthResponse.AuthProfile>> refresh(
+    AuthResponse.AuthProfile refresh(
             HttpServletRequest request,
             HttpServletResponse response
     );
@@ -59,5 +57,5 @@ public interface AuthControllerDocs {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "로그아웃 성공"),
     })
-    ResponseEntity<CustomResponse<Void>> logout(HttpServletRequest request, HttpServletResponse response);
+    void logout(HttpServletRequest request, HttpServletResponse response);
 }

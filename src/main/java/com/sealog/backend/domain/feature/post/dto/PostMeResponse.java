@@ -8,15 +8,15 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class PostResponse {
+public class PostMeResponse {
 
     /**
-     * 게시글 목록 응답 (요약 정보)
+     * 내 게시글 목록 응답
      */
     @Getter
     @Builder
-    @Schema(description = "게시글 목록 요약 정보")
-    public static class PostItem {
+    @Schema(description = "내 게시글 목록 정보")
+    public static class MyPostItem {
 
         private Long id;
         private String slug;
@@ -25,11 +25,10 @@ public class PostResponse {
         private PostStatus status;
         private String thumbnailUrl;
         private List<String> tags;
-        private List<StackItem> stacks;
-        private AuthorInfo author;
+        private List<MyStackItem> stacks;
         private LocalDateTime createdAt;
 
-        public static PostItem of(
+        public static MyPostItem of(
                 Long id,
                 String slug,
                 String title,
@@ -37,11 +36,10 @@ public class PostResponse {
                 PostStatus status,
                 String thumbnailUrl,
                 List<String> tags,
-                List<StackItem> stacks,
-                AuthorInfo author,
+                List<MyStackItem> stacks,
                 LocalDateTime createdAt
         ) {
-            return PostItem.builder()
+            return MyPostItem.builder()
                     .id(id)
                     .slug(slug)
                     .title(title)
@@ -50,19 +48,18 @@ public class PostResponse {
                     .thumbnailUrl(thumbnailUrl)
                     .tags(tags)
                     .stacks(stacks)
-                    .author(author)
                     .createdAt(createdAt)
                     .build();
         }
     }
 
     /**
-     * 게시글 상세 응답
+     * 게시글 수정용 응답
      */
     @Getter
     @Builder
-    @Schema(description = "게시글 상세 정보")
-    public static class PostDetail {
+    @Schema(description = "게시글 수정용 상세 정보")
+    public static class MyPostEdit {
 
         private Long id;
         private String slug;
@@ -72,13 +69,12 @@ public class PostResponse {
         private PostStatus status;
         private String thumbnailUrl;
         private List<String> tags;
-        private List<StackItem> stacks;
-        private AuthorInfo author;
-        private SeriesInfo seriesInfo;
+        private List<MyStackItem> stacks;
+        private Long seriesId;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
-        public static PostDetail of(
+        public static MyPostEdit of(
                 Long id,
                 String slug,
                 String title,
@@ -87,13 +83,12 @@ public class PostResponse {
                 PostStatus status,
                 String thumbnailUrl,
                 List<String> tags,
-                List<StackItem> stacks,
-                AuthorInfo author,
-                SeriesInfo seriesInfo,
+                List<MyStackItem> stacks,
+                Long seriesId,
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt
         ) {
-            return PostDetail.builder()
+            return MyPostEdit.builder()
                     .id(id)
                     .slug(slug)
                     .title(title)
@@ -103,8 +98,7 @@ public class PostResponse {
                     .thumbnailUrl(thumbnailUrl)
                     .tags(tags)
                     .stacks(stacks)
-                    .author(author)
-                    .seriesInfo(seriesInfo)
+                    .seriesId(seriesId)
                     .createdAt(createdAt)
                     .updatedAt(updatedAt)
                     .build();
@@ -112,59 +106,21 @@ public class PostResponse {
     }
 
     /**
-     * 작성자 정보
-     */
-    @Getter
-    @Builder
-    @Schema(description = "작성자 정보")
-    public static class AuthorInfo {
-        private String nickname;
-        private String profileImageUrl;
-
-        public static AuthorInfo of(String nickname, String profileImageUrl) {
-            return AuthorInfo.builder()
-                    .nickname(nickname)
-                    .profileImageUrl(profileImageUrl)
-                    .build();
-        }
-    }
-
-    /**
-     * 스택 정보 (post 도메인 내부 관리)
+     * 스택 정보
      */
     @Getter
     @Builder
     @Schema(description = "게시글 관련 스택 정보")
-    public static class StackItem {
+    public static class MyStackItem {
         private Long id;
         private String name;
         private Integer sortOrder;
 
-        public static StackItem of(Long id, String name, Integer sortOrder) {
-            return StackItem.builder()
+        public static MyStackItem of(Long id, String name, Integer sortOrder) {
+            return MyStackItem.builder()
                     .id(id)
                     .name(name)
                     .sortOrder(sortOrder)
-                    .build();
-        }
-    }
-
-    /**
-     * 시리즈 정보
-     */
-    @Getter
-    @Builder
-    @Schema(description = "시리즈 요약 정보")
-    public static class SeriesInfo {
-        private Long id;
-        private String slug;
-        private String name;
-
-        public static SeriesInfo of(Long id, String slug, String name) {
-            return SeriesInfo.builder()
-                    .id(id)
-                    .slug(slug)
-                    .name(name)
                     .build();
         }
     }

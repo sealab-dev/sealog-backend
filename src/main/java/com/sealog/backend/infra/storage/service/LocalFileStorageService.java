@@ -62,16 +62,6 @@ public class LocalFileStorageService implements FileStorageService {
     }
 
     @Override
-    public FileUploadResult uploadPublicThumbnail(MultipartFile file) throws IOException {
-        return uploadFileInternal(file, StoragePath.PUBLIC_THUMBNAIL);
-    }
-
-    @Override
-    public FileUploadResult uploadPublicProfileImage(MultipartFile file) throws IOException {
-        return uploadFileInternal(file, StoragePath.PUBLIC_PROFILE);
-    }
-
-    @Override
     public FileUploadResult uploadPublicVideo(MultipartFile file) throws IOException {
         return uploadFileInternal(file, StoragePath.PUBLIC_VIDEO);
     }
@@ -232,7 +222,7 @@ public class LocalFileStorageService implements FileStorageService {
 
         // 1. 주소 유효성 검증
         if (fileKey == null || fileKey.isBlank()) {
-            log.warn("파일 키가 null 또는 비어있음");
+            log.debug("파일 키가 null 또는 비어있음");
             return null;
         }
 

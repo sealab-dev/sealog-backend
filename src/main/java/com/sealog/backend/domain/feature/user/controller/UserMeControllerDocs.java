@@ -1,9 +1,11 @@
 package com.sealog.backend.domain.feature.user.controller;
 
-import com.sealog.backend.domain.feature.user.dto.UserRequest;
-import com.sealog.backend.domain.feature.user.dto.UserResponse;
-import com.sealog.backend.global.response.CustomResponse;
+import com.sealog.backend.domain.base.validation.annotation.CheckFile;
+import com.sealog.backend.domain.base.validation.enums.AllowedFileType;
+import com.sealog.backend.domain.feature.user.dto.UserMeRequest;
+import com.sealog.backend.domain.feature.user.dto.UserMeResponse;
 import com.sealog.backend.security.auth.CustomUserDetails;
+import com.sealog.backend.global.response.CustomResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Me", description = "내 정보 API")
@@ -24,7 +25,7 @@ public interface UserMeControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<UserResponse.MyProfile>> getMyInfo(CustomUserDetails userDetails);
+    UserMeResponse.MyProfile getMyInfo(CustomUserDetails userDetails);
 
     @Operation(summary = "프로필 수정", description = "닉네임/포지션/소개/프로필 이미지 정보를 수정합니다.")
     @ApiResponses({
@@ -34,9 +35,10 @@ public interface UserMeControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<UserResponse.MyProfile>> updateProfile(
+    UserMeResponse.MyProfile updateProfile(
             CustomUserDetails userDetails,
-            UserRequest.UpdateProfile request,
+            UserMeRequest.UpdateProfile request,
+            @CheckFile(allowed = {AllowedFileType.IMAGE}, maxSizeMB = 5, nullable = true)
             MultipartFile profileImage
     );
 
@@ -48,8 +50,8 @@ public interface UserMeControllerDocs {
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    ResponseEntity<CustomResponse<Void>> changePassword(
+    CustomResponse<Void> changePassword(
             CustomUserDetails userDetails,
-            UserRequest.UpdatePassword request
+            UserMeRequest.UpdatePassword request
     );
 }

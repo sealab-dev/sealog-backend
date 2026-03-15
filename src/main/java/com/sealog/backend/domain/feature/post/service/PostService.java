@@ -1,6 +1,7 @@
 package com.sealog.backend.domain.feature.post.service;
 
-import com.sealog.backend.domain.feature.post.dto.PostRequest;
+import com.sealog.backend.domain.feature.post.dto.PostMeResponse;
+import com.sealog.backend.domain.feature.post.dto.PostMeRequest;
 import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.global.exception.CustomException;
@@ -24,7 +25,7 @@ public interface PostService {
      * @param pageable 페이지네이션 정보
      * @return 게시글 목록
      */
-    Page<PostResponse.PostItems> getUserPosts(String nickname, Pageable pageable);
+    Page<PostResponse.PostItem> getUserPosts(String nickname, Pageable pageable);
 
     /**
      * 전체 공개 게시글 목록 조회
@@ -33,7 +34,7 @@ public interface PostService {
      * @param pageable 페이지네이션 정보
      * @return 게시글 목록
      */
-    Page<PostResponse.PostItems> getPosts(Pageable pageable);
+    Page<PostResponse.PostItem> getPosts(Pageable pageable);
 
     /**
      * 게시글 상세 조회 (Nickname + Slug 기반)
@@ -44,7 +45,7 @@ public interface PostService {
      * @return 게시글 상세 정보 (관련 게시글 포함)
      * @throws CustomException 게시글을 찾을 수 없거나 작성자가 일치하지 않는 경우
      */
-    PostResponse.Detail getDetail(String nickname, String slug);
+    PostResponse.PostDetail getDetail(String nickname, String slug);
 
     /**
      * 게시글 검색
@@ -56,7 +57,17 @@ public interface PostService {
      * @param pageable 페이지네이션 정보
      * @return 검색된 게시글 목록
      */
-    Page<PostResponse.PostItems> searchPosts(String nickname, String keyword, Pageable pageable);
+    Page<PostResponse.PostItem> searchPosts(String nickname, String keyword, Pageable pageable);
+
+    /**
+     * 내 게시글 검색 (전체 상태 포함)
+     *
+     * @param nickname 내 닉네임
+     * @param keyword  검색 키워드
+     * @param pageable 페이지네이션 정보
+     * @return 내 게시글 목록
+     */
+    Page<PostMeResponse.MyPostItem> searchMyPosts(String nickname, String keyword, Pageable pageable);
 
     /**
      * 특정 사용자의 공개 게시글 검색
@@ -67,7 +78,7 @@ public interface PostService {
      * @param pageable 페이지네이션 정보
      * @return 검색된 게시글 목록
      */
-    Page<PostResponse.PostItems> searchPostsByNickname(String nickname, String keyword, Pageable pageable);
+    Page<PostResponse.PostItem> searchPostsByNickname(String nickname, String keyword, Pageable pageable);
 
     /**
      * 특정 사용자의 스택별 공개 게시글 목록 조회
@@ -78,7 +89,7 @@ public interface PostService {
      * @param pageable  페이지네이션 정보
      * @return 해당 스택이 적용된 게시글 목록
      */
-    Page<PostResponse.PostItems> getPostsByStack(String nickname, String stackName, Pageable pageable);
+    Page<PostResponse.PostItem> getPostsByStack(String nickname, String stackName, Pageable pageable);
 
     // ========== Create, Update, Delete ========== //
 
@@ -90,7 +101,7 @@ public interface PostService {
      * @return 생성된 게시글 상세 정보
      * @throws CustomException 제목 중복, 사용자 없음, 파일 없음 등
      */
-    PostResponse.Detail create(User user, PostRequest.Create request, MultipartFile thumbnail);
+    PostMeResponse.MyPostItem create(User user, PostMeRequest.Create request, MultipartFile thumbnail);
 
     /**
      * 게시글 수정용 데이터 조회
@@ -100,7 +111,7 @@ public interface PostService {
      * @return 게시글 수정용 데이터
      * @throws CustomException 게시글을 찾을 수 없거나 권한이 없는 경우
      */
-    PostResponse.Edit getEdit(Long userId, String slug);
+    PostMeResponse.MyPostEdit getEdit(Long userId, String slug);
 
     /**
      * 게시글 수정
@@ -111,7 +122,7 @@ public interface PostService {
      * @return 수정된 게시글 상세 정보
      * @throws CustomException 게시글 없음, 권한 없음, 제목 중복 등
      */
-    PostResponse.Detail update(Long userId, Long postId, PostRequest.Update request, MultipartFile thumbnail);
+    PostMeResponse.MyPostItem update(Long userId, Long postId, PostMeRequest.Update request, MultipartFile thumbnail);
 
     /**
      * 게시글 삭제 (소프트 삭제)
@@ -139,5 +150,5 @@ public interface PostService {
      * @param pageable 페이지네이션 정보
      * @return 삭제된 게시글 목록
      */
-    Page<PostResponse.PostItems> getDeleted(Long userId, Pageable pageable);
+    Page<PostMeResponse.MyPostItem> getDeleted(Long userId, Pageable pageable);
 }
