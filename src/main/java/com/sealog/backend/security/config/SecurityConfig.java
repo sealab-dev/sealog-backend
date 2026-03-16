@@ -13,7 +13,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -30,6 +29,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final com.sealog.backend.global.converter.JsonConverter jsonConverter;
 
     @Value("${app.origin.frontend}")
     private String frontOrigin;
@@ -53,31 +53,32 @@ public class SecurityConfig {
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write(
-                                    "{\"success\": false, \"error\": {\"code\": \"UNAUTHORIZED\", \"message\": \"인증이 필요합니다. 로그인 후 다시 시도해주세요.\"}}"
+                            var errorResponse = com.sealog.backend.global.response.CustomResponse.error(
+                                    "인증이 필요합니다. 로그인 후 다시 시도해주세요.",
+                                    HttpServletResponse.SC_UNAUTHORIZED
                             );
+                            response.getWriter().write(jsonConverter.serialize(errorResponse));
                         })
                         // 권한 부족 시 403 응답 처리 (인증은 됐지만 권한 없음)
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write(
-                                    "{\"success\": false, \"error\": {\"code\": \"FORBIDDEN\", \"message\": \"접근 권한이 없습니다.\"}}"
+                            var errorResponse = com.sealog.backend.global.response.CustomResponse.error(
+                                    "접근 권한이 없습니다.",
+                                    HttpServletResponse.SC_FORBIDDEN
                             );
+                            response.getWriter().write(jsonConverter.serialize(errorResponse));
                         })
                 )
                 // URL별 접근 권한 설정
                 .authorizeHttpRequests(authorize -> authorize
                         // 인증 없이 접근 가능한 경로
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
-                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/user/**").hasRole("USER")
-                        .requestMatchers(HttpMethod.GET, "/api/guest/**").permitAll()
-                        // Swagger html 경로
-                        .requestMatchers("/swagger-ui/**","/v3/api-docs/**","/swagger-ui.html", "/docs/**").permitAll()
-                        // 그 외 모든 요청은 인증 필요
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/me/**").hasRole("USER")
+                        .requestMatchers("/api/files/**").hasRole("USER")
+                        // 그 외 모든 요청은 다 허용
+                        .anyRequest().permitAll()
                 )
                 // JWT 필터를 UsernamePasswordAuthenticationFilter 앞에 추가
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -131,7 +132,6 @@ public class SecurityConfig {
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 }

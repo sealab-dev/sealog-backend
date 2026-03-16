@@ -1,7 +1,8 @@
 package com.sealog.backend.domain.feature.series.service;
 
 import com.sealog.backend.domain.base.util.SlugUtils;
-import com.sealog.backend.domain.feature.series.dto.SeriesRequest;
+import com.sealog.backend.domain.feature.series.dto.SeriesMeResponse;
+import com.sealog.backend.domain.feature.series.dto.SeriesMeRequest;
 import com.sealog.backend.domain.feature.series.dto.SeriesResponse;
 import com.sealog.backend.domain.feature.series.entity.Series;
 import com.sealog.backend.domain.feature.series.repository.SeriesRepository;
@@ -20,187 +21,145 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
-/**
- * SeriesService 구현 클래스
- */
 @Transactional(readOnly = true)
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SeriesServiceImpl implements SeriesService {
 
-    // 사용 의존성
     private final SeriesRepository seriesRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
+    // ========== Guest (공개) ========== //
+
     @Override
-    public Page<SeriesResponse.PostItems> getPagedPostItems(Long requesterId, String nickname, String slug, Pageable pageable) {
+    public Page<SeriesResponse.PostItem> getPagedPostItemsByNickname(String nickname, String slug, Pageable pageable) {
+        Series series = seriesRepository.findByNicknameAndSlug(nickname, slug)
+                .orElseThrow(() -> CustomException.notFound("시리즈를 찾을 수 없습니다."));
 
-        // 1. 아카이브 조회
-        Series series = findSeriesByNicknameAndSlug(nickname, slug);
-
-        // 2. User: 소유자 검증 후 전체 상태 반환
-        if (Objects.nonNull(requesterId)) {
-            verifyOwner(series, requesterId);
-            return postRepository
-                    .findByUserIdAndSeriesId(requesterId, series.getId(), pageable)
-                    .map(this::toPostItems);
-        }
-
-        // 3. Guest: PUBLISHED만 반환
-        return postRepository
-                .findBySeriesIdAndStatus(series.getId(), PostStatus.PUBLISHED, pageable)
-                .map(this::toPostItems);
+        return postRepository.findBySeriesIdAndStatus(series.getId(), PostStatus.PUBLISHED, pageable)
+                .map(this::toPublicPostItem);
     }
 
     @Override
-    public Page<SeriesResponse.SeriesItems> getPagedPublicItems(String nickname, Pageable pageable) {
+    public Page<SeriesResponse.SeriesItem> getPagedPublicItems(String nickname, Pageable pageable) {
+        return seriesRepository.findByUserNicknameAndIsPublic(nickname, true, pageable)
+                .map(this::toPublicSeriesItem);
+    }
 
-        return seriesRepository
-                .findByUserNicknameAndIsPublic(nickname, true, pageable)
-                .map(this::toItems);
+    // ========== User (인증/소유자) ========== //
+
+    @Override
+    public Page<SeriesMeResponse.MyPostItem> getPagedPostItemsMe(Long userId, String slug, Pageable pageable) {
+        Series series = seriesRepository.findByNicknameAndSlug(null, slug)
+                .orElseThrow(() -> CustomException.notFound("시리즈를 찾을 수 없습니다."));
+        
+        verifyOwner(series, userId);
+
+        return postRepository.findByUserIdAndSeriesId(userId, series.getId(), pageable)
+
+                .map(this::toMePostItem);
     }
 
     @Override
-    public Page<SeriesResponse.SeriesItems> getPagedItems(Long userId, Pageable pageable) {
-
-        return seriesRepository
-                .findByUserId(userId, pageable)
-                .map(this::toItems);
+    public Page<SeriesMeResponse.MySeriesItem> getPagedItems(Long userId, Pageable pageable) {
+        return seriesRepository.findByUserId(userId, pageable)
+                .map(this::toMeSeriesItem);
     }
 
     @Transactional
     @Override
-    public void create(Long userId, SeriesRequest.Create request) {
+    public void create(Long userId, SeriesMeRequest.Create request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다."));
 
-        // 1. 회원 엔티티 조회
-        User user = userRepository
-                .findById(userId)
-                .orElseThrow(() -> CustomException.notFound("존재하지 않거나 탈퇴한 사용자의 아카이브를 생성할 수 없습니다."));
-
-        // 2. 검증
         String name = request.getName().trim();
-        String slug = SlugUtils.generate(name);
+        if (seriesRepository.existsByNameAndUserId(name, userId)) {
+            throw CustomException.badRequest("이미 존재하는 시리즈 이름입니다.");
+        }
 
-        // 같은 이름 생성 시도 차단
-        if (seriesRepository.existsByNameAndUserId(name, userId))
-            throw CustomException.badRequest("이미 같은 이름의 아카이브가 존재합니다.");
-
-        // 3. entity 생성
         Series series = Series.builder()
                 .user(user)
                 .name(name)
-                .slug(slug)
+                .slug(SlugUtils.generate(name))
                 .isPublic(true)
                 .build();
 
-        // 4. 저장
         seriesRepository.save(series);
     }
 
     @Transactional
     @Override
-    public void update(Long userId, Long seriesId, SeriesRequest.Update request) {
-
-        // 1. entity 조회 및 검증
+    public void update(Long userId, Long seriesId, SeriesMeRequest.Update request) {
         Series series = getByIdAndUserId(seriesId, userId);
-
-        // 2. 이름 중복 검사
         String editName = request.getName().trim();
 
-        // 동일 이름으로 수정 차단
-        if (Objects.equals(series.getName(), editName))
-            throw CustomException.badRequest("같은 이름으로 변경할 수 없습니다.");
+        if (Objects.equals(series.getName(), editName)) {
+            throw CustomException.badRequest("동일한 이름으로 변경할 수 없습니다.");
+        }
 
-        // 다른 아카이브와 이름 중복 차단
-        if (seriesRepository.existsByNameAndUserId(editName, userId))
-            throw CustomException.conflict("이미 같은 이름의 아카이브가 존재합니다.");
+        if (seriesRepository.existsByNameAndUserId(editName, userId)) {
+            throw CustomException.conflict("이미 존재하는 시리즈 이름입니다.");
+        }
 
-        // 3. 연관관계 메소드 기반 갱신
         series.edit(editName, SlugUtils.generate(editName));
     }
 
     @Transactional
     @Override
     public void show(Long userId, Long seriesId) {
-
-        // 1. 조회 및 검증
-        Series series = getByIdAndUserId(seriesId, userId);
-
-        // 2. 공개 상태로 변경
-        series.editIsPublic(true);
+        getByIdAndUserId(seriesId, userId).editIsPublic(true);
     }
-
 
     @Transactional
     @Override
     public void hide(Long userId, Long seriesId) {
-
-        // 1. 조회 및 검증
-        Series series = getByIdAndUserId(seriesId, userId);
-
-        // 2. 비공개 상태로 변경
-        series.editIsPublic(false);
+        getByIdAndUserId(seriesId, userId).editIsPublic(false);
     }
-
 
     @Transactional
     @Override
     public void delete(Long userId, Long seriesId) {
-
-        // 1. 조회 및 검증
         Series series = getByIdAndUserId(seriesId, userId);
-
-        // 2. 삭제 수행
         seriesRepository.delete(series);
     }
 
-
     @Override
     public Series getByIdAndUserId(Long seriesId, Long userId) {
-
-        // 1. 엔티티 조회
         Series series = seriesRepository.findById(seriesId)
-                .orElseThrow(() -> CustomException.notFound("아카이브를 찾을 수 없습니다."));
-
-        // 2. 소유권 검증
+                .orElseThrow(() -> CustomException.notFound("시리즈를 찾을 수 없습니다."));
         verifyOwner(series, userId);
-
         return series;
     }
 
+    // ========== DTO Mappers ========== //
 
-    /**
-     * Entity -> DTO 변환 메소드
-     */
-    private SeriesResponse.SeriesItems toItems(Series entity) {
-        return SeriesResponse.SeriesItems.of(entity.getId(), entity.getSlug(), entity.getName());
+    private SeriesResponse.SeriesItem toPublicSeriesItem(Series entity) {
+        return SeriesResponse.SeriesItem.of(entity.getId(), entity.getSlug(), entity.getName());
     }
 
-    private SeriesResponse.PostItems toPostItems(Post entity) {
-        return SeriesResponse.PostItems.of(entity.getId(), entity.getTitle(), entity.getSlug(), entity.getThumbnailPath());
+    private SeriesResponse.PostItem toPublicPostItem(Post entity) {
+        return SeriesResponse.PostItem.of(entity.getId(), entity.getTitle(), entity.getSlug(), entity.getThumbnailPath());
     }
 
-
-    /**
-     * 엔티티 조회 메소드
-     */
-    private Series findSeriesByNicknameAndSlug(String nickname, String slug) {
-
-        return seriesRepository
-                .findByNicknameAndSlug(nickname, slug)
-                .orElseThrow(() -> CustomException.notFound("존재하지 않거나 이미 삭제된 아카이브입니다."));
+    private SeriesMeResponse.MySeriesItem toMeSeriesItem(Series entity) {
+        return SeriesMeResponse.MySeriesItem.of(entity.getId(), entity.getSlug(), entity.getName(), entity.isPublic());
     }
 
-
-    /**
-     * 검증 메소드
-     */
-    private void verifyOwner(Series series, Long requestUserId) {
-
-        if (!series.isOwnedBy(requestUserId))
-            throw CustomException.forbidden("다른 사용자의 아카이브를 변경할 수 없습니다.");
+    private SeriesMeResponse.MyPostItem toMePostItem(Post entity) {
+        return SeriesMeResponse.MyPostItem.of(
+                entity.getId(), 
+                entity.getTitle(),
+                entity.getSlug(), 
+                entity.getThumbnailPath(),
+                entity.getStatus().name()
+        );
     }
 
+    private void verifyOwner(Series series, Long userId) {
+        if (!series.getUser().getId().equals(userId)) {
+            throw CustomException.forbidden("권한이 없습니다.");
+        }
+    }
 }

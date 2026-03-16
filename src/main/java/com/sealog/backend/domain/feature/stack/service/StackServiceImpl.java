@@ -1,7 +1,8 @@
 package com.sealog.backend.domain.feature.stack.service;
 
 import com.sealog.backend.domain.feature.post.repository.PostStackRepository;
-import com.sealog.backend.domain.feature.stack.dto.StackRequest;
+import com.sealog.backend.domain.feature.stack.dto.StackAdminResponse;
+import com.sealog.backend.domain.feature.stack.dto.StackAdminRequest;
 import com.sealog.backend.domain.feature.stack.dto.StackResponse;
 import com.sealog.backend.domain.feature.stack.entity.Stack;
 import com.sealog.backend.domain.feature.stack.enums.StackGroup;
@@ -15,14 +16,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * 공개 스택 서비스 구현체
- */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -42,7 +39,7 @@ public class StackServiceImpl implements StackService {
                         keyword.trim(),
                         PageRequest.of(0, 5)
                 ).stream()
-                .map(StackResponse.StackItem::from)
+                .map(stack -> StackResponse.StackItem.of(stack.getId(), stack.getName(), stack.getStackGroup()))
                 .collect(Collectors.toList());
     }
 
@@ -61,17 +58,18 @@ public class StackServiceImpl implements StackService {
     }
 
     @Override
-    public Page<StackResponse.StackItem> getAllStacks(String keyword, Pageable pageable) {
+    public Page<StackAdminResponse.StackItem> getAllStacks(String keyword, Pageable pageable) {
         if (keyword == null || keyword.isBlank()) {
-            return stackRepository.findAll(pageable).map(StackResponse.StackItem::from);
+            return stackRepository.findAll(pageable)
+                    .map(stack -> StackAdminResponse.StackItem.of(stack.getId(), stack.getName(), stack.getStackGroup()));
         }
         return stackRepository.findByNameContainingIgnoreCase(keyword.trim(), pageable)
-                .map(StackResponse.StackItem::from);
+                .map(stack -> StackAdminResponse.StackItem.of(stack.getId(), stack.getName(), stack.getStackGroup()));
     }
 
     @Override
     @Transactional
-    public StackResponse.StackItem createStack(StackRequest.Create request, Long userId) {
+    public StackAdminResponse.StackItem createStack(StackAdminRequest.Create request, Long userId) {
         validateDuplicateName(request.getName());
         StackGroup stackGroup = StackGroup.fromKey(request.getStackGroup());
 
@@ -81,12 +79,12 @@ public class StackServiceImpl implements StackService {
                 .build();
 
         Stack savedStack = stackRepository.save(stack);
-        return StackResponse.StackItem.from(savedStack);
+        return StackAdminResponse.StackItem.of(savedStack.getId(), savedStack.getName(), savedStack.getStackGroup());
     }
 
     @Override
     @Transactional
-    public StackResponse.StackItem updateStack(Long stackId, StackRequest.Update request, Long userId) {
+    public StackAdminResponse.StackItem updateStack(Long stackId, StackAdminRequest.Update request, Long userId) {
         Stack stack = findStackById(stackId);
         StackGroup stackGroup = StackGroup.fromKey(request.getStackGroup());
 
@@ -99,7 +97,7 @@ public class StackServiceImpl implements StackService {
             stack.updateStackGroup(stackGroup);
         }
 
-        return StackResponse.StackItem.from(stack);
+        return StackAdminResponse.StackItem.of(stack.getId(), stack.getName(), stack.getStackGroup());
     }
 
     @Override
@@ -111,30 +109,21 @@ public class StackServiceImpl implements StackService {
     }
 
     // ========== Private Methods ========== //
-    /**
-     * DTO
-     */
     private List<StackResponse.StackWithCount> convertToStackWithCount(List<Object[]> results) {
         return results.stream()
                 .map(result -> {
                     Stack stack = (Stack) result[0];
                     Long postCount = (Long) result[1];
-                    return StackResponse.StackWithCount.of(stack, postCount);
+                    return StackResponse.StackWithCount.of(stack.getId(), stack.getName(), stack.getStackGroup(), postCount);
                 })
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 스택 ID로 Stack 엔티티 조회
-     */
     private Stack findStackById(Long stackId) {
         return stackRepository.findById(stackId)
                 .orElseThrow(() -> CustomException.notFound("스택을 찾을 수 없습니다"));
     }
 
-    /**
-     * 스택명 중복 검사
-     */
     private void validateDuplicateName(String name) {
         if (stackRepository.existsByName(name)) {
             throw CustomException.conflict("이미 존재하는 스택명입니다");

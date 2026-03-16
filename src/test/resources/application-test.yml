@@ -60,7 +60,7 @@ spring:
 
 # ── JWT ────────────────────────────────────────────────────────────────────
 jwt:
-  secret: dGVzdC1zZWNyZXQta2V5LWZvci1qdW5pdC10ZXN0aW5n
+  secret: YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=
   access-token-validity: 3600000
   refresh-token-validity: 86400000
 

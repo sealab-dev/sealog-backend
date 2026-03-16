@@ -1,6 +1,7 @@
 package com.sealog.backend.domain.feature.stack.service;
 
-import com.sealog.backend.domain.feature.stack.dto.StackRequest;
+import com.sealog.backend.domain.feature.stack.dto.StackAdminResponse;
+import com.sealog.backend.domain.feature.stack.dto.StackAdminRequest;
 import com.sealog.backend.domain.feature.stack.dto.StackResponse;
 import com.sealog.backend.global.exception.CustomException;
 import org.springframework.data.domain.Page;
@@ -9,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 /**
- * 공개 스택 서비스 인터페이스
+ * 스택 서비스 인터페이스
  */
 public interface StackService {
 
@@ -38,7 +39,7 @@ public interface StackService {
      * @param pageable 페이지 정보
      * @return 스택 페이지
      */
-    Page<StackResponse.StackItem> getAllStacks(String keyword, Pageable pageable);
+    Page<StackAdminResponse.StackItem> getAllStacks(String keyword, Pageable pageable);
 
     /**
      * 스택 생성 (어드민 전용)
@@ -50,7 +51,7 @@ public interface StackService {
      * @throws CustomException 잘못된 스택 그룹일 경우 (BAD_REQUEST)
      * @throws CustomException 어드민 권한이 없는 경우 (FORBIDDEN)
      */
-    StackResponse.StackItem createStack(StackRequest.Create request, Long userId);
+    StackAdminResponse.StackItem createStack(StackAdminRequest.Create request, Long userId);
 
     /**
      * 스택 수정 (어드민 전용)
@@ -64,7 +65,7 @@ public interface StackService {
      * @throws CustomException 잘못된 스택 그룹일 경우 (BAD_REQUEST)
      * @throws CustomException 어드민 권한이 없는 경우 (FORBIDDEN)
      */
-    StackResponse.StackItem updateStack(Long stackId, StackRequest.Update request, Long userId);
+    StackAdminResponse.StackItem updateStack(Long stackId, StackAdminRequest.Update request, Long userId);
 
     /**
      * 스택 삭제 (어드민 전용)

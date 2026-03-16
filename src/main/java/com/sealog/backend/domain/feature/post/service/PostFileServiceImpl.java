@@ -2,7 +2,6 @@ package com.sealog.backend.domain.feature.post.service;
 
 import com.sealog.backend.domain.feature.file.entity.FileMetadata;
 import com.sealog.backend.domain.feature.file.service.FileMetadataService;
-import com.sealog.backend.domain.feature.file.util.FileValidator;
 import com.sealog.backend.domain.feature.post.entity.PostFile;
 import com.sealog.backend.domain.feature.post.enums.PostFileType;
 import com.sealog.backend.domain.feature.post.repository.PostFileRepository;
@@ -54,13 +53,11 @@ public class PostFileServiceImpl implements PostFileService {
     @Override
     @Transactional
     public String saveThumbnailFile(Long postId, User user, MultipartFile thumbnail) {
-        FileValidator.validateImageFile(thumbnail);
-
         deleteThumbnail(postId); // 기존 매핑 없으면 no-op
 
         FileUploadResult uploadResult;
         try {
-            uploadResult = fileStorageService.uploadPublicThumbnail(thumbnail);
+            uploadResult = fileStorageService.uploadPublicImage(thumbnail);
         } catch (IOException e) {
             throw CustomException.badRequest("썸네일 업로드에 실패했습니다: " + e.getMessage());
         }

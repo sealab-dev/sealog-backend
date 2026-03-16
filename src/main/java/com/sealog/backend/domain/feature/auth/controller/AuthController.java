@@ -5,7 +5,6 @@ import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
 import com.sealog.backend.domain.feature.auth.dto.AuthResponse.Token;
 import com.sealog.backend.domain.feature.auth.service.AuthService;
 import com.sealog.backend.global.exception.CustomException;
-import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.security.auth.CustomUserDetails;
 import com.sealog.backend.security.util.CookieUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,7 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,10 +36,11 @@ public class AuthController implements AuthControllerDocs {
      */
     @Override
     @GetMapping("/me")
-    public ResponseEntity<CustomResponse<AuthResponse.AuthProfile>> getMe(
+    @ResponseStatus(HttpStatus.OK)
+    public AuthResponse.AuthProfile getMe(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(CustomResponse.success(authService.getMe(userDetails.getUserId())));
+        return authService.getMe(userDetails.getUserId());
     }
 
     /**
@@ -50,7 +50,8 @@ public class AuthController implements AuthControllerDocs {
      */
     @Override
     @PostMapping("/login")
-    public ResponseEntity<CustomResponse<AuthResponse.AuthProfile>> login(
+    @ResponseStatus(HttpStatus.OK)
+    public AuthResponse.AuthProfile login(
             @Valid @RequestBody AuthRequest.Login request,
             HttpServletResponse response
     ) {
@@ -62,7 +63,7 @@ public class AuthController implements AuthControllerDocs {
 
         log.info("[Auth] Login success - UserID: {}", token.getAuthProfile().getId());
 
-        return ResponseEntity.ok(CustomResponse.success(token.getAuthProfile(), "로그인 성공"));
+        return token.getAuthProfile();
     }
 
     /**
@@ -74,7 +75,8 @@ public class AuthController implements AuthControllerDocs {
      */
     @Override
     @PostMapping("/refresh")
-    public ResponseEntity<CustomResponse<AuthResponse.AuthProfile>> refresh(
+    @ResponseStatus(HttpStatus.OK)
+    public AuthResponse.AuthProfile refresh(
             HttpServletRequest request,
             HttpServletResponse response
     ) {
@@ -88,7 +90,7 @@ public class AuthController implements AuthControllerDocs {
 
         cookieUtil.addAccessTokenCookie(response, token.getAccessToken());
 
-        return ResponseEntity.ok(CustomResponse.success(token.getAuthProfile(), "토큰이 재발급되었습니다"));
+        return token.getAuthProfile();
     }
 
     /**
@@ -98,13 +100,13 @@ public class AuthController implements AuthControllerDocs {
      */
     @Override
     @PostMapping("/logout")
-    public ResponseEntity<CustomResponse<Void>> logout(
+    @ResponseStatus(HttpStatus.OK)
+    public void logout(
             HttpServletRequest request,
             HttpServletResponse response
     ) {
         cookieUtil.getRefreshToken(request).ifPresent(authService::logout);
 
         cookieUtil.deleteTokenCookies(response);
-        return ResponseEntity.ok(CustomResponse.success(null, "로그아웃 되었습니다"));
     }
 }

@@ -45,7 +45,7 @@ class FileIntegrationTest extends TestIntegrationBase {
     // 파일 업로드
     // =====================================================================
     @Nested
-    @DisplayName("파일 업로드 (POST /api/user/files/upload)")
+    @DisplayName("파일 업로드 (POST /api/files/upload)")
     class 파일_업로드 {
 
         @Test
@@ -55,10 +55,10 @@ class FileIntegrationTest extends TestIntegrationBase {
                     "file",
                     "test.jpg",
                     "image/jpeg",
-                    "fake image content".getBytes()
+                    new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF}
             );
 
-            mockMvc.perform(multipart("/api/user/files/upload")
+            mockMvc.perform(multipart("/api/files/upload")
                             .file(file)
                             .with(user(myDetails)))
                     .andExpect(status().isOk())
@@ -74,10 +74,10 @@ class FileIntegrationTest extends TestIntegrationBase {
                     "file",
                     "document.pdf",
                     "application/pdf",
-                    "fake pdf content".getBytes()
+                    "%PDF-1.4".getBytes()
             );
 
-            mockMvc.perform(multipart("/api/user/files/upload")
+            mockMvc.perform(multipart("/api/files/upload")
                             .file(file)
                             .with(user(myDetails)))
                     .andExpect(status().isOk())
@@ -95,7 +95,7 @@ class FileIntegrationTest extends TestIntegrationBase {
                     "fake image content".getBytes()
             );
 
-            mockMvc.perform(multipart("/api/user/files/upload")
+            mockMvc.perform(multipart("/api/files/upload")
                             .file(file)
                             .with(anonymous()))
                     .andExpect(status().isUnauthorized());
@@ -111,10 +111,11 @@ class FileIntegrationTest extends TestIntegrationBase {
                     new byte[0]
             );
 
-            mockMvc.perform(multipart("/api/user/files/upload")
+            mockMvc.perform(multipart("/api/files/upload")
                             .file(file)
                             .with(user(myDetails)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false));
         }
 
         @Test
@@ -127,10 +128,11 @@ class FileIntegrationTest extends TestIntegrationBase {
                     "fake content".getBytes()
             );
 
-            mockMvc.perform(multipart("/api/user/files/upload")
+            mockMvc.perform(multipart("/api/files/upload")
                             .file(file)
                             .with(user(myDetails)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false));
         }
 
         @Test
@@ -143,10 +145,11 @@ class FileIntegrationTest extends TestIntegrationBase {
                     "fake content".getBytes()
             );
 
-            mockMvc.perform(multipart("/api/user/files/upload")
+            mockMvc.perform(multipart("/api/files/upload")
                             .file(file)
                             .with(user(myDetails)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false));
         }
     }
 }

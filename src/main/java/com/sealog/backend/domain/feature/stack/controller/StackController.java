@@ -4,31 +4,29 @@ import com.sealog.backend.domain.feature.stack.dto.StackResponse;
 import com.sealog.backend.domain.feature.stack.service.StackService;
 import com.sealog.backend.global.response.CustomResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/guest/stacks")
+@RequestMapping("/api/stacks")
 @RequiredArgsConstructor
 public class StackController implements StackControllerDocs {
 
     private final StackService stackService;
 
     @Override
-    @GetMapping("/grouped/user/{nickname}")
-    public ResponseEntity<CustomResponse<StackResponse.GroupedStacks>> getGroupedStacksByUser(
-            @PathVariable String nickname
-    ) {
-        return ResponseEntity.ok(CustomResponse.success(stackService.getGroupedStacksWithPostCountByUser(nickname)));
+    @GetMapping("/user/{nickname}")
+    @ResponseStatus(HttpStatus.OK)
+    public StackResponse.GroupedStacks getStacksByUser(@PathVariable String nickname) {
+        return stackService.getGroupedStacksWithPostCountByUser(nickname);
     }
 
     @Override
-    @GetMapping("/autocomplete")
-    public ResponseEntity<CustomResponse<List<StackResponse.StackItem>>> autocomplete(
-            @RequestParam(required = false, defaultValue = "") String keyword
-    ) {
-        return ResponseEntity.ok(CustomResponse.success(stackService.autocomplete(keyword)));
+    @GetMapping("/search")
+    @ResponseStatus(HttpStatus.OK)
+    public List<StackResponse.StackItem> searchStackByName(@RequestParam String keyword) {
+        return stackService.autocomplete(keyword);
     }
 }

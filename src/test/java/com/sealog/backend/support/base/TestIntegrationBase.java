@@ -24,7 +24,11 @@ import org.springframework.test.context.ActiveProfiles;
 @Import(TestDataFactory.class)
 @ExtendWith(ExecutionTimeExtension.class)
 @ActiveProfiles("test")
-@SpringBootTest
+@SpringBootTest(properties = {
+        "jwt.secret=YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=",
+        "jwt.access-token-validity=3600000",
+        "jwt.refresh-token-validity=86400000"
+})
 @AutoConfigureMockMvc
 public abstract class TestIntegrationBase extends TestContainerBase {
 

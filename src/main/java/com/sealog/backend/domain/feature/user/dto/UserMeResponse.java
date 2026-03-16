@@ -7,27 +7,36 @@ import lombok.Getter;
 
 import java.util.List;
 
-public class UserResponse {
+public class UserMeResponse {
 
     @Getter
     @Builder
-    @Schema(description = "사용자 프로필 정보 (공개용)")
-    public static class UserProfile {
+    @Schema(description = "내 정보 응답")
+    public static class MyProfile {
+        private Long id;
+        private String email;
+        private String name;
         private String nickname;
-        private String profileImageUrl;
         private String about;
-        private List<SocialLinkItem> socialLinks;
+        private String profileImageUrl;
+        private List<MySocialLinkItem> socialLinks;
 
-        public static UserProfile of(
+        public static MyProfile of(
+                Long id,
+                String email,
+                String name,
                 String nickname,
-                String profileImageUrl,
                 String about,
-                List<SocialLinkItem> socialLinks
+                String profileImageUrl,
+                List<MySocialLinkItem> socialLinks
         ) {
-            return UserProfile.builder()
+            return MyProfile.builder()
+                    .id(id)
+                    .email(email)
+                    .name(name)
                     .nickname(nickname)
-                    .profileImageUrl(profileImageUrl)
                     .about(about)
+                    .profileImageUrl(profileImageUrl)
                     .socialLinks(socialLinks)
                     .build();
         }
@@ -35,8 +44,8 @@ public class UserResponse {
 
     @Getter
     @Builder
-    @Schema(description = "사용자 소셜 링크 정보 (공개용)")
-    public static class SocialLinkItem {
+    @Schema(description = "내 소셜 링크 정보")
+    public static class MySocialLinkItem {
 
         @Schema(description = "소셜 타입", example = "GITHUB")
         private SocialType socialType;
@@ -44,8 +53,8 @@ public class UserResponse {
         @Schema(description = "소셜 링크 URL", example = "https://github.com/username")
         private String url;
 
-        public static SocialLinkItem of(SocialType socialType, String url) {
-            return SocialLinkItem.builder()
+        public static MySocialLinkItem of(SocialType socialType, String url) {
+            return MySocialLinkItem.builder()
                     .socialType(socialType)
                     .url(url)
                     .build();

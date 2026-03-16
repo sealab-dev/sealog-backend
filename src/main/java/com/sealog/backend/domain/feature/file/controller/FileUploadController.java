@@ -1,19 +1,19 @@
 package com.sealog.backend.domain.feature.file.controller;
 
-import com.sealog.backend.global.response.CustomResponse;
+import com.sealog.backend.domain.base.validation.annotation.CheckFile;
+import com.sealog.backend.domain.base.validation.enums.AllowedFileType;
 import com.sealog.backend.domain.feature.file.dto.FileResponse;
 import com.sealog.backend.domain.feature.file.entity.FileMetadata;
 import com.sealog.backend.domain.feature.file.service.FileMetadataService;
-import com.sealog.backend.domain.feature.file.util.FileValidator;
 import com.sealog.backend.infra.storage.dto.FileUploadResult;
 import com.sealog.backend.infra.storage.service.FileStorageService;
 import com.sealog.backend.security.auth.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,6 +25,7 @@ import java.io.IOException;
  * - S3 업로드 및 메타데이터 저장
  */
 @Slf4j
+@Validated
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
@@ -49,16 +50,13 @@ public class FileUploadController implements FileUploadControllerDocs{
     @Override
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Transactional
-    public ResponseEntity<CustomResponse<FileResponse>> uploadFile(
+    public FileResponse uploadFile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @CheckFile(maxSizeMB = 100)
             @RequestPart("file") MultipartFile file
     ) throws IOException {
         log.debug("파일 업로드 요청: filename={}, contentType={}, size={}bytes",
                 file.getOriginalFilename(), file.getContentType(), file.getSize());
-
-        // 1. 파일 검증
-        FileValidator.validateFile(file);
-        log.debug("파일 검증 완료: filename={}", file.getOriginalFilename());
 
         // 2. 업로드 (타입별 경로 자동 분류)
         FileUploadResult uploadResult = fileStorageService.uploadFile(file);
@@ -74,6 +72,6 @@ public class FileUploadController implements FileUploadControllerDocs{
         FileResponse response = FileResponse.from(fileMetadata, fileUrl);
         log.debug("파일 업로드 성공: fileId={}, path={}", response.id(), response.path());
 
-        return ResponseEntity.ok(CustomResponse.success(response, "파일이 업로드되었습니다"));
+        return response;
     }
 }

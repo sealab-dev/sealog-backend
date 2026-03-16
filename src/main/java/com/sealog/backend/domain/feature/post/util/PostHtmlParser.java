@@ -224,7 +224,7 @@ public class PostHtmlParser {
      * 조회 시: <img data-file-path="..."> 속성을 이용해 src를 재조립합니다.
      *
      * @param html     DB에서 조회한 HTML (src 없음)
-     * @param baseUrl  storage.base-url (예: https://cdn.example.com)
+     * @param baseUrl  file.local.base-url (예: https://cdn.example.com)
      * @return src가 채워진 HTML
      */
     public static String injectSrcAttributes(String html, String baseUrl) {

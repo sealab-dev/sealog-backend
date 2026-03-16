@@ -1,18 +1,22 @@
 package com.sealog.backend.domain.feature.user.controller;
 
-import com.sealog.backend.domain.feature.user.dto.UserRequest;
+import com.sealog.backend.domain.base.validation.annotation.CheckFile;
+import com.sealog.backend.domain.base.validation.enums.AllowedFileType;
+import com.sealog.backend.domain.feature.user.dto.UserMeRequest;
 import com.sealog.backend.domain.feature.user.service.UserService;
-import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.security.auth.CustomUserDetails;
-import com.sealog.backend.domain.feature.user.dto.UserResponse;
+import com.sealog.backend.domain.feature.user.dto.UserMeResponse;
+import com.sealog.backend.global.response.CustomResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+@Validated
 @RestController
 @RequestMapping("/api/me")
 @RequiredArgsConstructor
@@ -27,11 +31,11 @@ public class UserMeController implements UserMeControllerDocs {
      */
     @Override
     @GetMapping("/profile")
-    public ResponseEntity<CustomResponse<UserResponse.MyProfile>> getMyInfo(
+    @ResponseStatus(HttpStatus.OK)
+    public UserMeResponse.MyProfile getMyInfo(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        UserResponse.MyProfile response = userService.getMyProfile(userDetails.getUserId());
-        return ResponseEntity.ok(CustomResponse.success(response));
+        return userService.getMyProfile(userDetails.getUserId());
     }
 
     /**
@@ -43,18 +47,14 @@ public class UserMeController implements UserMeControllerDocs {
      */
     @Override
     @PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CustomResponse<UserResponse.MyProfile>> updateProfile(
+    @ResponseStatus(HttpStatus.OK)
+    public UserMeResponse.MyProfile updateProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestPart("request") @Valid UserRequest.UpdateProfile request,
+            @RequestPart("request") @Valid UserMeRequest.UpdateProfile request,
+            @CheckFile(allowed = {AllowedFileType.IMAGE}, maxSizeMB = 10, nullable = true)
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
     ) {
-        UserResponse.MyProfile response = userService.updateProfile(
-                userDetails.getUserId(),
-                request,
-                profileImage
-        );
-
-        return ResponseEntity.ok(CustomResponse.success(response, "프로필이 수정되었습니다"));
+        return userService.updateProfile(userDetails.getUserId(), request, profileImage);
     }
 
     /**
@@ -65,11 +65,12 @@ public class UserMeController implements UserMeControllerDocs {
      */
     @Override
     @PatchMapping("/password")
-    public ResponseEntity<CustomResponse<Void>> changePassword(
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public CustomResponse<Void> changePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody UserRequest.UpdatePassword request
+            @Valid @RequestBody UserMeRequest.UpdatePassword request
     ) {
         userService.updatePassword(userDetails.getUserId(), request);
-        return ResponseEntity.ok(CustomResponse.success(null, "비밀번호가 변경되었습니다"));
+        return CustomResponse.success("비밀번호가 변경되었습니다");
     }
 }
