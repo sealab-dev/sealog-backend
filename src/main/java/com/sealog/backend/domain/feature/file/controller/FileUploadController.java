@@ -52,7 +52,7 @@ public class FileUploadController implements FileUploadControllerDocs{
     @Transactional
     public FileResponse uploadFile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @CheckFile(allowed = {AllowedFileType.ALL}, maxSizeMB = 100)
+            @CheckFile(maxSizeMB = 100)
             @RequestPart("file") MultipartFile file
     ) throws IOException {
         log.debug("파일 업로드 요청: filename={}, contentType={}, size={}bytes",

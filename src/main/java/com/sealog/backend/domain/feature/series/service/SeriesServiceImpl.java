@@ -58,6 +58,7 @@ public class SeriesServiceImpl implements SeriesService {
         verifyOwner(series, userId);
 
         return postRepository.findByUserIdAndSeriesId(userId, series.getId(), pageable)
+
                 .map(this::toMePostItem);
     }
 

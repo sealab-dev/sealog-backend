@@ -52,8 +52,7 @@ public interface PostMeControllerDocs {
     PostMeResponse.MyPostItem update(
             CustomUserDetails userDetails,
             @Parameter(description = "수정할 게시글 ID", example = "1") Long postId,
-            @Valid PostMeRequest.Update request,
-            @CheckFile(allowed = {AllowedFileType.IMAGE}, maxSizeMB = 10, nullable = true)
+            PostMeRequest.Update request,
             MultipartFile thumbnail
     );
 

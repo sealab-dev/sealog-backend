@@ -7,6 +7,7 @@ import com.sealog.backend.domain.feature.user.dto.UserMeResponse;
 import com.sealog.backend.security.auth.CustomUserDetails;
 import com.sealog.backend.global.response.CustomResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -38,7 +39,6 @@ public interface UserMeControllerDocs {
     UserMeResponse.MyProfile updateProfile(
             CustomUserDetails userDetails,
             UserMeRequest.UpdateProfile request,
-            @CheckFile(allowed = {AllowedFileType.IMAGE}, maxSizeMB = 5, nullable = true)
             MultipartFile profileImage
     );
 

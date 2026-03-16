@@ -38,11 +38,11 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse.Token login(AuthRequest.Login request) {
         // 이메일로 사용자 조회
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> CustomException.unauthorized("이메일 또는 비밀번호가 일치하지 않습니다"));
+                .orElseThrow(() -> CustomException.badRequest("이메일 또는 비밀번호가 일치하지 않습니다"));
 
         // 비밀번호 검증
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw CustomException.unauthorized("이메일 또는 비밀번호가 일치하지 않습니다");
+            throw CustomException.badRequest("이메일 또는 비밀번호가 일치하지 않습니다");
         }
 
         // 토큰 생성
@@ -98,7 +98,7 @@ public class AuthServiceImpl implements AuthService {
 
     private User getUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> CustomException.unauthorized("사용자를 찾을 수 없습니다"));
+                .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
     }
 
     private void validateStoredRefreshToken(User user, String refreshToken) {

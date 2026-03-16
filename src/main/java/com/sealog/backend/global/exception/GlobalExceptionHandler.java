@@ -45,6 +45,28 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * ConstraintViolationException 예외 처리 (주로 파라미터 레벨 검증 @CheckFile 등)
+     */
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public CustomResponse<Void> handleConstraintViolation(jakarta.validation.ConstraintViolationException e) {
+        log.error("Constraint Violation: {}", e.getMessage());
+        String errorMessage = e.getConstraintViolations().iterator().next().getMessage();
+        return CustomResponse.error(errorMessage, HttpStatus.BAD_REQUEST.value());
+    }
+
+    /**
+     * HandlerMethodValidationException 예외 처리 (Spring Boot 3.2+ 신규 방식)
+     */
+    @ExceptionHandler(org.springframework.web.method.annotation.HandlerMethodValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public CustomResponse<Void> handleMethodValidationException(org.springframework.web.method.annotation.HandlerMethodValidationException e) {
+        log.error("Method Validation Exception: {}", e.getMessage());
+        String errorMessage = e.getAllErrors().get(0).getDefaultMessage();
+        return CustomResponse.error(errorMessage, HttpStatus.BAD_REQUEST.value());
+    }
+
+    /**
      * DB 제약 조건 위반 (중복 값 등) 예외 처리
      */
     @ExceptionHandler(DataIntegrityViolationException.class)

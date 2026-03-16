@@ -1,6 +1,6 @@
 package com.sealog.backend.domain.feature.user.service;
 
-import com.sealog.backend.domain.feature.user.dto.UserRequest;
+import com.sealog.backend.domain.feature.user.dto.UserAdminRequest;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
@@ -65,7 +65,7 @@ class UserServiceUnitTest extends TestUnitBase {
             given(passwordEncoder.encode(TEST_PASSWORD)).willReturn(ENCODED_PW);
             given(userRepository.save(any(User.class))).willReturn(testUser);
 
-            UserRequest.Create request = UserRequest.Create.builder()
+            UserAdminRequest.Create request = UserAdminRequest.Create.builder()
                     .email(TEST_EMAIL)
                     .password(TEST_PASSWORD)
                     .name("테스트유저")
@@ -85,7 +85,7 @@ class UserServiceUnitTest extends TestUnitBase {
             doThrow(CustomException.conflict("이미 사용 중인 이메일입니다"))
                     .when(userValidatorService).validateDuplicateEmail(TEST_EMAIL);
 
-            UserRequest.Create request = UserRequest.Create.builder()
+            UserAdminRequest.Create request = UserAdminRequest.Create.builder()
                     .email(TEST_EMAIL).password(TEST_PASSWORD)
                     .name("테스트유저").nickname("tester").build();
 
@@ -103,7 +103,7 @@ class UserServiceUnitTest extends TestUnitBase {
             doThrow(CustomException.conflict("이미 사용 중인 닉네임입니다"))
                     .when(userValidatorService).validateDuplicateNickname("tester");
 
-            UserRequest.Create request = UserRequest.Create.builder()
+            UserAdminRequest.Create request = UserAdminRequest.Create.builder()
                     .email(TEST_EMAIL).password(TEST_PASSWORD)
                     .name("테스트유저").nickname("tester").build();
 

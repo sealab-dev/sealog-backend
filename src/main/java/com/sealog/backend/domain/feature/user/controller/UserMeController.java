@@ -51,7 +51,7 @@ public class UserMeController implements UserMeControllerDocs {
     public UserMeResponse.MyProfile updateProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart("request") @Valid UserMeRequest.UpdateProfile request,
-            @CheckFile(allowed = {AllowedFileType.IMAGE}, maxSizeMB = 5, nullable = true)
+            @CheckFile(allowed = {AllowedFileType.IMAGE}, maxSizeMB = 10, nullable = true)
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
     ) {
         return userService.updateProfile(userDetails.getUserId(), request, profileImage);

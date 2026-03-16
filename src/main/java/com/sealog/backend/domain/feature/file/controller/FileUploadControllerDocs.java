@@ -42,7 +42,6 @@ public interface FileUploadControllerDocs {
             @Parameter(description = "업로드할 파일", required = true,
                     content = @Content(mediaType = "application/octet-stream",
                             schema = @Schema(type = "string", format = "binary")))
-            @CheckFile(allowed = {AllowedFileType.ALL}, maxSizeMB = 100)
             @RequestPart("file") MultipartFile file
     ) throws IOException;
 }
