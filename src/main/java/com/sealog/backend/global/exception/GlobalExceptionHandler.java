@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -26,6 +27,7 @@ public class GlobalExceptionHandler {
     public CustomResponse<Void> handleBusinessException(CustomException e, HttpServletResponse response) {
         log.error("Business Exception: {}", e.getMessage());
         response.setStatus(e.getStatus().value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         return CustomResponse.error(e.getMessage(), e.getStatus().value());
     }
 
@@ -78,6 +80,16 @@ public class GlobalExceptionHandler {
                 "요청을 처리할 수 없습니다. 중복된 값이거나 유효하지 않은 요청입니다.",
                 HttpStatus.CONFLICT.value()
         );
+    }
+
+    /**
+     * 클라이언트가 연결을 끊었을 때 (영상 스트리밍 seek, 탭 이동 등 정상 동작)
+     * 응답을 쓰지 않고 무시합니다.
+     */
+    @ExceptionHandler(org.apache.catalina.connector.ClientAbortException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public void handleClientAbort(org.apache.catalina.connector.ClientAbortException e) {
+        log.debug("Client disconnected: {}", e.getMessage());
     }
 
     /**

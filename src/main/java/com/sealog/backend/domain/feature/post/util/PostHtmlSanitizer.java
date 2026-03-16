@@ -21,6 +21,7 @@ public class PostHtmlSanitizer {
      *       dd, dfn, div, dl, dt, em, figcaption, figure, h1-h6, header,
      *       hr, i, img, li, ol, p, pre, q, small, span, strike, strong,
      *       sub, sup, table, tbody, td, tfoot, th, thead, tr, u, ul
+     *       video
      *
      * 차단: script, style, iframe, form, input 등 → 400 Bad Request
      */
@@ -29,11 +30,15 @@ public class PostHtmlSanitizer {
             "dd", "dfn", "div", "dl", "dt", "em", "figcaption", "figure",
             "h1", "h2", "h3", "h4", "h5", "h6", "header", "hr", "i", "img",
             "li", "ol", "p", "pre", "q", "small", "span", "strike", "strong",
-            "sub", "sup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "u", "ul"
+            "sub", "sup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "u", "ul",
+            "video"
     );
 
     private static final Safelist SAFELIST = Safelist.relaxed()
-            .addAttributes("img", "data-file-id", "data-file-path");
+            .addAttributes("img", "data-file-id", "data-file-path")
+            .addTags("video")
+            .addAttributes("video", "src", "controls", "width", "height", "data-file-id", "data-file-path")
+            .addProtocols("video", "src", "https");
 
     private static final Document.OutputSettings OUTPUT_SETTINGS =
             new Document.OutputSettings().prettyPrint(false);
