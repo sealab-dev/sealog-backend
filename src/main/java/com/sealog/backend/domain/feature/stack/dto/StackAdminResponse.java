@@ -14,16 +14,19 @@ public class StackAdminResponse {
     @Builder
     @Schema(description = "어드민용 스택 정보")
     public static class StackItem {
+
+        @Schema(description = "스택 ID", example = "1")
         private Long id;
+
+        @Schema(description = "스택명", example = "Spring Boot")
         private String name;
+
+        @Schema(description = "스택 그룹 (LANGUAGE / FRAMEWORK / LIBRARY / DATABASE / DEVOPS / KNOWLEDGE / TOOL / ETC)",
+                example = "FRAMEWORK")
         private StackGroup stackGroup;
 
         public static StackItem of(Long id, String name, StackGroup stackGroup) {
-            return StackItem.builder()
-                    .id(id)
-                    .name(name)
-                    .stackGroup(stackGroup)
-                    .build();
+            return StackItem.builder().id(id).name(name).stackGroup(stackGroup).build();
         }
     }
 }

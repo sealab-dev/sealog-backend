@@ -23,7 +23,7 @@ public interface SeriesService {
      * @param pageable 페이징 정보
      * @return 공개 게시글 목록
      */
-    Page<SeriesResponse.PostItem> getPagedPostItemsByNickname(String nickname, String slug, Pageable pageable);
+    Page<SeriesResponse.SeriesPostItem> getPagedPostItemsByNickname(String nickname, String slug, Pageable pageable);
 
     /**
      * 특정 사용자(nickname)의 공개 시리즈 목록 페이징 조회
@@ -46,7 +46,7 @@ public interface SeriesService {
      * @param pageable 페이징 정보
      * @return 시리즈 내 전체 게시글 목록
      */
-    Page<SeriesMeResponse.MyPostItem> getPagedPostItemsMe(Long userId, String slug, Pageable pageable);
+    Page<SeriesMeResponse.MySeriesPostItem> getPagedPostItemsMe(Long userId, String slug, Pageable pageable);
 
     /**
      * 내 전체 시리즈 목록 페이징 조회

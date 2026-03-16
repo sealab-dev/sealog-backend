@@ -29,11 +29,11 @@ public class UserMeRequest {
         @Schema(description = "닉네임", example = "seadev")
         private String nickname;
 
-        @Size(max = 100, message = "포지션은 100자 이내로 입력해주세요.")
+        @Size(max = 50, message = "포지션은 50자 이내로 입력해주세요.")
         @Schema(description = "포지션", example = "Java/Spring 백엔드 개발자")
         private String position;
 
-        @Size(max = 500, message = "소개는 500자 이내로 입력해주세요.")
+        @Size(max = 150, message = "소개는 150자 이내로 입력해주세요.")
         @Schema(description = "소개", example = "Java/Spring 기반 백엔드 개발자입니다.")
         private String about;
 

@@ -5,6 +5,7 @@ import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
 import com.sealog.backend.domain.feature.auth.dto.AuthResponse.Token;
 import com.sealog.backend.domain.feature.auth.service.AuthService;
 import com.sealog.backend.global.exception.CustomException;
+import com.sealog.backend.global.response.CustomResponse;
 import com.sealog.backend.security.auth.CustomUserDetails;
 import com.sealog.backend.security.util.CookieUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,11 +44,15 @@ public class AuthController {
      * GET /api/auth/me
      * user
      */
-    @Operation(summary = "내 정보 조회", description = "로그인한 사용자의 인증 프로필을 조회합니다.")
+    @Operation(
+            summary = "내 인증 정보 조회",
+            description = "Bearer 토큰으로 로그인한 사용자의 인증 프로필(id, email, nickname, role, profileImageUrl)을 반환합니다."
+    )
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = AuthResponse.AuthProfile.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패 (토큰 없음 또는 만료)",
                     content = @Content(schema = @Schema(hidden = true))),
     })
     @GetMapping("/me")
@@ -63,13 +68,21 @@ public class AuthController {
      * POST /api/auth/login
      * guest
      */
-    @Operation(summary = "로그인", description = "로그인 후 JWT 발급 (HttpOnly 쿠키로 전달)")
+    @Operation(
+            summary = "로그인",
+            description = """
+                    이메일/비밀번호로 로그인합니다.
+                    - 성공 시 Access Token과 Refresh Token을 **HttpOnly 쿠키**로 발급합니다.
+                    - 응답 body에는 사용자 기본 정보(AuthProfile)를 반환합니다.
+                    """
+    )
     @SecurityRequirements()
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "로그인 성공"),
-            @ApiResponse(responseCode = "400", description = "유효성 검사 실패",
+            @ApiResponse(responseCode = "200", description = "로그인 성공",
+                    content = @Content(schema = @Schema(implementation = AuthResponse.AuthProfile.class))),
+            @ApiResponse(responseCode = "400", description = "유효성 검사 실패 (이메일 형식 오류 등)",
                     content = @Content(schema = @Schema(hidden = true))),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
+            @ApiResponse(responseCode = "401", description = "이메일 또는 비밀번호 불일치",
                     content = @Content(schema = @Schema(hidden = true))),
     })
     @PostMapping("/login")
@@ -96,11 +109,19 @@ public class AuthController {
      * guest
      * - 리프레시 토큰 로테이션 없음: 액세스 토큰만 재발급
      */
-    @Operation(summary = "토큰 재발급", description = "쿠키의 Refresh Token을 DB와 비교 검증 후 Access Token만 재발급 (Refresh Token 로테이션 없음)")
+    @Operation(
+            summary = "Access Token 재발급",
+            description = """
+                    쿠키에 담긴 Refresh Token을 검증하여 새 Access Token을 발급합니다.
+                    - Refresh Token 로테이션 없음 (Refresh Token은 변경되지 않습니다).
+                    - 발급된 Access Token은 **HttpOnly 쿠키**로 전달됩니다.
+                    """
+    )
     @SecurityRequirements()
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "재발급 성공"),
-            @ApiResponse(responseCode = "401", description = "Refresh Token 없음/유효하지 않음",
+            @ApiResponse(responseCode = "200", description = "재발급 성공",
+                    content = @Content(schema = @Schema(implementation = AuthResponse.AuthProfile.class))),
+            @ApiResponse(responseCode = "401", description = "Refresh Token이 없거나 유효하지 않음",
                     content = @Content(schema = @Schema(hidden = true))),
     })
     @PostMapping("/refresh")
@@ -127,19 +148,27 @@ public class AuthController {
      * POST /api/auth/logout
      * user
      */
-    @Operation(summary = "로그아웃", description = "DB에서 Refresh Token 삭제 및 토큰 쿠키 만료 처리")
+    @Operation(
+            summary = "로그아웃",
+            description = """
+                    DB에서 Refresh Token을 삭제하고 쿠키를 만료 처리합니다.
+                    - 쿠키에 Refresh Token이 없는 경우에도 200을 반환합니다.
+                    """
+    )
     @SecurityRequirements()
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "로그아웃 성공"),
+            @ApiResponse(responseCode = "200", description = "로그아웃 성공",
+                    content = @Content(schema = @Schema(hidden = true))),
     })
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.OK)
-    public void logout(
+    public CustomResponse<Void> logout(
             HttpServletRequest request,
             HttpServletResponse response
     ) {
         cookieUtil.getRefreshToken(request).ifPresent(authService::logout);
-
         cookieUtil.deleteTokenCookies(response);
+
+        return CustomResponse.success("로그아웃 되었습니다.");
     }
 }

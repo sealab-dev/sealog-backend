@@ -149,4 +149,14 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
             "WHERE p.deletedAt IS NOT NULL " +
             "AND p.deletedAt < :deletedBefore")
     List<Post> findPostsToHardDelete(@Param("deletedBefore") LocalDateTime deletedBefore);
+
+    /**
+     * 특정 시리즈의 공개 게시글 수 카운트
+     */
+    long countBySeriesIdAndStatusAndDeletedAtIsNull(Long seriesId, PostStatus status);
+
+    /**
+     * 특정 시리즈의 삭제되지 않은 전체 게시글 수 카운트
+     */
+    long countBySeriesIdAndDeletedAtIsNull(Long seriesId);
 }

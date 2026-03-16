@@ -1,6 +1,7 @@
 package com.sealog.backend.global.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,17 +11,22 @@ import lombok.Getter;
  */
 @Getter
 @Builder
+@Schema(description = "공통 응답 봉투")
 public class CustomResponse<T> {
 
+    @Schema(description = "요청 성공 여부", example = "true")
     private final boolean success;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "응답 데이터 (API마다 다름)")
     private final T data;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "응답 메시지 (액션 성공·실패 시 반환)", example = "게시글이 삭제되었습니다")
     private final String message;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "HTTP 상태 코드", example = "200")
     private final Integer status;
 
     // ========== 성공 응답 (상태 코드는 시스템이 자동 주입) ========== //

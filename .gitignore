@@ -42,6 +42,7 @@ out/
 /uploads
 /uploads/test
 
-### Claude Code ###
+### AI ###
+GEMINI.md
 CLAUDE.md
 .claude
