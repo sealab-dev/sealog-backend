@@ -46,6 +46,7 @@ class UserIntegrationTest extends TestIntegrationBase {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.nickname").value(testUser.getNickname()))
+                    .andExpect(jsonPath("$.data.position").exists())
                     .andExpect(jsonPath("$.data.socialLinks").isArray());
         }
 

@@ -17,6 +17,7 @@ public class UserMeResponse {
         private String email;
         private String name;
         private String nickname;
+        private String position;
         private String about;
         private String profileImageUrl;
         private List<MySocialLinkItem> socialLinks;
@@ -26,6 +27,7 @@ public class UserMeResponse {
                 String email,
                 String name,
                 String nickname,
+                String position,
                 String about,
                 String profileImageUrl,
                 List<MySocialLinkItem> socialLinks
@@ -35,6 +37,7 @@ public class UserMeResponse {
                     .email(email)
                     .name(name)
                     .nickname(nickname)
+                    .position(position)
                     .about(about)
                     .profileImageUrl(profileImageUrl)
                     .socialLinks(socialLinks)

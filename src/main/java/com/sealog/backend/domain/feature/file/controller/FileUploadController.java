@@ -1,13 +1,20 @@
 package com.sealog.backend.domain.feature.file.controller;
 
 import com.sealog.backend.domain.base.validation.annotation.CheckFile;
-import com.sealog.backend.domain.base.validation.enums.AllowedFileType;
 import com.sealog.backend.domain.feature.file.dto.FileResponse;
 import com.sealog.backend.domain.feature.file.entity.FileMetadata;
 import com.sealog.backend.domain.feature.file.service.FileMetadataService;
 import com.sealog.backend.infra.storage.dto.FileUploadResult;
 import com.sealog.backend.infra.storage.service.FileStorageService;
 import com.sealog.backend.security.auth.CustomUserDetails;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -25,11 +32,13 @@ import java.io.IOException;
  * - S3 업로드 및 메타데이터 저장
  */
 @Slf4j
+@Tag(name = "File", description = "파일 업로드 API")
+@SecurityRequirement(name = "bearerAuth")
 @Validated
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
-public class FileUploadController implements FileUploadControllerDocs{
+public class FileUploadController {
 
     private final FileStorageService fileStorageService;
     private final FileMetadataService fileMetadataService;
@@ -47,11 +56,22 @@ public class FileUploadController implements FileUploadControllerDocs{
      * @return FileUploadResponse 업로드된 파일 정보 (ID, URL 등)
      * @throws IOException 파일 처리 중 오류 발생 시
      */
-    @Override
+    @Operation(
+            summary = "파일 업로드",
+            description = "파일을 업로드하고 메타데이터를 저장한 뒤 업로드 결과를 반환합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "업로드 성공"),
+            @ApiResponse(responseCode = "400", description = "파일 검증 실패(확장자/크기/MIME 타입 등)"),
+            @ApiResponse(responseCode = "401", description = "인증 필요"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Transactional
     public FileResponse uploadFile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "업로드할 파일", required = true,
+                    content = @Content(mediaType = "application/octet-stream",
+                            schema = @Schema(type = "string", format = "binary")))
             @CheckFile(maxSizeMB = 100)
             @RequestPart("file") MultipartFile file
     ) throws IOException {

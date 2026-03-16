@@ -14,18 +14,21 @@ public class UserResponse {
     @Schema(description = "사용자 프로필 정보 (공개용)")
     public static class UserProfile {
         private String nickname;
+        private String position;
         private String profileImageUrl;
         private String about;
         private List<SocialLinkItem> socialLinks;
 
         public static UserProfile of(
                 String nickname,
+                String position,
                 String profileImageUrl,
                 String about,
                 List<SocialLinkItem> socialLinks
         ) {
             return UserProfile.builder()
                     .nickname(nickname)
+                    .position(position)
                     .profileImageUrl(profileImageUrl)
                     .about(about)
                     .socialLinks(socialLinks)
