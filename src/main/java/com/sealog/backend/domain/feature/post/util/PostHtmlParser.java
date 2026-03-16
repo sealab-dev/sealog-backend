@@ -247,4 +247,26 @@ public class PostHtmlParser {
         log.debug("src 속성 주입 완료: 대상 img 수={}", images.size());
         return doc.body().html();
     }
+
+    /**
+     * HTML 본문에서 최대 100자의 요약 텍스트를 추출합니다.
+     * 모든 HTML 태그를 제거하고 순수 텍스트만 추출합니다.
+     *
+     * @param html 원본 HTML
+     * @return 최대 100자의 요약 문자열
+     */
+    public static String extractExcerpt(String html) {
+        if (html == null || html.isBlank()) {
+            return "";
+        }
+
+        Document doc = Jsoup.parseBodyFragment(html);
+        String text = doc.body().text();
+
+        if (text.length() <= 100) {
+            return text;
+        }
+
+        return text.substring(0, 100);
+    }
 }

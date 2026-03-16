@@ -28,11 +28,6 @@ public class PostMeRequest {
         @Schema(description = "제목", example = "Spring Boot 시작하기", maxLength = 50)
         private String title;
 
-        @NotBlank(message = "요약을 입력해주세요")
-        @Size(max = 200, message = "요약은 200자 이내로 입력해주세요")
-        @Schema(description = "요약", example = "Spring Boot 핵심 개념을 정리합니다.", maxLength = 200)
-        private String excerpt;
-
         @NotBlank(message = "내용을 입력해주세요")
         @Size(max = 150000, message = "본문이 최대길이를 초과했습니다.")
         @Schema(description = "본문", example = "여기에 본문을 작성합니다.", maxLength = 150000)
@@ -41,7 +36,7 @@ public class PostMeRequest {
         @Schema(description = "시리즈 ID", example = "1")
         private Long seriesId;
 
-        @Size(max = 3, message = "태그는 최대 3개까지 등록할 수 있습니다")
+        @Size(max = 5, message = "태그는 최대 5개까지 등록할 수 있습니다")
         @Schema(description = "태그 목록", example = "[\"spring\", \"jwt\"]")
         private List<String> tags;
 
@@ -67,11 +62,6 @@ public class PostMeRequest {
         @Schema(description = "제목", example = "Spring Boot 시작하기", maxLength = 50)
         private String title;
 
-        @NotBlank(message = "요약을 입력해주세요")
-        @Size(max = 200, message = "요약은 200자 이내로 입력해주세요")
-        @Schema(description = "요약", example = "Spring Boot 핵심 개념을 정리합니다.", maxLength = 200)
-        private String excerpt;
-
         @NotBlank(message = "내용을 입력해주세요")
         @Size(max = 150000, message = "본문이 최대길이를 초과했습니다.")
         @Schema(description = "본문", example = "내용 여기에 본문을 작성합니다.", maxLength = 150000)
@@ -80,7 +70,7 @@ public class PostMeRequest {
         @Schema(description = "시리즈 ID", example = "1")
         private Long seriesId;
 
-        @Size(max = 3, message = "태그는 최대 3개까지 등록할 수 있습니다")
+        @Size(max = 5, message = "태그는 최대 5개까지 등록할 수 있습니다")
         @Schema(description = "태그 목록", example = "[\"spring\", \"jwt\"]")
         private List<String> tags;
 

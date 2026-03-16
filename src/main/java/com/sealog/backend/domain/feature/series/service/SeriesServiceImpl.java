@@ -12,6 +12,11 @@ import com.sealog.backend.domain.feature.post.repository.PostRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
+import com.sealog.backend.domain.feature.post.service.PostStackService;
+import com.sealog.backend.domain.feature.post.service.PostTagService;
+import com.sealog.backend.infra.storage.service.FileStorageService;
+import com.sealog.backend.domain.feature.post.dto.PostMeResponse;
+import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -19,7 +24,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Transactional(readOnly = true)
 @Slf4j
@@ -30,16 +37,19 @@ public class SeriesServiceImpl implements SeriesService {
     private final SeriesRepository seriesRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final PostTagService postTagService;
+    private final PostStackService postStackService;
+    private final FileStorageService fileStorageService;
 
     // ========== Guest (공개) ========== //
 
     @Override
-    public Page<SeriesResponse.PostItem> getPagedPostItemsByNickname(String nickname, String slug, Pageable pageable) {
+    public Page<SeriesResponse.SeriesPostItem> getPagedPostItemsByNickname(String nickname, String slug, Pageable pageable) {
         Series series = seriesRepository.findByNicknameAndSlug(nickname, slug)
                 .orElseThrow(() -> CustomException.notFound("시리즈를 찾을 수 없습니다."));
 
         return postRepository.findBySeriesIdAndStatus(series.getId(), PostStatus.PUBLISHED, pageable)
-                .map(this::toPublicPostItem);
+                .map(this::toPublicSeriesPostItem);
     }
 
     @Override
@@ -51,15 +61,14 @@ public class SeriesServiceImpl implements SeriesService {
     // ========== User (인증/소유자) ========== //
 
     @Override
-    public Page<SeriesMeResponse.MyPostItem> getPagedPostItemsMe(Long userId, String slug, Pageable pageable) {
+    public Page<SeriesMeResponse.MySeriesPostItem> getPagedPostItemsMe(Long userId, String slug, Pageable pageable) {
         Series series = seriesRepository.findByNicknameAndSlug(null, slug)
                 .orElseThrow(() -> CustomException.notFound("시리즈를 찾을 수 없습니다."));
         
         verifyOwner(series, userId);
 
         return postRepository.findByUserIdAndSeriesId(userId, series.getId(), pageable)
-
-                .map(this::toMePostItem);
+                .map(this::toMeSeriesPostItem);
     }
 
     @Override
@@ -136,24 +145,56 @@ public class SeriesServiceImpl implements SeriesService {
     // ========== DTO Mappers ========== //
 
     private SeriesResponse.SeriesItem toPublicSeriesItem(Series entity) {
-        return SeriesResponse.SeriesItem.of(entity.getId(), entity.getSlug(), entity.getName());
+        long postCount = postRepository.countBySeriesIdAndStatusAndDeletedAtIsNull(entity.getId(), PostStatus.PUBLISHED);
+        return SeriesResponse.SeriesItem.of(entity.getId(), entity.getSlug(), entity.getName(), postCount);
     }
 
-    private SeriesResponse.PostItem toPublicPostItem(Post entity) {
-        return SeriesResponse.PostItem.of(entity.getId(), entity.getTitle(), entity.getSlug(), entity.getThumbnailPath());
+    private SeriesResponse.SeriesPostItem toPublicSeriesPostItem(Post entity) {
+        List<String> tags = postTagService.getTagNamesByPostId(entity.getId());
+        List<PostResponse.StackItem> stacks = postStackService.getPostStacksByPostId(entity.getId()).stream()
+                .map(ps -> PostResponse.StackItem.of(ps.getStack().getId(), ps.getStack().getName(), ps.getSortOrder()))
+                .collect(Collectors.toList());
+
+        PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
+                entity.getUser().getNickname(),
+                fileStorageService.getFileUrl(entity.getUser().getProfileImagePath())
+        );
+
+        return SeriesResponse.SeriesPostItem.of(
+                entity.getId(),
+                entity.getSlug(),
+                entity.getTitle(),
+                entity.getExcerpt(),
+                entity.getStatus(),
+                fileStorageService.getFileUrl(entity.getThumbnailPath()),
+                tags,
+                stacks,
+                author,
+                entity.getCreatedAt()
+        );
     }
 
     private SeriesMeResponse.MySeriesItem toMeSeriesItem(Series entity) {
-        return SeriesMeResponse.MySeriesItem.of(entity.getId(), entity.getSlug(), entity.getName(), entity.isPublic());
+        long postCount = postRepository.countBySeriesIdAndDeletedAtIsNull(entity.getId());
+        return SeriesMeResponse.MySeriesItem.of(entity.getId(), entity.getSlug(), entity.getName(), entity.isPublic(), postCount);
     }
 
-    private SeriesMeResponse.MyPostItem toMePostItem(Post entity) {
-        return SeriesMeResponse.MyPostItem.of(
-                entity.getId(), 
+    private SeriesMeResponse.MySeriesPostItem toMeSeriesPostItem(Post entity) {
+        List<String> tags = postTagService.getTagNamesByPostId(entity.getId());
+        List<PostMeResponse.MyStackItem> stacks = postStackService.getPostStacksByPostId(entity.getId()).stream()
+                .map(ps -> PostMeResponse.MyStackItem.of(ps.getStack().getId(), ps.getStack().getName(), ps.getSortOrder()))
+                .collect(Collectors.toList());
+
+        return SeriesMeResponse.MySeriesPostItem.of(
+                entity.getId(),
+                entity.getSlug(),
                 entity.getTitle(),
-                entity.getSlug(), 
-                entity.getThumbnailPath(),
-                entity.getStatus().name()
+                entity.getExcerpt(),
+                entity.getStatus(),
+                fileStorageService.getFileUrl(entity.getThumbnailPath()),
+                tags,
+                stacks,
+                entity.getCreatedAt()
         );
     }
 

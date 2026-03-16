@@ -98,8 +98,7 @@ public class PostServiceImpl implements PostService {
                 post.getId(),
                 post.getSlug(),
                 post.getTitle(),
-                post.getExcerpt(),
-                post.getContent(),
+                PostHtmlParser.injectSrcAttributes(post.getContent(), fileStorageService.getBaseUrl()),
                 post.getStatus(),
                 fileStorageService.getFileUrl(post.getThumbnailPath()),
                 tagNames,
@@ -150,7 +149,7 @@ public class PostServiceImpl implements PostService {
                 .user(user)
                 .title(request.getTitle())
                 .slug(slug)
-                .excerpt(request.getExcerpt())
+                .excerpt(PostHtmlParser.extractExcerpt(refinedHtml))
                 .content(refinedHtml)
                 .status(PostStatus.PUBLISHED)
                 .build());
@@ -205,7 +204,7 @@ public class PostServiceImpl implements PostService {
             post.removeFromSeries();
         }
 
-        post.update(request.getTitle(), newSlug, request.getExcerpt(), finalContent);
+        post.update(request.getTitle(), newSlug, PostHtmlParser.extractExcerpt(finalContent), finalContent);
         postStackService.updatePostStacks(post.getId(), request.getStackIds());
         postTagService.updatePostTags(post.getId(), request.getTags());
 

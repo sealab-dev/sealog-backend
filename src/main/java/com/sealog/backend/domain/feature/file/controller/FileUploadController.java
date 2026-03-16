@@ -1,6 +1,7 @@
 package com.sealog.backend.domain.feature.file.controller;
 
 import com.sealog.backend.domain.base.validation.annotation.CheckFile;
+import com.sealog.backend.domain.base.validation.enums.AllowedFileType;
 import com.sealog.backend.domain.feature.file.dto.FileResponse;
 import com.sealog.backend.domain.feature.file.entity.FileMetadata;
 import com.sealog.backend.domain.feature.file.service.FileMetadataService;
@@ -53,26 +54,40 @@ public class FileUploadController {
      * 4. 업로드 결과 반환
      *
      * @param file 업로드할 파일
-     * @return FileUploadResponse 업로드된 파일 정보 (ID, URL 등)
+     * @return FileResponse 업로드된 파일 정보 (ID, URL 등)
      * @throws IOException 파일 처리 중 오류 발생 시
      */
     @Operation(
             summary = "파일 업로드",
-            description = "파일을 업로드하고 메타데이터를 저장한 뒤 업로드 결과를 반환합니다.")
+            description = """
+                    파일을 S3에 업로드하고 메타데이터를 저장한 뒤 업로드 결과를 반환합니다.
+
+                    **제약 조건**
+                    - 최대 파일 크기: 100MB
+                    - 허용 파일 타입: 이미지 (jpg, jpeg, png, gif, webp, svg, bmp) / 영상 (mp4, mpeg, mov, avi, flv, webm, mkv)
+                    - 파일 타입은 MIME 타입 및 확장자 이중 검증
+
+                    **응답 data 필드**: `FileResponse` (id, originalName, path, fileUrl, size, contentType)
+                    """
+    )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "업로드 성공"),
-            @ApiResponse(responseCode = "400", description = "파일 검증 실패(확장자/크기/MIME 타입 등)"),
-            @ApiResponse(responseCode = "401", description = "인증 필요"),
-            @ApiResponse(responseCode = "500", description = "서버 오류")
+            @ApiResponse(responseCode = "200", description = "업로드 성공",
+                    content = @Content(schema = @Schema(implementation = FileResponse.class))),
+            @ApiResponse(responseCode = "400", description = "파일 검증 실패 (확장자·크기·MIME 타입 오류)",
+                    content = @Content(schema = @Schema(hidden = true))),
+            @ApiResponse(responseCode = "401", description = "인증 필요",
+                    content = @Content(schema = @Schema(hidden = true))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류 (S3 업로드 실패 등)",
+                    content = @Content(schema = @Schema(hidden = true)))
     })
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Transactional
     public FileResponse uploadFile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Parameter(description = "업로드할 파일", required = true,
+            @Parameter(description = "업로드할 파일 (multipart/form-data)", required = true,
                     content = @Content(mediaType = "application/octet-stream",
                             schema = @Schema(type = "string", format = "binary")))
-            @CheckFile(maxSizeMB = 100)
+            @CheckFile(allowed = {AllowedFileType.IMAGE, AllowedFileType.VIDEO}, maxSizeMB = 100)
             @RequestPart("file") MultipartFile file
     ) throws IOException {
         log.debug("파일 업로드 요청: filename={}, contentType={}, size={}bytes",

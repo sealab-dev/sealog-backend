@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.sealog.backend"
-version = "@v1.0"
+version = "@v2_0_0"
 description = "sealog backend"
 
 bootJar {
