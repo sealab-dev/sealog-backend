@@ -40,18 +40,18 @@ public class PostHtmlParser {
          */
         public String finalize(Set<Long> invalidIds) {
             Document copy = doc.clone();
-            for (Element img : copy.body().select("img")) {
-                img.removeAttr("src");
+            for (Element el : copy.body().select("img, video")) {
+                el.removeAttr("src");
 
-                String fileIdStr = img.attr("data-file-id");
+                String fileIdStr = el.attr("data-file-id");
                 if (!fileIdStr.isEmpty()) {
                     try {
                         if (!invalidIds.isEmpty() && invalidIds.contains(Long.parseLong(fileIdStr))) {
-                            img.remove();
+                            el.remove();
                         }
                     } catch (NumberFormatException e) {
                         log.warn("data-file-id 파싱 실패로 태그 제거: value={}", fileIdStr);
-                        img.remove();
+                        el.remove();
                     }
                 }
             }
@@ -79,11 +79,11 @@ public class PostHtmlParser {
 
         // 2. 파일 ID 추출 (DOM 순회, 재파싱 없음)
         Set<Long> fileIds = new HashSet<>();
-        for (Element img : doc.body().select("img[data-file-id]")) {
+        for (Element el : doc.body().select("img[data-file-id], video[data-file-id]")) {
             try {
-                fileIds.add(Long.parseLong(img.attr("data-file-id")));
+                fileIds.add(Long.parseLong(el.attr("data-file-id")));
             } catch (NumberFormatException e) {
-                log.warn("data-file-id 파싱 실패: value={}", img.attr("data-file-id"));
+                log.warn("data-file-id 파싱 실패: value={}", el.attr("data-file-id"));
             }
         }
 
@@ -106,10 +106,10 @@ public class PostHtmlParser {
         }
 
         Document doc = Jsoup.parseBodyFragment(html);
-        Elements images = doc.select("img[data-file-id]");
+        Elements mediaElements = doc.select("img[data-file-id], video[data-file-id]");
 
-        for (Element img : images) {
-            String fileIdStr = img.attr("data-file-id");
+        for (Element el : mediaElements) {
+            String fileIdStr = el.attr("data-file-id");
             try {
                 fileIds.add(Long.parseLong(fileIdStr));
             } catch (NumberFormatException e) {
@@ -137,18 +137,18 @@ public class PostHtmlParser {
         Document doc = Jsoup.parseBodyFragment(html);
         doc.outputSettings().prettyPrint(false);
 
-        Elements images = doc.select("img[data-file-id]");
+        Elements mediaElements = doc.select("img[data-file-id], video[data-file-id]");
         int removedCount = 0;
-        for (Element img : images) {
+        for (Element el : mediaElements) {
             try {
-                Long fileId = Long.parseLong(img.attr("data-file-id"));
+                Long fileId = Long.parseLong(el.attr("data-file-id"));
                 if (invalidFileIds.contains(fileId)) {
-                    img.remove();
+                    el.remove();
                     removedCount++;
                 }
             } catch (NumberFormatException e) {
-                log.warn("data-file-id 파싱 실패로 태그 제거: value={}", img.attr("data-file-id"));
-                img.remove();
+                log.warn("data-file-id 파싱 실패로 태그 제거: value={}", el.attr("data-file-id"));
+                el.remove();
                 removedCount++;
             }
         }
@@ -174,19 +174,19 @@ public class PostHtmlParser {
         doc.outputSettings().prettyPrint(false);
 
         int removedCount = 0;
-        for (Element img : doc.select("img")) {
-            img.removeAttr("src");
+        for (Element el : doc.select("img, video")) {
+            el.removeAttr("src");
 
-            String fileIdStr = img.attr("data-file-id");
+            String fileIdStr = el.attr("data-file-id");
             if (!fileIdStr.isEmpty() && !invalidFileIds.isEmpty()) {
                 try {
                     if (invalidFileIds.contains(Long.parseLong(fileIdStr))) {
-                        img.remove();
+                        el.remove();
                         removedCount++;
                     }
                 } catch (NumberFormatException e) {
                     log.warn("data-file-id 파싱 실패로 태그 제거: value={}", fileIdStr);
-                    img.remove();
+                    el.remove();
                     removedCount++;
                 }
             }
@@ -211,12 +211,12 @@ public class PostHtmlParser {
         Document doc = Jsoup.parseBodyFragment(html);
         doc.outputSettings().prettyPrint(false);
 
-        Elements images = doc.select("img[src]");
-        for (Element img : images) {
-            img.removeAttr("src");
+        Elements mediaElements = doc.select("img[src], video[src]");
+        for (Element el : mediaElements) {
+            el.removeAttr("src");
         }
 
-        log.debug("src 속성 제거 완료: 대상 img 수={}", images.size());
+        log.debug("src 속성 제거 완료: 대상 수={}", mediaElements.size());
         return doc.body().html();
     }
 
@@ -237,14 +237,14 @@ public class PostHtmlParser {
         Document doc = Jsoup.parseBodyFragment(html);
         doc.outputSettings().prettyPrint(false);
 
-        Elements images = doc.select("img[data-file-path]");
-        for (Element img : images) {
-            String filePath = img.attr("data-file-path");
+        Elements mediaElements = doc.select("img[data-file-path], video[data-file-path]");
+        for (Element el : mediaElements) {
+            String filePath = el.attr("data-file-path");
             String src = filePath.startsWith("/") ? base + filePath : base + "/" + filePath;
-            img.attr("src", src);
+            el.attr("src", src);
         }
 
-        log.debug("src 속성 주입 완료: 대상 img 수={}", images.size());
+        log.debug("src 속성 주입 완료: 대상 수={}", mediaElements.size());
         return doc.body().html();
     }
 
