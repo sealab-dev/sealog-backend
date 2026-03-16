@@ -62,6 +62,7 @@ class UserMeIntegrationTest extends TestIntegrationBase {
                     .andExpect(jsonPath("$.data.id").value(testUser.getId()))
                     .andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
                     .andExpect(jsonPath("$.data.nickname").value(testUser.getNickname()))
+                    .andExpect(jsonPath("$.data.position").exists())
                     .andExpect(jsonPath("$.data.role").doesNotExist())
                     .andExpect(jsonPath("$.data.socialLinks").isArray());
         }
@@ -100,6 +101,40 @@ class UserMeIntegrationTest extends TestIntegrationBase {
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.nickname").value("새닉네임"))
                     .andExpect(jsonPath("$.message").value("프로필이 수정되었습니다"));
+        }
+
+        @Test
+        @DisplayName("성공 - 포지션 수정 → 200, 수정된 포지션 반환")
+        void 포지션_수정_성공() throws Exception {
+            // given
+            CustomUserDetails userDetails = new CustomUserDetails(testUser);
+            UserMeRequest.UpdateProfile request = UserMeRequest.UpdateProfile.builder()
+                    .position("Java/Spring 백엔드 개발자")
+                    .build();
+
+            // when & then
+            mockMvc.perform(multipart(HttpMethod.PATCH, "/api/me/profile")
+                            .file(toMultipartJson("request", request))
+                            .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.position").value("Java/Spring 백엔드 개발자"));
+        }
+
+        @Test
+        @DisplayName("실패 - 포지션 100자 초과 → 400")
+        void 포지션_유효성_실패() throws Exception {
+            // given
+            CustomUserDetails userDetails = new CustomUserDetails(testUser);
+            UserMeRequest.UpdateProfile request = UserMeRequest.UpdateProfile.builder()
+                    .position("a".repeat(101))
+                    .build();
+
+            // when & then
+            mockMvc.perform(multipart(HttpMethod.PATCH, "/api/me/profile")
+                            .file(toMultipartJson("request", request))
+                            .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
+                    .andExpect(status().isBadRequest());
         }
 
         @Test

@@ -43,6 +43,7 @@ public class UserServiceImpl implements UserService {
                 user.getEmail(),
                 user.getName(),
                 user.getNickname(),
+                user.getPosition(),
                 user.getAbout(),
                 fileStorageService.getFileUrl(user.getProfileImagePath()),
                 socialLinks
@@ -68,6 +69,10 @@ public class UserServiceImpl implements UserService {
             }
         }
 
+        if (request.getPosition() != null) {
+            user.updatePosition(request.getPosition());
+        }
+
         if (request.getAbout() != null) {
             user.updateAbout(request.getAbout());
         }
@@ -87,6 +92,7 @@ public class UserServiceImpl implements UserService {
                 user.getEmail(),
                 user.getName(),
                 user.getNickname(),
+                user.getPosition(),
                 user.getAbout(),
                 fileStorageService.getFileUrl(user.getProfileImagePath()),
                 socialLinks
@@ -128,6 +134,7 @@ public class UserServiceImpl implements UserService {
         List<UserResponse.SocialLinkItem> socialLinks = userSocialService.getPublicLinks(nickname);
         return UserResponse.UserProfile.of(
                 user.getNickname(),
+                user.getPosition(),
                 fileStorageService.getFileUrl(user.getProfileImagePath()),
                 user.getAbout(),
                 socialLinks

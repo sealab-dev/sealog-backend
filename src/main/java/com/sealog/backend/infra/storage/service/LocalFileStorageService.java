@@ -231,7 +231,7 @@ public class LocalFileStorageService implements FileStorageService {
                 ? "%s%s".formatted(baseUrl, fileKey)
                 : "%s/%s".formatted(baseUrl, fileKey);
 
-        log.info("로컬 파일 URL 생성 완료: path={}", url);
+        log.debug("로컬 파일 URL 생성 완료: path={}", url);
         return url;
     }
 
