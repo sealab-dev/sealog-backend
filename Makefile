@@ -1,6 +1,6 @@
 # ── 변수 선언 ─────────────────────────────────────────────────────────────────
 DEV_COMPOSE_FILE := docker/docker-compose.yml
-PERF_COMPOSE_FILE := docker/docker-compose.perf.yml
+PERF_COMPOSE_FILE := docker/docker-compose.test.server.yml
 DOCKERFILE := docker/Dockerfile
 
 # ── 기본 타겟 ─────────────────────────────────────────────────────────────────

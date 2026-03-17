@@ -2,8 +2,8 @@ package com.sealog.backend.infra.storage.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -15,7 +15,7 @@ import java.nio.file.Paths;
  * /files/** 경로로 로컬 파일 접근 가능하도록 ResourceHandler 등록
  */
 @Configuration
-@Profile({"local", "test"})
+@ConditionalOnProperty(name = "sealog.storage.type", havingValue = "local", matchIfMissing = true)
 @RequiredArgsConstructor
 public class LocalStorageConfig implements WebMvcConfigurer {
 
