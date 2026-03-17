@@ -75,8 +75,8 @@ public class SecurityConfig {
                         // 인증 없이 접근 가능한 경로
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/me/**").hasRole("USER")
-                        .requestMatchers("/api/files/**").hasRole("USER")
+                        .requestMatchers("/api/me/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/files/**").hasAnyRole("USER", "ADMIN")
                         // 그 외 모든 요청은 다 허용
                         .anyRequest().permitAll()
                 )
