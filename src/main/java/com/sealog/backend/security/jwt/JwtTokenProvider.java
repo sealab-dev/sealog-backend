@@ -120,6 +120,10 @@ public class JwtTokenProvider {
         return Long.parseLong(claims.getSubject());
     }
 
+    public long getRefreshTokenValidity() {
+        return refreshTokenValidity;
+    }
+
     /**
      * 토큰에서 이메일 추출
      *

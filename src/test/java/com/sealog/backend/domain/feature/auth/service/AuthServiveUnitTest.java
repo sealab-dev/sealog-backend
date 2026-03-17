@@ -7,8 +7,9 @@ import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.domain.feature.user.service.UserValidatorService;
 import com.sealog.backend.global.exception.CustomException;
-import com.sealog.backend.security.jwt.JwtTokenProvider;
+import com.sealog.backend.infra.redis.repository.RefreshTokenRepository;
 import com.sealog.backend.infra.storage.service.FileStorageService;
+import com.sealog.backend.security.jwt.JwtTokenProvider;
 import com.sealog.backend.support.base.TestUnitBase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +36,7 @@ class AuthServiveUnitTest extends TestUnitBase {
     @Mock UserValidatorService userValidatorService;
     @Mock JwtTokenProvider jwtTokenProvider;
     @Mock FileStorageService fileStorageService;
+    @Mock RefreshTokenRepository refreshTokenRepository;
 
     @InjectMocks
     AuthServiceImpl authService;
@@ -73,6 +75,7 @@ class AuthServiveUnitTest extends TestUnitBase {
             given(passwordEncoder.matches(TEST_PASSWORD, ENCODED_PW)).willReturn(true);
             given(jwtTokenProvider.createAccessToken(1L, TEST_EMAIL)).willReturn(ACCESS_TOKEN);
             given(jwtTokenProvider.createRefreshToken(1L, TEST_EMAIL)).willReturn(REFRESH_TOKEN);
+            given(jwtTokenProvider.getRefreshTokenValidity()).willReturn(86400000L);
 
             AuthRequest.Login request = AuthRequest.Login.builder()
                     .email(TEST_EMAIL).password(TEST_PASSWORD).build();
@@ -82,8 +85,8 @@ class AuthServiveUnitTest extends TestUnitBase {
             assertThat(result.getAccessToken()).isEqualTo(ACCESS_TOKEN);
             assertThat(result.getRefreshToken()).isEqualTo(REFRESH_TOKEN);
             assertThat(result.getAuthProfile().getEmail()).isEqualTo(TEST_EMAIL);
-            // DB에 리프레시 토큰이 저장되었는지 확인
-            assertThat(testUser.getRefreshToken()).isEqualTo(REFRESH_TOKEN);
+            // Redis에 리프레시 토큰이 저장되었는지 확인
+            verify(refreshTokenRepository).save(eq(1L), eq(REFRESH_TOKEN), eq(86400000L));
         }
 
         @Test
@@ -131,7 +134,7 @@ class AuthServiveUnitTest extends TestUnitBase {
 
         @BeforeEach
         void givenStoredToken() {
-            testUser.updateRefreshToken(REFRESH_TOKEN);
+            given(refreshTokenRepository.find(1L)).willReturn(Optional.of(REFRESH_TOKEN));
         }
 
         @Test
@@ -161,13 +164,12 @@ class AuthServiveUnitTest extends TestUnitBase {
         }
 
         @Test
-        @DisplayName("실패 - DB에 저장된 토큰과 다른 토큰으로 재발급하면 401 예외가 발생한다")
-        void DB_토큰_불일치() {
-            testUser.updateRefreshToken("token.saved.in.db");
-
+        @DisplayName("실패 - Redis에 저장된 토큰과 다른 토큰으로 재발급하면 401 예외가 발생한다")
+        void Redis_토큰_불일치() {
             given(jwtTokenProvider.validateToken(REFRESH_TOKEN)).willReturn(true);
             given(jwtTokenProvider.getUserId(REFRESH_TOKEN)).willReturn(1L);
             given(userRepository.findById(1L)).willReturn(Optional.of(testUser));
+            given(refreshTokenRepository.find(1L)).willReturn(Optional.of("token.saved.in.redis"));
 
             assertThatThrownBy(() -> authService.refresh(REFRESH_TOKEN))
                     .isInstanceOf(CustomException.class)
@@ -183,21 +185,15 @@ class AuthServiveUnitTest extends TestUnitBase {
     @DisplayName("로그아웃")
     class Logout {
 
-        @BeforeEach
-        void givenStoredToken() {
-            testUser.updateRefreshToken(REFRESH_TOKEN);
-        }
-
         @Test
-        @DisplayName("성공 - 유효한 토큰으로 로그아웃하면 DB의 리프레시 토큰이 삭제된다")
+        @DisplayName("성공 - 유효한 토큰으로 로그아웃하면 Redis의 리프레시 토큰이 삭제된다")
         void 성공() {
             given(jwtTokenProvider.validateToken(REFRESH_TOKEN)).willReturn(true);
             given(jwtTokenProvider.getUserId(REFRESH_TOKEN)).willReturn(1L);
-            given(userRepository.findById(1L)).willReturn(Optional.of(testUser));
 
             authService.logout(REFRESH_TOKEN);
 
-            assertThat(testUser.getRefreshToken()).isNull();
+            verify(refreshTokenRepository).delete(1L);
         }
 
         @Test
@@ -208,8 +204,8 @@ class AuthServiveUnitTest extends TestUnitBase {
             assertThatCode(() -> authService.logout("invalid.token"))
                     .doesNotThrowAnyException();
 
-            // userId 추출 → DB 조회까지 진행되면 안 됨
-            verify(userRepository, never()).findById(anyLong());
+            // userId 추출 → Redis 삭제까지 진행되면 안 됨
+            verify(refreshTokenRepository, never()).delete(anyLong());
         }
     }
 }

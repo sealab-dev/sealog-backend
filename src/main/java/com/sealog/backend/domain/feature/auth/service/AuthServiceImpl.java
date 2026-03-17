@@ -2,10 +2,10 @@ package com.sealog.backend.domain.feature.auth.service;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
+import com.sealog.backend.infra.redis.repository.RefreshTokenRepository;
 import com.sealog.backend.infra.storage.service.FileStorageService;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
 import com.sealog.backend.domain.feature.user.entity.User;
-import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.domain.feature.user.service.UserValidatorService;
 import com.sealog.backend.global.exception.CustomException;
@@ -26,6 +26,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserValidatorService userValidatorService;
     private final JwtTokenProvider jwtTokenProvider;
     private final FileStorageService fileStorageService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     public AuthResponse.AuthProfile getMe(Long userId) {
@@ -49,8 +50,8 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId(), user.getEmail());
 
-        //  Refresh Token DB 저장
-        user.updateRefreshToken(refreshToken);
+        // Refresh Token Redis 저장
+        refreshTokenRepository.save(user.getId(), refreshToken, jwtTokenProvider.getRefreshTokenValidity());
 
         AuthResponse.AuthProfile authProfile = AuthResponse.AuthProfile.from(user, fileStorageService.getFileUrl(user.getProfileImagePath()));
 
@@ -72,8 +73,12 @@ public class AuthServiceImpl implements AuthService {
         Long userId = jwtTokenProvider.getUserId(refreshToken);
         User user = getUserById(userId);
 
-        // DB 저장 토큰과 비교
-        validateStoredRefreshToken(user, refreshToken);
+        // Redis 저장 토큰과 비교
+        String stored = refreshTokenRepository.find(userId)
+                .orElseThrow(() -> CustomException.unauthorized("유효하지 않은 Refresh Token입니다"));
+        if (!stored.equals(refreshToken)) {
+            throw CustomException.unauthorized("유효하지 않은 Refresh Token입니다");
+        }
 
         // 새 Access Token 생성
         String newAccessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
@@ -87,24 +92,16 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
     public void logout(String refreshToken) {
-        // 유효한 경우에만 userId 추출 → DB에서 삭제
+        // 유효한 경우에만 userId 추출 → Redis에서 삭제
         if (jwtTokenProvider.validateToken(refreshToken)) {
             Long userId = jwtTokenProvider.getUserId(refreshToken);
-            userRepository.findById(userId).ifPresent(User::clearRefreshToken);
+            refreshTokenRepository.delete(userId);
         }
     }
 
     private User getUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
-    }
-
-    private void validateStoredRefreshToken(User user, String refreshToken) {
-        String storedToken = user.getRefreshToken();
-        if (storedToken == null || !storedToken.equals(refreshToken)) {
-            throw CustomException.unauthorized("유효하지 않은 Refresh Token입니다");
-        }
     }
 }
