@@ -3,7 +3,7 @@ package com.sealog.backend.domain.feature.file.integration;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.security.auth.CustomUserDetails;
-import com.sealog.backend.support.base.TestIntegrationBase;
+import com.sealog.backend.support.base.test.IntegrationTest;
 import com.sealog.backend.support.component.TestDataFactory;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * File 통합 테스트 (Controller → Service → Repository)
  */
 @DisplayName("File 통합 테스트 (Controller → Service → Repository)")
-class FileIntegrationTest extends TestIntegrationBase {
+class FileIntegrationTest extends IntegrationTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired TestDataFactory testDataFactory;

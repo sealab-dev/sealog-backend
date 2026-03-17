@@ -5,7 +5,7 @@ import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
-import com.sealog.backend.support.base.TestUnitBase;
+import com.sealog.backend.support.base.test.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -23,7 +23,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @DisplayName("UserService 단위 테스트")
-class UserServiceUnitTest extends TestUnitBase {
+class UserServiceUnitTest extends UnitTest {
 
     @Mock UserRepository userRepository;
     @Mock UserValidatorService userValidatorService;

@@ -7,7 +7,7 @@ import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.domain.feature.auth.store.RefreshTokenStore;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
-import com.sealog.backend.support.base.TestIntegrationBase;
+import com.sealog.backend.support.base.test.IntegrationTest;
 import com.sealog.backend.support.component.TestDataFactory;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Auth 통합 테스트
  */
 @DisplayName("Auth 통합 테스트 (Controller → Service → Repository)")
-class AuthIntegrationTest extends TestIntegrationBase {
+class AuthIntegrationTest extends IntegrationTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;

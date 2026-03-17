@@ -1,6 +1,7 @@
 package com.sealog.backend.support.component;
 
 
+import com.sealog.backend.domain.base.util.SlugUtils;
 import com.sealog.backend.domain.feature.series.entity.Series;
 import com.sealog.backend.domain.feature.series.repository.SeriesRepository;
 import com.sealog.backend.domain.feature.post.entity.Post;
@@ -12,7 +13,8 @@ import com.sealog.backend.domain.feature.stack.repository.StackRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
-import com.sealog.backend.global.utils.LogUtils;
+import com.sealog.backend.support.constant.TestContainer;
+import com.sealog.backend.support.constant.TestSql;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.context.TestComponent;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -21,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.LongStream;
@@ -34,14 +37,42 @@ import java.util.stream.LongStream;
 @RequiredArgsConstructor
 public class TestDataFactory {
 
-    private final JdbcTemplate jdbcTemplate;
+    // repository 의존성
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final SeriesRepository seriesRepository;
     private final StackRepository stackRepository;
 
+    // JDBC 직접 사용
+    private final JdbcTemplate jdbcTemplate;
+
     // 패스워드 인코더 직접 주입(스프링 의존성 제거)
     private final PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+
+
+
+    // =========================================================
+    // 태이블 일괄 삭제
+    // =========================================================
+
+    /**
+     * 테스트 환경의 테이블 내 데이터 일괄 삭제 (TRUNCATE)
+     * DELETE 기반 삭제보다 빠르고, AUTO_INCREMENT 초기화
+     */
+    public void clearTable() {
+
+        // 1. FK Constraint 비활성화
+        jdbcTemplate.execute(TestSql.FOREIGN_KEY_CHECKS_INACTIVATION);
+
+        // 2. 테이블 행 일괄 삭제
+        jdbcTemplate
+                .queryForList(TestSql.SELECT_TABLE_NAMES, String.class, TestContainer.DEFAULT_DATABASE_NAME)
+                .forEach(tableName -> jdbcTemplate.execute(TestSql.TRUNCATE_TABLE + tableName));
+
+        // 3. FK Constraint 활성화
+        jdbcTemplate.execute(TestSql.FOREIGN_KEY_CHECKS_ACTIVATION);
+    }
+
 
     // =========================================================
     // 단일 생성
@@ -67,7 +98,21 @@ public class TestDataFactory {
      */
     public Post createPost(User user, PostStatus status) {
         return postRepository.save(
-                createEntity(postRepository::count, idx -> buildPost(user, status, idx))
+                createEntity(postRepository::count, idx -> buildPost(idx, user, status))
+        );
+    }
+
+
+    /**
+     * Post 단일 생성 (커스텀 제목)
+     * @param user   작성자
+     * @param status 게시글 상태
+     * @param title  커스텀 제목
+     * @return 저장된 Post 엔티티 (ID 포함)
+     */
+    public Post createPost(User user, PostStatus status, String title) {
+        return postRepository.save(
+                createEntity(postRepository::count, idx -> buildPost(idx, user, status, title))
         );
     }
 
@@ -82,10 +127,29 @@ public class TestDataFactory {
     public Post createPost(User user, Series series, PostStatus status) {
 
         // 1. 엔티티 생성 및 시리즈 삽입
-        Post post = createEntity(postRepository::count, idx -> buildPost(user, status, idx));
+        Post post = createEntity(postRepository::count, idx -> buildPost(idx, user, status));
         post.addToSeries(series);
 
         // 2. 생성 및 반환
+        return postRepository.save(post);
+    }
+
+    /**
+     * Post 단일 생성 (소프트 삭제 상태)
+     * @param user 작성자
+     * @return deletedAt이 설정된 소프트 삭제된 Post 엔티티 (ID 포함)
+     */
+    public Post createDeletedPost(User user) {
+
+        // 1. 엔티티 생성
+        Post post = createEntity(
+                postRepository::count, idx -> buildPost(idx, user, PostStatus.PUBLISHED)
+        );
+
+        // 2. 소프트 삭제 처리
+        post.softDelete();
+
+        // 3. 저장 및 반환
         return postRepository.save(post);
     }
 
@@ -97,7 +161,7 @@ public class TestDataFactory {
      */
     public Series createSeries(User user, boolean isPublic) {
         return seriesRepository.save(
-                createEntity(seriesRepository::count, idx -> buildSeries(user, isPublic, idx))
+                createEntity(seriesRepository::count, idx -> buildSeries(idx, user, isPublic))
         );
     }
 
@@ -109,7 +173,7 @@ public class TestDataFactory {
      */
     public Stack createStack(StackGroup stackGroup) {
         return stackRepository.save(
-                createEntity(stackRepository::count, idx -> buildStack(stackGroup, idx))
+                createEntity(stackRepository::count, idx -> buildStack(idx, stackGroup))
         );
     }
 
@@ -127,34 +191,30 @@ public class TestDataFactory {
     public void createTestUsers(int amount, UserRole role) {
 
         // 1. User 생성
-        List<User> users = createEntities(
-                amount,
-                userRepository::count,
-                idx -> buildUser(idx, "password", role)
+        List<Object[]> jdbcUsers = createEntities(
+                amount, userRepository::count, idx -> createUserArray(idx, "password", role)
         );
 
         // 2. 삽입 수행 (시간 측정)
-        LogUtils.runAndShowCostLog("테스트 사용자 저장", () -> userRepository.saveAll(users));
+        processBatchQuery(jdbcUsers, chunk -> jdbcTemplate.batchUpdate(TestSql.INSERT_USER, chunk));
     }
 
     /**
      * TEST Post 생성
-     * amount = 10 -> 제목000000~제목000009까지 생성
-     * @param amount 생성 수량
-     * @param status 블로그 게시글 상태
-     * @param user   블로그 작성자 회원 엔티티
+     * @param amount   생성 수량
+     * @param status   블로그 게시글 상태
+     * @param user     블로그 작성자 회원 엔티티
      */
     public void createTestPosts(int amount, PostStatus status, User user) {
 
         // 1. Post 생성
-        List<Post> posts = createEntities(
-                amount,
-                postRepository::count,
-                idx -> buildPost(user, status, idx)
+        List<Object[]> jdbcPosts = createEntities(
+                amount, postRepository::count, idx -> createPostArray(idx, status, user)
         );
 
-        // 2. 삽입 수행 (시간 측정)
-        LogUtils.runAndShowCostLog("테스트 블로그 저장", () -> postRepository.saveAll(posts));
+        // 2. 삽입 수행
+        // JPA batch 방식 (청크 단위 처리)
+        processBatchQuery(jdbcPosts, chunk -> jdbcTemplate.batchUpdate(TestSql.INSERT_POST, chunk));
     }
 
 
@@ -168,14 +228,12 @@ public class TestDataFactory {
     public void createTestSeries(int amount, boolean isPublic, User user) {
 
         // 1. Series 생성
-        List<Series> seriesList = createEntities(
-                amount,
-                seriesRepository::count,
-                idx -> buildSeries(user, isPublic, idx)
+        List<Object[]> jdbcSeries = createEntities(
+                amount, seriesRepository::count, idx -> createSeriesArray(idx, user, isPublic)
         );
 
         // 2. 삽입 수행 (시간 측정)
-        LogUtils.runAndShowCostLog("테스트 시리즈 저장", () -> seriesRepository.saveAll(seriesList));
+        processBatchQuery(jdbcSeries, chunk -> jdbcTemplate.batchUpdate(TestSql.INSERT_SERIES, chunk));
     }
 
     /**
@@ -191,36 +249,87 @@ public class TestDataFactory {
                 .build();
     }
 
+    private Object[] createUserArray(long idx, String rawPassword, UserRole role) {
+        return new Object[]{
+                "test%06d@test.com".formatted(idx),
+                passwordEncoder.encode(rawPassword),
+                "테스트%06d".formatted(idx),
+                "테스트%06d".formatted(idx),
+                role.name()
+        };
+    }
+
     /**
      * builder 기반 post entity 생성
      */
-    private Post buildPost(User user, PostStatus status, long idx) {
+    private Post buildPost(long idx, User user, PostStatus status) {
+
+        String title = TestTextGenerator.generatePostTitle(idx);
         return Post.builder()
                 .user(user)
-                .title("제목%06d".formatted(idx))
-                .slug("post-%06d".formatted(idx))
+                .title(title)
+                .slug(SlugUtils.generate(title))
                 .excerpt("요약%06d".formatted(idx))
                 .content("내용%06d".formatted(idx))
                 .status(status)
                 .build();
     }
 
+    private Post buildPost(long idx, User user, PostStatus status, String title) {
+        return Post.builder()
+                .user(user)
+                .title(title)
+                .slug(SlugUtils.generate(title))
+                .excerpt("요약%06d".formatted(idx))
+                .content("내용%06d".formatted(idx))
+                .status(status)
+                .build();
+    }
+
+    private Object[] createPostArray(long idx, PostStatus status, User user) {
+
+        String title = TestTextGenerator.generatePostTitle(idx);
+        return new Object[]{
+                user.getId(),
+                title,
+                SlugUtils.generate(title),
+                "요약%06d".formatted(idx),
+                "내용%06d".formatted(idx),
+                status.name()
+        };
+    }
+
+
     /**
      * builder 기반 series entity 생성
      */
-    private Series buildSeries(User user, boolean isPublic, long idx) {
+    private Series buildSeries(long idx, User user, boolean isPublic) {
+
+        String name = "시리즈%06d".formatted(idx);
         return Series.builder()
                 .user(user)
-                .name("시리즈%06d".formatted(idx))
-                .slug("series-%06d".formatted(idx))
+                .name(name)
+                .slug(SlugUtils.generate(name))
                 .isPublic(isPublic)
                 .build();
     }
 
+    private Object[] createSeriesArray(long idx, User user, boolean isPublic) {
+
+        String name = "시리즈%06d".formatted(idx);
+        return new Object[]{
+                user.getId(),
+                name,
+                SlugUtils.generate(name),
+                isPublic
+        };
+    }
+
+
     /**
      * builder 기반 stack entity 생성
      */
-    private Stack buildStack(StackGroup stackGroup, long idx) {
+    private Stack buildStack(long idx, StackGroup stackGroup) {
         return Stack.builder()
                 .name("스택%06d".formatted(idx))
                 .stackGroup(stackGroup)
@@ -228,6 +337,24 @@ public class TestDataFactory {
     }
 
 
+
+    // =========================================================
+    // 배치 처리
+    // =========================================================
+
+    private static final int BATCH_SIZE = 10_000;
+
+    /**
+     * 대용량 파라미터 리스트를 BATCH_SIZE 단위로 분할하여 배치 작업 실행 (JDBC 전용)
+     */
+    private void processBatchQuery(List<Object[]> params, Consumer<List<Object[]>> batchAction) {
+        for (int i = 0; i < params.size(); i += BATCH_SIZE)
+            batchAction.accept(params.subList(i, Math.min(i + BATCH_SIZE, params.size())));
+    }
+
+    // =========================================================
+    // 엔티티 생성 헬퍼
+    // =========================================================
 
     /**
      * 엔티티 생성 일반화 메소드

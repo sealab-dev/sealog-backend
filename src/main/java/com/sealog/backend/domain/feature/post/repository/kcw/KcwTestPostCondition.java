@@ -1,7 +1,8 @@
-package com.sealog.backend.domain.feature.post.repository.condition;
+package com.sealog.backend.domain.feature.post.repository.kcw;
 
 import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
+import com.sealog.backend.infra.constant.HibernateFunction;
 import lombok.experimental.UtilityClass;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -17,7 +18,7 @@ import java.util.Objects;
  * - searchByNickname → 특정 사용자의 PUBLISHED 게시글만 (공개 검색)
  */
 @UtilityClass
-public class PostCondition {
+public class KcwTestPostCondition {
 
     /**
      * 게시글 검색 조건 조합
@@ -35,6 +36,16 @@ public class PostCondition {
                 nicknameEquals(nickname)
         );
     }
+
+    public static Specification<Post> searchLike(String nickname, String keyword) {
+        return Specification.allOf(
+                notDeleted(),
+                keywordContainsLike(keyword),
+                onlyPublishedIfNicknameAbsent(nickname),
+                nicknameEquals(nickname)
+        );
+    }
+
 
     /**
      * 특정 사용자의 공개 게시글 검색 조건 조합
@@ -62,14 +73,26 @@ public class PostCondition {
         return (root, query, cb) -> cb.isNull(root.get("deletedAt"));
     }
 
-
-    /**
-     * 제목 또는 요약에 키워드 포함
-     */
-    private static Specification<Post> keywordContains(String keyword) {
+    // 기존 LIKE 기반 검색 (풀스캔) — 성능 비교를 위해 보존
+    private static Specification<Post> keywordContainsLike(String keyword) {
         return (root, query, cb) -> cb.or(
                 cb.like(root.get("title"), "%" + keyword + "%"),
                 cb.like(root.get("excerpt"), "%" + keyword + "%")
+        );
+    }
+
+    /**
+     * 제목 또는 요약에 키워드 포함 (FULLTEXT — ft_post_title_excerpt 인덱스 필요)
+     */
+    private static Specification<Post> keywordContains(String keyword) {
+        return (root, query, cb) -> cb.isTrue(
+                cb.function(
+                        HibernateFunction.MATCH_AGAINST,
+                        Boolean.class,
+                        root.get("title"),
+                        root.get("excerpt"),
+                        cb.literal(keyword)
+                )
         );
     }
 
