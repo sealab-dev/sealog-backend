@@ -199,10 +199,8 @@ public class S3FileStorageService implements FileStorageService {
     @Override
     public String getFileUrl(String fileKey) {
 
-        // 1. 주소 유효성 검증
         if (fileKey == null || fileKey.isBlank()) {
-            log.warn("파일 키가 null 또는 비어있음");
-            throw FileStorageException.badRequest("파일 키가 유효하지 않습니다.");
+            return null;
         }
 
         // 2. 로컬 환경에서는 직접 접근 URL 반환
