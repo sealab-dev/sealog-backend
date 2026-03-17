@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
-public class RefreshTokenRepository {
+public class RefreshTokenStore {
 
     private final StringRedisTemplate stringRedisTemplate;
 

@@ -7,7 +7,7 @@ import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.domain.feature.user.service.UserValidatorService;
 import com.sealog.backend.global.exception.CustomException;
-import com.sealog.backend.infra.redis.repository.RefreshTokenRepository;
+import com.sealog.backend.infra.redis.repository.RefreshTokenStore;
 import com.sealog.backend.infra.storage.service.FileStorageService;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
 import com.sealog.backend.support.base.TestUnitBase;
@@ -36,7 +36,8 @@ class AuthServiveUnitTest extends TestUnitBase {
     @Mock UserValidatorService userValidatorService;
     @Mock JwtTokenProvider jwtTokenProvider;
     @Mock FileStorageService fileStorageService;
-    @Mock RefreshTokenRepository refreshTokenRepository;
+    @Mock
+    RefreshTokenStore refreshTokenStore;
 
     @InjectMocks
     AuthServiceImpl authService;
@@ -86,7 +87,7 @@ class AuthServiveUnitTest extends TestUnitBase {
             assertThat(result.getRefreshToken()).isEqualTo(REFRESH_TOKEN);
             assertThat(result.getAuthProfile().getEmail()).isEqualTo(TEST_EMAIL);
             // Redis에 리프레시 토큰이 저장되었는지 확인
-            verify(refreshTokenRepository).save(eq(1L), eq(REFRESH_TOKEN), eq(86400000L));
+            verify(refreshTokenStore).save(eq(1L), eq(REFRESH_TOKEN), eq(86400000L));
         }
 
         @Test
@@ -134,7 +135,7 @@ class AuthServiveUnitTest extends TestUnitBase {
 
         @BeforeEach
         void givenStoredToken() {
-            given(refreshTokenRepository.find(1L)).willReturn(Optional.of(REFRESH_TOKEN));
+            given(refreshTokenStore.find(1L)).willReturn(Optional.of(REFRESH_TOKEN));
         }
 
         @Test
@@ -169,7 +170,7 @@ class AuthServiveUnitTest extends TestUnitBase {
             given(jwtTokenProvider.validateToken(REFRESH_TOKEN)).willReturn(true);
             given(jwtTokenProvider.getUserId(REFRESH_TOKEN)).willReturn(1L);
             given(userRepository.findById(1L)).willReturn(Optional.of(testUser));
-            given(refreshTokenRepository.find(1L)).willReturn(Optional.of("token.saved.in.redis"));
+            given(refreshTokenStore.find(1L)).willReturn(Optional.of("token.saved.in.redis"));
 
             assertThatThrownBy(() -> authService.refresh(REFRESH_TOKEN))
                     .isInstanceOf(CustomException.class)
@@ -193,7 +194,7 @@ class AuthServiveUnitTest extends TestUnitBase {
 
             authService.logout(REFRESH_TOKEN);
 
-            verify(refreshTokenRepository).delete(1L);
+            verify(refreshTokenStore).delete(1L);
         }
 
         @Test
@@ -205,7 +206,7 @@ class AuthServiveUnitTest extends TestUnitBase {
                     .doesNotThrowAnyException();
 
             // userId 추출 → Redis 삭제까지 진행되면 안 됨
-            verify(refreshTokenRepository, never()).delete(anyLong());
+            verify(refreshTokenStore, never()).delete(anyLong());
         }
     }
 }

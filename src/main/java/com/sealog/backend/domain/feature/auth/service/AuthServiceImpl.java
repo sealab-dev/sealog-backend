@@ -2,7 +2,7 @@ package com.sealog.backend.domain.feature.auth.service;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
-import com.sealog.backend.infra.redis.repository.RefreshTokenRepository;
+import com.sealog.backend.infra.redis.repository.RefreshTokenStore;
 import com.sealog.backend.infra.storage.service.FileStorageService;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
 import com.sealog.backend.domain.feature.user.entity.User;
@@ -26,7 +26,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserValidatorService userValidatorService;
     private final JwtTokenProvider jwtTokenProvider;
     private final FileStorageService fileStorageService;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenStore refreshTokenStore;
 
     @Override
     public AuthResponse.AuthProfile getMe(Long userId) {
@@ -51,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId(), user.getEmail());
 
         // Refresh Token Redis 저장
-        refreshTokenRepository.save(user.getId(), refreshToken, jwtTokenProvider.getRefreshTokenValidity());
+        refreshTokenStore.save(user.getId(), refreshToken, jwtTokenProvider.getRefreshTokenValidity());
 
         AuthResponse.AuthProfile authProfile = AuthResponse.AuthProfile.from(user, fileStorageService.getFileUrl(user.getProfileImagePath()));
 
@@ -74,7 +74,7 @@ public class AuthServiceImpl implements AuthService {
         User user = getUserById(userId);
 
         // Redis 저장 토큰과 비교
-        String stored = refreshTokenRepository.find(userId)
+        String stored = refreshTokenStore.find(userId)
                 .orElseThrow(() -> CustomException.unauthorized("유효하지 않은 Refresh Token입니다"));
         if (!stored.equals(refreshToken)) {
             throw CustomException.unauthorized("유효하지 않은 Refresh Token입니다");
@@ -96,7 +96,7 @@ public class AuthServiceImpl implements AuthService {
         // 유효한 경우에만 userId 추출 → Redis에서 삭제
         if (jwtTokenProvider.validateToken(refreshToken)) {
             Long userId = jwtTokenProvider.getUserId(refreshToken);
-            refreshTokenRepository.delete(userId);
+            refreshTokenStore.delete(userId);
         }
     }
 
