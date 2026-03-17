@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@Profile("local")
+@Profile("dev")
 @RequiredArgsConstructor
 public class LocalUserInitializer implements ApplicationRunner {
 

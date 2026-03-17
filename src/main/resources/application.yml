@@ -1,6 +1,6 @@
 spring:
     profiles:
-        active: ${SPRING_PROFILES_ACTIVE:local}
+        active: ${SPRING_PROFILES_ACTIVE:dev}
 
     application:
         name: sealog-backend
@@ -9,98 +9,24 @@ spring:
         rest:
             base-path: /api
 
-    datasource:
-        url: ${DATABASE_URL}
-        username: ${DATABASE_USER}
-        password: ${DATABASE_PASSWORD}
-        driver-class-name: org.mariadb.jdbc.Driver
-        hikari:
-            maximum-pool-size: 10
-            minimum-idle: 5
-            connection-timeout: 30000
-            connection-init-sql: SET time_zone = '+09:00'
-
-    jpa:
-        show-sql: ${JPA_SHOW_SQL:false}
-        hibernate:
-            ddl-auto: ${JPA_HIBERNATE_DDL:none}
-        properties:
-            hibernate:
-                format_sql: true
-                use_sql_comments: true
-                jdbc:
-                    batch_size: 20
-        open-in-view: false
-
-    task:
-        scheduling:
-            enabled: ${SCHEDULER_ENABLED:false}
-
     servlet:
         multipart:
             enabled: true
             max-file-size: 100MB
             max-request-size: 100MB
 
-    cloud:
-        aws:
-            credentials:
-                access-key: ${AWS_ACCESS_KEY}
-                secret-key: ${AWS_SECRET_KEY}
-            region:
-                static: ${AWS_REGION:ap-northeast-2}
-            s3:
-                bucket: ${AWS_BUCKET}
-            cloudfront:
-                domain: ${AWS_DOMAIN}
-                distribution-id: ${AWS_DISTRIBUTION_ID}
-
-    ai:
-        openai:
-            api-key: ${OPENAI_API_KEY}
-            chat:
-                options:
-                    model: gpt-4o-mini
-
-            embedding:
-                options:
-                    model: text-embedding-3-small
-
-
 server:
     port: ${SERVER_PORT:8080}
 
-app:
-    origin:
-        frontend: ${FRONT_ORIGIN:http://localhost:5173}
-    cookie:
-        secure: ${COOKIE_IS_SECURE:false}
-        sameSite: ${COOKIE_SAMESITE:Lax}
-
-jwt:
-    secret: ${JWT_KEY}
-    access-token-validity: ${JWT_ACCESS_TTL:3600000}
-    refresh-token-validity: ${JWT_REFRESH_TTL:86400000}
-
-file:
-    local:
-        upload-dir: ${FILE_UPLOAD_DIR:./uploads}
-        base-url: ${FILE_BASE_URL:http://localhost:8080/files}
+sealog:
+    storage:
+        type: ${STORAGE_TYPE:local}
 
 logging:
-    file:
-        name: ${LOG_FILE_PATH:}
     logback:
         rollingpolicy:
             max-file-size: 10MB
-            max-history: 30  # 파일 생성 후 30일까지 존재
-    level:
-        com.sealog.backend: ${LOG_LEVEL_APP:INFO}
-        com.sealog.backend.feature.file: ${LOG_LEVEL_FILE:INFO}
-        com.sealog.backend.infra.storage: ${LOG_LEVEL_STORAGE:INFO}
-        software.amazon.awssdk: ${LOG_LEVEL_AWS:INFO}
-        org.hibernate.SQL: ${LOG_LEVEL_HIBERNATE:ERROR}
-
+            max-history: 30
 
 springdoc:
   swagger-ui:

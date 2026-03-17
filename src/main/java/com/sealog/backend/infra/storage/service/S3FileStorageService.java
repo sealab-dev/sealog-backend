@@ -7,7 +7,7 @@ import com.sealog.backend.infra.storage.util.FileKeyGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -40,7 +40,7 @@ import static com.sealog.backend.infra.storage.util.FileTypeResolver.*;
  */
 @Slf4j
 @Service
-@Profile("prod")
+@ConditionalOnProperty(name = "sealog.storage.type", havingValue = "s3")
 @RequiredArgsConstructor
 public class S3FileStorageService implements FileStorageService {
 

@@ -1,0 +1,53 @@
+spring:
+    datasource:
+        url: ${DATABASE_URL}
+        username: ${DATABASE_USER}
+        password: ${DATABASE_PASSWORD}
+    jpa:
+        show-sql: ${JPA_SHOW_SQL:false}
+        hibernate:
+            ddl-auto: ${JPA_HIBERNATE_DDL:none}
+    task:
+        scheduling:
+            enabled: ${SCHEDULER_ENABLED:true}
+
+    # 운영 Redis 설정
+    data:
+        redis:
+            host: ${REDIS_HOST}
+            port: ${REDIS_PORT}
+            password: ${REDIS_PASSWORD}
+
+    # 운영 클라우드 환경
+    cloud:
+        aws:
+            credentials:
+                access-key: ${AWS_ACCESS_KEY}
+                secret-key: ${AWS_SECRET_KEY}
+            region:
+                static: ${AWS_REGION:ap-northeast-2}
+            s3:
+                bucket: ${AWS_BUCKET}
+            cloudfront:
+                domain: ${AWS_DOMAIN}
+                distribution-id: ${AWS_DISTRIBUTION_ID}
+
+app:
+    origin:
+        frontend: ${FRONT_ORIGIN}
+    cookie:
+        secure: ${COOKIE_IS_SECURE}
+        sameSite: ${COOKIE_SAMESITE}
+
+jwt:
+    secret: ${JWT_KEY}
+    access-token-validity: ${JWT_ACCESS_TTL}
+    refresh-token-validity: ${JWT_REFRESH_TTL}
+
+logging:
+    file:
+        name: ${LOG_FILE_PATH:}
+    level:
+        com.sealog.backend: INFO
+        software.amazon.awssdk: INFO
+        org.hibernate.SQL: ERROR
