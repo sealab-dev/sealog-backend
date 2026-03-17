@@ -26,6 +26,6 @@ public class PostScheduler {
      */
     @Scheduled(cron = "0 0 0 * * *")
     public void cleanupDeletedPosts() {
-        LogUtils.runAndShowCostLog("게시글 정리 스케줄러", postSchedulerService::cleanupExpiredPosts);
+        LogUtils.showCostLog("게시글 정리 스케줄러", postSchedulerService::cleanupExpiredPosts);
     }
 }
