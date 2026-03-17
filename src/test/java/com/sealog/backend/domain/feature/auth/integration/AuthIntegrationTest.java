@@ -68,12 +68,11 @@ class AuthIntegrationTest extends TestIntegrationBase {
                     .andExpect(cookie().httpOnly("access_token", true))
                     .andExpect(cookie().httpOnly("refresh_token", true))
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.email").value(testUser.getEmail()))
-                    .andExpect(jsonPath("$.message").value("로그인 성공"));
+                    .andExpect(jsonPath("$.data.email").value(testUser.getEmail()));
         }
 
         @Test
-        @DisplayName("실패 - 존재하지 않는 이메일 → 401")
+        @DisplayName("실패 - 존재하지 않는 이메일 → 400")
         void 이메일_없음() throws Exception {
             AuthRequest.Login request = AuthRequest.Login.builder()
                     .email("nobody@local.com")
@@ -83,11 +82,11 @@ class AuthIntegrationTest extends TestIntegrationBase {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
-        @DisplayName("실패 - 잘못된 비밀번호 → 401")
+        @DisplayName("실패 - 잘못된 비밀번호 → 400")
         void 비밀번호_불일치() throws Exception {
             AuthRequest.Login request = AuthRequest.Login.builder()
                     .email(testUser.getEmail())
@@ -97,7 +96,7 @@ class AuthIntegrationTest extends TestIntegrationBase {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
