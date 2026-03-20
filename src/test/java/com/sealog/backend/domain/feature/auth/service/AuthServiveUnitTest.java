@@ -7,7 +7,7 @@ import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.domain.feature.user.service.UserValidatorService;
 import com.sealog.backend.global.exception.CustomException;
-import com.sealog.backend.infra.redis.repository.RefreshTokenStore;
+import com.sealog.backend.domain.feature.auth.store.RefreshTokenStore;
 import com.sealog.backend.infra.storage.service.FileStorageService;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
 import com.sealog.backend.support.base.TestUnitBase;

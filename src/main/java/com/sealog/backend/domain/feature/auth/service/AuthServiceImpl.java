@@ -2,7 +2,7 @@ package com.sealog.backend.domain.feature.auth.service;
 
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.auth.dto.AuthResponse;
-import com.sealog.backend.infra.redis.repository.RefreshTokenStore;
+import com.sealog.backend.domain.feature.auth.store.RefreshTokenStore;
 import com.sealog.backend.infra.storage.service.FileStorageService;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
 import com.sealog.backend.domain.feature.user.entity.User;

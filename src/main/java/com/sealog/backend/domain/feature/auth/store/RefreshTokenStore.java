@@ -1,4 +1,4 @@
-package com.sealog.backend.infra.redis.repository;
+package com.sealog.backend.domain.feature.auth.store;
 
 import com.sealog.backend.global.constant.CoreRedisKey;
 import lombok.RequiredArgsConstructor;
