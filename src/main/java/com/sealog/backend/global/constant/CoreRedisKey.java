@@ -12,5 +12,5 @@ public class CoreRedisKey {
     public static final String PREFIX_KEY = "KEY:";
     public static final String PREFIX_CACHE = "CACHE:";
     public static final String PREFIX_LOCK = "LOCK:";
-    public static final String PREFIX_REFRESH_TOKEN = "KEY:RT:";
+
 }

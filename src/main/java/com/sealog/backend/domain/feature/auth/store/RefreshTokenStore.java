@@ -13,17 +13,18 @@ import java.util.concurrent.TimeUnit;
 public class RefreshTokenStore {
 
     private final StringRedisTemplate stringRedisTemplate;
+    private final String PREFIX_REFRESH_TOKEN = CoreRedisKey.PREFIX_KEY + "RT:";
 
     public void save(Long userId, String token, long ttlMillis) {
         stringRedisTemplate.opsForValue()
-                .set(CoreRedisKey.PREFIX_REFRESH_TOKEN + userId, token, ttlMillis, TimeUnit.MILLISECONDS);
+                .set(PREFIX_REFRESH_TOKEN + userId, token, ttlMillis, TimeUnit.MILLISECONDS);
     }
 
     public Optional<String> find(Long userId) {
-        return Optional.ofNullable(stringRedisTemplate.opsForValue().get(CoreRedisKey.PREFIX_REFRESH_TOKEN + userId));
+        return Optional.ofNullable(stringRedisTemplate.opsForValue().get(PREFIX_REFRESH_TOKEN + userId));
     }
 
     public void delete(Long userId) {
-        stringRedisTemplate.delete(CoreRedisKey.PREFIX_REFRESH_TOKEN + userId);
+        stringRedisTemplate.delete(PREFIX_REFRESH_TOKEN + userId);
     }
 }
