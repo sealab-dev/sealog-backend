@@ -5,6 +5,7 @@ import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
+import com.sealog.backend.domain.feature.auth.store.RefreshTokenStore;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
 import com.sealog.backend.support.base.TestIntegrationBase;
 import com.sealog.backend.support.component.TestDataFactory;
@@ -12,7 +13,6 @@ import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,6 +29,8 @@ class AuthIntegrationTest extends TestIntegrationBase {
     @Autowired ObjectMapper objectMapper;
     @Autowired UserRepository userRepository;
     @Autowired JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    RefreshTokenStore refreshTokenStore;
     @Autowired TestDataFactory testDataFactory;
 
     private User testUser;
@@ -124,10 +126,9 @@ class AuthIntegrationTest extends TestIntegrationBase {
         @Test
         @DisplayName("성공 - 유효한 refresh_token 쿠키 → 200, 새 access_token 쿠키 발급")
         void 성공() throws Exception {
-            // 실제 JWT 리프레시 토큰 생성 후 DB에 저장
+            // 실제 JWT 리프레시 토큰 생성 후 Redis에 저장
             String refreshToken = jwtTokenProvider.createRefreshToken(testUser.getId(), testUser.getEmail());
-            testUser.updateRefreshToken(refreshToken);
-            userRepository.save(testUser);
+            refreshTokenStore.save(testUser.getId(), refreshToken, jwtTokenProvider.getRefreshTokenValidity());
 
             mockMvc.perform(post("/api/auth/refresh")
                             .cookie(new Cookie("refresh_token", refreshToken)))
@@ -145,14 +146,12 @@ class AuthIntegrationTest extends TestIntegrationBase {
         }
 
         @Test
-        @DisplayName("실패 - DB에 저장된 토큰과 다른 쿠키로 요청 → 401")
-        void DB_토큰_불일치() throws Exception {
-            // DB에는 이전에 발급된 토큰(구 토큰)이 저장되어 있는 상태
-            // createRefreshToken을 같은 밀리초 내에 두 번 호출하면 iat가 동일해 토큰이 일치할 수 있으므로
-            // DB에는 JWT가 아닌 고정 문자열을 저장해 확실하게 불일치 시나리오를 만든다
-            testUser.updateRefreshToken("stale-token-already-in-db");
+        @DisplayName("실패 - Redis에 저장된 토큰과 다른 쿠키로 요청 → 401")
+        void Redis_토큰_불일치() throws Exception {
+            // Redis에는 이전에 발급된 구 토큰을 저장
+            refreshTokenStore.save(testUser.getId(), "stale-token-already-in-redis", jwtTokenProvider.getRefreshTokenValidity());
 
-            // 유효한 JWT이지만 DB에 저장된 값과 다름
+            // 유효한 JWT이지만 Redis에 저장된 값과 다름
             String freshToken = jwtTokenProvider.createRefreshToken(testUser.getId(), testUser.getEmail());
 
             mockMvc.perform(post("/api/auth/refresh")
@@ -169,10 +168,10 @@ class AuthIntegrationTest extends TestIntegrationBase {
     class Logout {
 
         @Test
-        @DisplayName("성공 - 유효한 refresh_token 쿠키로 로그아웃 → 200, 쿠키 삭제, DB 토큰 제거")
+        @DisplayName("성공 - 유효한 refresh_token 쿠키로 로그아웃 → 200, 쿠키 삭제, Redis 토큰 제거")
         void 성공() throws Exception {
             String refreshToken = jwtTokenProvider.createRefreshToken(testUser.getId(), testUser.getEmail());
-            testUser.updateRefreshToken(refreshToken);
+            refreshTokenStore.save(testUser.getId(), refreshToken, jwtTokenProvider.getRefreshTokenValidity());
 
             mockMvc.perform(post("/api/auth/logout")
                             .cookie(new Cookie("refresh_token", refreshToken)))
@@ -181,9 +180,8 @@ class AuthIntegrationTest extends TestIntegrationBase {
                     .andExpect(cookie().maxAge("refresh_token", 0))
                     .andExpect(jsonPath("$.success").value(true));
 
-            // DB에서 리프레시 토큰이 제거되었는지 확인
-            User updateUser = userRepository.findById(testUser.getId()).orElseThrow();
-            assertThat(updateUser.getRefreshToken()).isNull();
+            // Redis에서 리프레시 토큰이 제거되었는지 확인
+            assertThat(refreshTokenStore.find(testUser.getId())).isEmpty();
         }
 
         @Test

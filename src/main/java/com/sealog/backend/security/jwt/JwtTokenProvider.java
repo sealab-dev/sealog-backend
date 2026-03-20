@@ -3,6 +3,7 @@ package com.sealog.backend.security.jwt;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,7 @@ public class JwtTokenProvider {
     @Value("${jwt.access-token-validity}")
     private long accessTokenValidity;  // Access Token 유효시간 (ms)
 
+    @Getter
     @Value("${jwt.refresh-token-validity}")
     private long refreshTokenValidity;  // Refresh Token 유효시간 (ms)
 

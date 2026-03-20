@@ -85,6 +85,9 @@ dependencies {
 
 	// === tika (file validation) ===//
 	implementation 'org.apache.tika:tika-core:3.2.2'
+
+	// ========== Redis ========== //
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 }
 
 dependencyManagement {

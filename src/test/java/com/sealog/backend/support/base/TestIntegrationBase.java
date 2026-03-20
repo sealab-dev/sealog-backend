@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -36,6 +37,9 @@ public abstract class TestIntegrationBase extends TestContainerBase {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
     /**
      * 각 테스트 클래스 종료 후, 테이블 재생성 (TRUNCATE)
      * DELETE 기반 삭제보다 빠르고, AUTO_INCREMENT 초기화
@@ -53,5 +57,8 @@ public abstract class TestIntegrationBase extends TestContainerBase {
 
         // 3. FK Constraint 활성화
         jdbcTemplate.execute(TestSql.FOREIGN_KEY_CHECKS_ACTIVATION);
+
+        // 4. Redis 초기화
+        stringRedisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
     }
 }
