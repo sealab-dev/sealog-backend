@@ -1,4 +1,4 @@
-package com.sealog.backend.infra.constant;
+package com.sealog.backend.infra.orm.constant;
 
 import lombok.experimental.UtilityClass;
 

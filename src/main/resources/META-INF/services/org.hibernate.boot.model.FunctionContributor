@@ -1,1 +1,1 @@
-com.sealog.backend.infra.contributor.MatchAgainstFunctionContributor
+com.sealog.backend.infra.orm.hibernate.MatchAgainstFunctionContributor

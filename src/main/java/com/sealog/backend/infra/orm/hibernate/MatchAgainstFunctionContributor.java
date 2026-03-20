@@ -1,6 +1,6 @@
-package com.sealog.backend.infra.contributor;
+package com.sealog.backend.infra.orm.hibernate;
 
-import com.sealog.backend.infra.constant.HibernateFunction;
+import com.sealog.backend.infra.orm.constant.HibernateFunction;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.type.StandardBasicTypes;
