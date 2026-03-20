@@ -98,4 +98,30 @@ public final class TestTextGenerator {
         }
         return generatePostTitle(idx);
     }
+
+
+    // =========================================================
+    // 본문 생성
+    // =========================================================
+
+    private static final String CONTENT_UNIT = "테스트 본문 내용입니다. ";
+    private static final int    CONTENT_UNIT_LEN = CONTENT_UNIT.length();
+
+    /**
+     * 지정한 길이의 본문 문자열 생성
+     *
+     * 예시:
+     * - generatePostContent(100)  → "테스트 본문 내용입니다. 테스트 본문 ..." (100자)
+     * - generatePostContent(5000) → 동일 단위 반복 (5,000자)
+     *
+     * @param length 생성할 본문 길이 (글자 수)
+     * @return 지정 길이의 본문 문자열
+     */
+    public static String generatePostContent(int length) {
+        StringBuilder sb = new StringBuilder(length + CONTENT_UNIT_LEN);
+        while (sb.length() < length) {
+            sb.append(CONTENT_UNIT);
+        }
+        return sb.substring(0, length);
+    }
 }

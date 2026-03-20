@@ -1,27 +1,24 @@
 package com.sealog.backend.support.base.container;
 
-import com.sealog.backend.support.base.config.TestPersistenceConfig;
-import com.sealog.backend.support.constant.TestContainer;
+import com.sealog.backend.support.base.config.TestGlobalConfig;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.containers.MariaDBContainer;
 
 /**
  * 통합 테스트에 사용할 인프라 컨테이너를 정의하는 추상 클래스
  */
-@Testcontainers
-public abstract class TestIntegrationContainer extends TestPersistenceConfig {
+public abstract class TestIntegrationContainer extends TestGlobalConfig {
 
     // 컨테이너
+    static final MariaDBContainer<?> MARIA_DB;
     static final GenericContainer<?> REDIS;
 
     // static 블록
     static {
-        REDIS = new GenericContainer<>(TestContainer.DEFAULT_IMAGE_REDIS)
-                .withExposedPorts(TestContainer.DEFAULT_REDIS_PORT);
-
-        REDIS.start();
+        MARIA_DB = TestContainer.getAndStartMariaDBContainer();
+        REDIS = TestContainer.getAndStartRedisContainer();
     }
 
     /**
@@ -30,8 +27,8 @@ public abstract class TestIntegrationContainer extends TestPersistenceConfig {
      */
     @DynamicPropertySource
     static void overrideContainerProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.data.redis.host", REDIS::getHost);
-        registry.add("spring.data.redis.port", () -> String.valueOf(REDIS.getMappedPort(TestContainer.DEFAULT_REDIS_PORT)));
+        TestContainer.registerMariaDb(MARIA_DB, registry);
+        TestContainer.registerRedis(REDIS, registry);
     }
 
 }

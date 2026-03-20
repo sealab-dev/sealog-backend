@@ -1,15 +1,15 @@
-package com.sealog.backend.domain.feature.post.repository.kcw;
+package com.sealog.backend.domain.feature.post.persistence.kcw;
 
 import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
-import com.sealog.backend.infra.constant.HibernateFunction;
+import com.sealog.backend.infra.orm.constant.HibernateFunction;
 import lombok.experimental.UtilityClass;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Objects;
 
 /**
- * Post 검색 조건 Specification 모음
+ * Post 검색 조건 Specification 모음 (kcw 실험용)
  *
  * 사용 목적:
  * - Guest/User 역할별 동적 조건 조합
@@ -46,7 +46,6 @@ public class KcwTestPostCondition {
         );
     }
 
-
     /**
      * 특정 사용자의 공개 게시글 검색 조건 조합
      * - 삭제되지 않은 게시글 + PUBLISHED + 닉네임 일치 + 키워드 매칭
@@ -66,14 +65,11 @@ public class KcwTestPostCondition {
 
     // ========== private conditions ========== //
 
-    /**
-     * 소프트 삭제되지 않은 게시글
-     */
     private static Specification<Post> notDeleted() {
         return (root, query, cb) -> cb.isNull(root.get("deletedAt"));
     }
 
-    // 기존 LIKE 기반 검색 (풀스캔) — 성능 비교를 위해 보존
+    // LIKE 기반 검색 (풀스캔) — FT 성능 비교용
     private static Specification<Post> keywordContainsLike(String keyword) {
         return (root, query, cb) -> cb.or(
                 cb.like(root.get("title"), "%" + keyword + "%"),
@@ -96,9 +92,6 @@ public class KcwTestPostCondition {
         );
     }
 
-    /**
-     * nickname이 없는 경우(Guest) PUBLISHED 상태만 (nickname 존재 시 조건 없음 → 전체 상태)
-     */
     private static Specification<Post> onlyPublishedIfNicknameAbsent(String nickname) {
         return (root, query, cb) ->
                 Objects.isNull(nickname)
@@ -106,16 +99,10 @@ public class KcwTestPostCondition {
                         : null;
     }
 
-    /**
-     * 항상 PUBLISHED 상태만
-     */
     private static Specification<Post> onlyPublished() {
         return (root, query, cb) -> cb.equal(root.get("status"), PostStatus.PUBLISHED);
     }
 
-    /**
-     * 닉네임 일치하는 사용자의 게시글만 (null이면 조건 없음 → 전체 사용자)
-     */
     private static Specification<Post> nicknameEquals(String nickname) {
         return (root, query, cb) ->
                 Objects.nonNull(nickname)

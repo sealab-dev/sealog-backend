@@ -13,7 +13,7 @@ import com.sealog.backend.domain.feature.stack.repository.StackRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
-import com.sealog.backend.support.constant.TestContainer;
+import com.sealog.backend.support.base.container.TestContainer;
 import com.sealog.backend.support.constant.TestSql;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.context.TestComponent;
@@ -22,10 +22,12 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 /**
@@ -196,7 +198,7 @@ public class TestDataFactory {
         );
 
         // 2. 삽입 수행 (시간 측정)
-        processBatchQuery(jdbcUsers, chunk -> jdbcTemplate.batchUpdate(TestSql.INSERT_USER, chunk));
+        processBatchQuery(jdbcUsers, batch -> jdbcTemplate.batchUpdate(TestSql.INSERT_USER, batch));
     }
 
     /**
@@ -207,14 +209,47 @@ public class TestDataFactory {
      */
     public void createTestPosts(int amount, PostStatus status, User user) {
 
-        // 1. Post 생성
-        List<Object[]> jdbcPosts = createEntities(
-                amount, postRepository::count, idx -> createPostArray(idx, status, user)
+        createAndInsertEntities(
+                amount,
+                postRepository::count,
+                idx -> createPostArray(idx, status, user, 0),
+                chunk -> processBatchQuery(chunk, batch -> jdbcTemplate.batchUpdate(TestSql.INSERT_POST, batch))
         );
+    }
 
-        // 2. 삽입 수행
-        // JPA batch 방식 (청크 단위 처리)
-        processBatchQuery(jdbcPosts, chunk -> jdbcTemplate.batchUpdate(TestSql.INSERT_POST, chunk));
+    /**
+     * TEST Post 생성 (본문 길이 지정)
+     * @param amount        생성 수량
+     * @param status        블로그 게시글 상태
+     * @param user          블로그 작성자 회원 엔티티
+     * @param contentLength content 필드 길이 (글자 수)
+     */
+    public void createTestPosts(int amount, PostStatus status, User user, int contentLength) {
+
+        createAndInsertEntities(
+                amount,
+                postRepository::count,
+                idx -> createPostArray(idx, status, user, contentLength),
+                chunk -> processBatchQuery(chunk, batch -> jdbcTemplate.batchUpdate(TestSql.INSERT_POST, batch))
+        );
+    }
+
+    /**
+     * TEST Post 생성 (모든 게시글 제목에 지정 키워드 포함)
+     *
+     * @param amount   생성 수량
+     * @param status   블로그 게시글 상태
+     * @param user     블로그 작성자 회원 엔티티
+     * @param title    블로그 제목
+     */
+    public void createTestPosts(int amount, PostStatus status, User user, String title, int contentLength) {
+
+        createAndInsertEntities(
+                amount,
+                postRepository::count,
+                idx -> createPostArray(idx, status, user, title, contentLength),
+                chunk -> processBatchQuery(chunk, batch -> jdbcTemplate.batchUpdate(TestSql.INSERT_POST, batch))
+        );
     }
 
 
@@ -233,7 +268,7 @@ public class TestDataFactory {
         );
 
         // 2. 삽입 수행 (시간 측정)
-        processBatchQuery(jdbcSeries, chunk -> jdbcTemplate.batchUpdate(TestSql.INSERT_SERIES, chunk));
+        processBatchQuery(jdbcSeries, batch -> jdbcTemplate.batchUpdate(TestSql.INSERT_SERIES, batch));
     }
 
     /**
@@ -286,15 +321,39 @@ public class TestDataFactory {
                 .build();
     }
 
-    private Object[] createPostArray(long idx, PostStatus status, User user) {
+    private Object[] createPostArray(long idx, PostStatus status, User user, int contentLength) {
 
+        // 1. 테스트 제목, 본문
         String title = TestTextGenerator.generatePostTitle(idx);
+        String content = contentLength > 0 ?
+                TestTextGenerator.generatePostContent(contentLength) :
+                "테스트본문%06d".formatted(idx);
+
+        // 2. Post 엔티티 배열 생성
         return new Object[]{
                 user.getId(),
                 title,
                 SlugUtils.generate(title),
                 "요약%06d".formatted(idx),
-                "내용%06d".formatted(idx),
+                content,
+                status.name()
+        };
+    }
+
+    private Object[] createPostArray(long idx, PostStatus status, User user, String title, int contentLength) {
+
+        // 1. 테스트 본문
+        String formattedTitle = "%s%06d".formatted(title, idx);
+        String content = contentLength > 0 ?
+                TestTextGenerator.generatePostContent(contentLength) :
+                "테스트본문%06d".formatted(idx);
+
+        return new Object[]{
+                user.getId(),
+                formattedTitle,
+                SlugUtils.generate(formattedTitle),
+                "요약%06d".formatted(idx),
+                content,
                 status.name()
         };
     }
@@ -342,7 +401,7 @@ public class TestDataFactory {
     // 배치 처리
     // =========================================================
 
-    private static final int BATCH_SIZE = 10_000;
+    private static final int BATCH_SIZE = 1_000;
 
     /**
      * 대용량 파라미터 리스트를 BATCH_SIZE 단위로 분할하여 배치 작업 실행 (JDBC 전용)
@@ -394,5 +453,32 @@ public class TestDataFactory {
         return LongStream.range(currentCount, endIdx)
                 .mapToObj(mappingMethod::apply)
                 .toList();
+    }
+
+
+    private void createAndInsertEntities(
+            int amount,
+            Supplier<Long> countMethod,
+            Function<Long, Object[]> mappingMethod,
+            Consumer<List<Object[]>> batchAction
+    ) {
+        long currentCount = countMethod.get() + 1;
+        long endIdx = currentCount + amount;
+
+        List<Object[]> chunk = new ArrayList<>(BATCH_SIZE);
+
+        for (long i = currentCount; i < endIdx; i++) {
+            chunk.add(mappingMethod.apply(i));
+
+            if (chunk.size() == BATCH_SIZE) {
+                batchAction.accept(chunk);
+                chunk.clear(); // 메모리 즉시 해제
+            }
+        }
+
+        // 나머지 처리
+        if (!chunk.isEmpty()) {
+            batchAction.accept(chunk);
+        }
     }
 }

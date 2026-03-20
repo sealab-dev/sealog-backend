@@ -1,12 +1,13 @@
 package com.sealog.backend.support.base.test;
 
 
-import com.sealog.backend.support.base.config.TestIntegrationConfig;
+import com.sealog.backend.support.base.container.TestIntegrationContainer;
 import com.sealog.backend.support.component.TestDataFactory;
 import com.sealog.backend.support.constant.TestMode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
@@ -16,12 +17,13 @@ import org.springframework.data.redis.core.StringRedisTemplate;
  */
 
 @Tag(TestMode.INTEGRATION)
+@AutoConfigureMockMvc
 @SpringBootTest(properties = {
         "jwt.secret=YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=",
         "jwt.access-token-validity=3600000",
         "jwt.refresh-token-validity=86400000"
 })
-public abstract class IntegrationTest extends TestIntegrationConfig {
+public abstract class IntegrationTest extends TestIntegrationContainer {
 
     // 사용 의존성
     @Autowired TestDataFactory testDataFactory;
