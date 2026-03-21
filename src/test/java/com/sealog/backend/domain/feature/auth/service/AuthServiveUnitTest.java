@@ -8,9 +8,9 @@ import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.domain.feature.user.service.UserValidatorService;
 import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.domain.feature.auth.store.RefreshTokenStore;
-import com.sealog.backend.infra.storage.service.FileStorageService;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
-import com.sealog.backend.support.base.TestUnitBase;
+import com.sealog.backend.infra.storage.service.FileStorageService;
+import com.sealog.backend.support.base.test.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -29,15 +29,14 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @DisplayName("AuthService 단위 테스트")
-class AuthServiveUnitTest extends TestUnitBase {
+class AuthServiveUnitTest extends UnitTest {
 
     @Mock UserRepository userRepository;
     @Mock PasswordEncoder passwordEncoder;
     @Mock UserValidatorService userValidatorService;
     @Mock JwtTokenProvider jwtTokenProvider;
     @Mock FileStorageService fileStorageService;
-    @Mock
-    RefreshTokenStore refreshTokenStore;
+    @Mock RefreshTokenStore refreshTokenStore;
 
     @InjectMocks
     AuthServiceImpl authService;
@@ -76,7 +75,6 @@ class AuthServiveUnitTest extends TestUnitBase {
             given(passwordEncoder.matches(TEST_PASSWORD, ENCODED_PW)).willReturn(true);
             given(jwtTokenProvider.createAccessToken(1L, TEST_EMAIL)).willReturn(ACCESS_TOKEN);
             given(jwtTokenProvider.createRefreshToken(1L, TEST_EMAIL)).willReturn(REFRESH_TOKEN);
-            given(jwtTokenProvider.getRefreshTokenValidity()).willReturn(86400000L);
 
             AuthRequest.Login request = AuthRequest.Login.builder()
                     .email(TEST_EMAIL).password(TEST_PASSWORD).build();
@@ -187,10 +185,11 @@ class AuthServiveUnitTest extends TestUnitBase {
     class Logout {
 
         @Test
-        @DisplayName("성공 - 유효한 토큰으로 로그아웃하면 Redis의 리프레시 토큰이 삭제된다")
+        @DisplayName("성공 - 유효한 토큰으로 로그아웃하면 DB의 리프레시 토큰이 삭제된다")
         void 성공() {
             given(jwtTokenProvider.validateToken(REFRESH_TOKEN)).willReturn(true);
             given(jwtTokenProvider.getUserId(REFRESH_TOKEN)).willReturn(1L);
+            given(userRepository.findById(1L)).willReturn(Optional.of(testUser));
 
             authService.logout(REFRESH_TOKEN);
 

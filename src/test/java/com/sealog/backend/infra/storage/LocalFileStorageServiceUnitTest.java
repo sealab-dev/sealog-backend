@@ -2,7 +2,7 @@ package com.sealog.backend.infra.storage;
 
 import com.sealog.backend.infra.storage.service.LocalFileStorageService;
 import com.sealog.backend.infra.storage.util.FileKeyGenerator;
-import com.sealog.backend.support.base.TestUnitBase;
+import com.sealog.backend.support.base.test.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,7 +24,7 @@ import java.util.Properties;
 import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("LocalFileStorageService 단위 테스트")
-class LocalFileStorageServiceUnitTest extends TestUnitBase {
+class LocalFileStorageServiceUnitTest extends UnitTest {
 
     // ========== application-test.yml 로딩 ========== //
 

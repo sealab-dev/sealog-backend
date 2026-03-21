@@ -3,7 +3,7 @@ package com.sealog.backend.infra.storage;
 import com.sealog.backend.infra.storage.exception.FileStorageException;
 import com.sealog.backend.infra.storage.service.S3FileStorageService;
 import com.sealog.backend.infra.storage.util.FileKeyGenerator;
-import com.sealog.backend.support.base.TestUnitBase;
+import com.sealog.backend.support.base.test.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,7 +35,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @DisplayName("S3FileStorageService 단위 테스트")
-class S3FileStorageServiceUnitTest extends TestUnitBase {
+class S3FileStorageServiceUnitTest extends UnitTest {
 
     // ========== application-test.yml 로딩 ========== //
 

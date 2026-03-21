@@ -39,7 +39,7 @@ public class FileMetadataScheduler {
     @Scheduled(cron = "0 0 3 * * *")
     @Transactional
     public void removeOrphans() {
-        LogUtils.runAndShowCostLog("파일 정리 스케줄러", fileMetadataSchedulerService::removeOrphans);
+        LogUtils.showCostLog("파일 정리 스케줄러", fileMetadataSchedulerService::removeOrphans);
     }
 
 }

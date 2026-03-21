@@ -12,7 +12,7 @@ import com.sealog.backend.domain.feature.stack.repository.StackRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.security.auth.CustomUserDetails;
-import com.sealog.backend.support.base.TestIntegrationBase;
+import com.sealog.backend.support.base.test.IntegrationTest;
 import com.sealog.backend.support.component.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @DisplayName("StackAdmin 통합 테스트 (Controller → Service → Repository)")
-class StackAdminIntegrationTest extends TestIntegrationBase {
+class StackAdminIntegrationTest extends IntegrationTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;

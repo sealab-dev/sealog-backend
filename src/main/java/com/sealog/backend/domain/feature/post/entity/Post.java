@@ -43,7 +43,7 @@ public class Post extends BaseTimeEntity {
     private String excerpt;
 
     @Lob
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "MEDIUMTEXT") // 성능 테스트를 위한 임시 변경
     private String content;
 
     @Enumerated(EnumType.STRING)
