@@ -10,19 +10,21 @@ import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.infra.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
-
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
+/**
+ * 사용자 서비스 구현체
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -34,8 +36,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserMeResponse.MyProfile getMyProfile(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
+        User user = findUserById(userId);
 
         List<UserMeResponse.MySocialLinkItem> socialLinks = userSocialService.getMyLinks(userId);
         return UserMeResponse.MyProfile.of(
@@ -57,11 +58,9 @@ public class UserServiceImpl implements UserService {
             UserMeRequest.UpdateProfile request,
             MultipartFile profileImage
     ) {
-        log.info("프로필 수정 시작: userId={}", userId);
+        User user = findUserById(userId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
-
+        // 닉네임 변경 시 중복 검증
         if (request.getNickname() != null && !request.getNickname().isBlank()) {
             if (!user.getNickname().equals(request.getNickname())) {
                 userValidatorService.validateDuplicateNickname(request.getNickname());
@@ -84,28 +83,14 @@ public class UserServiceImpl implements UserService {
         }
 
         userRepository.save(user);
-        log.info("프로필 수정 완료: userId={}", userId);
 
-        List<UserMeResponse.MySocialLinkItem> socialLinks = userSocialService.getMyLinks(userId);
-        return UserMeResponse.MyProfile.of(
-                user.getId(),
-                user.getEmail(),
-                user.getName(),
-                user.getNickname(),
-                user.getPosition(),
-                user.getAbout(),
-                fileStorageService.getFileUrl(user.getProfileImagePath()),
-                socialLinks
-        );
+        return getMyProfile(userId);
     }
 
     @Override
     @Transactional
     public void updatePassword(Long userId, UserMeRequest.UpdatePassword request) {
-        log.info("비밀번호 변경 시작: userId={}", userId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
+        User user = findUserById(userId);
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw CustomException.badRequest("현재 비밀번호가 일치하지 않습니다");
@@ -121,8 +106,6 @@ public class UserServiceImpl implements UserService {
 
         user.updatePassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
-
-        log.info("비밀번호 변경 완료: userId={}", userId);
     }
 
     @Override
@@ -143,13 +126,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void createUser(UserAdminRequest.Create request) {
-        // 이메일 중복 검사
         userValidatorService.validateDuplicateEmail(request.getEmail());
-
-        // 닉네임 중복 검사
         userValidatorService.validateDuplicateNickname(request.getNickname());
 
-        // 비밀번호 암호화 및 User 생성
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -161,8 +140,21 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-    // ========== 프로필 이미지 처리 ========== //
+    // ========== Private 보조 메소드 ========== //
 
+    /**
+     * ID 기반 사용자 조회 (내부용)
+     */
+    private User findUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
+    }
+
+    /**
+     * 프로필 이미지 처리 로직
+     * - 이미지 삭제 요청 시 기존 파일 및 경로 제거
+     * - 새 이미지 업로드 시 기존 이미지 교체
+     */
     private void handleProfileImage(User user, UserMeRequest.UpdateProfile request, MultipartFile profileImage) {
         if (Boolean.TRUE.equals(request.getRemoveProfileImage())) {
             userFileService.deleteProfile(user.getId());

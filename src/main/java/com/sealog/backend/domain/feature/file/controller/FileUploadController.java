@@ -104,7 +104,14 @@ public class FileUploadController {
 
         // 4. 응답 반환
         String fileUrl = fileStorageService.getFileUrl(fileMetadata.getPath());
-        FileResponse response = FileResponse.from(fileMetadata, fileUrl);
+        FileResponse response = FileResponse.of(
+                fileMetadata.getId(),
+                fileMetadata.getOriginalName(),
+                fileMetadata.getPath(),
+                fileUrl,
+                fileMetadata.getSize(),
+                fileMetadata.getContentType()
+        );
         log.debug("파일 업로드 성공: fileId={}, path={}", response.id(), response.path());
 
         return response;

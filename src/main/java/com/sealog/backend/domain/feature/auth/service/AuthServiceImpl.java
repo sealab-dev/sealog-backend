@@ -15,6 +15,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 인증 서비스 구현체
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -23,7 +26,6 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserValidatorService userValidatorService;
     private final JwtTokenProvider jwtTokenProvider;
     private final FileStorageService fileStorageService;
     private final RefreshTokenStore refreshTokenStore;
@@ -31,77 +33,76 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse.AuthProfile getMe(Long userId) {
         User user = getUserById(userId);
-        return AuthResponse.AuthProfile.from(user, fileStorageService.getFileUrl(user.getProfileImagePath()));
+        return buildAuthProfile(user);
     }
 
     @Override
     @Transactional
     public AuthResponse.Token login(AuthRequest.Login request) {
-        // 이메일로 사용자 조회
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> CustomException.badRequest("이메일 또는 비밀번호가 일치하지 않습니다"));
 
-        // 비밀번호 검증
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw CustomException.badRequest("이메일 또는 비밀번호가 일치하지 않습니다");
         }
 
-        // 토큰 생성
         String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId(), user.getEmail());
 
-        // Refresh Token Redis 저장
         refreshTokenStore.save(user.getId(), refreshToken, jwtTokenProvider.getRefreshTokenValidity());
 
-        AuthResponse.AuthProfile authProfile = AuthResponse.AuthProfile.from(user, fileStorageService.getFileUrl(user.getProfileImagePath()));
-
-        return AuthResponse.Token.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .authProfile(authProfile)
-                .build();
+        return AuthResponse.Token.of(accessToken, refreshToken, buildAuthProfile(user));
     }
 
     @Override
     public AuthResponse.Token refresh(String refreshToken) {
-        // JWT 서명 및 만료 검증
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw CustomException.unauthorized("유효하지 않은 Refresh Token입니다");
         }
 
-        // userId 추출
         Long userId = jwtTokenProvider.getUserId(refreshToken);
         User user = getUserById(userId);
 
-        // Redis 저장 토큰과 비교
         String stored = refreshTokenStore.find(userId)
                 .orElseThrow(() -> CustomException.unauthorized("유효하지 않은 Refresh Token입니다"));
         if (!stored.equals(refreshToken)) {
             throw CustomException.unauthorized("유효하지 않은 Refresh Token입니다");
         }
 
-        // 새 Access Token 생성
         String newAccessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
 
-        AuthResponse.AuthProfile authProfile = AuthResponse.AuthProfile.from(user, fileStorageService.getFileUrl(user.getProfileImagePath()));
-
-        return AuthResponse.Token.builder()
-                .accessToken(newAccessToken)
-                .authProfile(authProfile)
-                .build();
+        return AuthResponse.Token.of(newAccessToken, null, buildAuthProfile(user));
     }
 
     @Override
     public void logout(String refreshToken) {
-        // 유효한 경우에만 userId 추출 → Redis에서 삭제
         if (jwtTokenProvider.validateToken(refreshToken)) {
             Long userId = jwtTokenProvider.getUserId(refreshToken);
             refreshTokenStore.delete(userId);
         }
     }
 
+    // ========== Private 보조 메소드 ========== //
+
+    /**
+     * ID 기반 사용자 조회
+     */
     private User getUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> CustomException.notFound("사용자를 찾을 수 없습니다"));
+    }
+
+    /**
+     * User 엔티티를 AuthProfile DTO로 변환
+     */
+    private AuthResponse.AuthProfile buildAuthProfile(User user) {
+        return AuthResponse.AuthProfile.of(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getNickname(),
+                user.getRole(),
+                fileStorageService.getFileUrl(user.getProfileImagePath())
+        );
     }
 }

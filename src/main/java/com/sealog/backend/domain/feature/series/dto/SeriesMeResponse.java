@@ -64,8 +64,8 @@ public class SeriesMeResponse {
         @Schema(description = "태그 목록 (최대 3개)", example = "[\"spring\", \"jpa\"]")
         private List<String> tags;
 
-        @Schema(description = "기술 스택 목록 (최대 5개)")
-        private List<PostMeResponse.MyStackItem> stacks;
+        @Schema(description = "카테고리 목록 (최대 5개)")
+        private List<PostMeResponse.MyCategoryItem> categories;
 
         @Schema(description = "생성일시", example = "2024-01-15T10:30:00")
         private LocalDateTime createdAt;
@@ -73,13 +73,13 @@ public class SeriesMeResponse {
         public static MySeriesPostItem of(
                 Long id, String slug, String title, String excerpt,
                 PostStatus status, String thumbnailUrl,
-                List<String> tags, List<PostMeResponse.MyStackItem> stacks,
+                List<String> tags, List<PostMeResponse.MyCategoryItem> categories,
                 LocalDateTime createdAt
         ) {
             return MySeriesPostItem.builder()
                     .id(id).slug(slug).title(title).excerpt(excerpt)
                     .status(status).thumbnailUrl(thumbnailUrl)
-                    .tags(tags).stacks(stacks).createdAt(createdAt)
+                    .tags(tags).categories(categories).createdAt(createdAt)
                     .build();
         }
     }

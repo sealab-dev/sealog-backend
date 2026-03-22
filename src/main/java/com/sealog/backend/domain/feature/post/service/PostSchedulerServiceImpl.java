@@ -22,7 +22,7 @@ public class PostSchedulerServiceImpl implements PostSchedulerService {
 
     private final PostRepository postRepository;
     private final PostFileService postFileService;
-    private final PostStackService postStackService;
+    private final PostCategoryService postCategoryService;
     private final PostTagService postTagService;
 
     /**
@@ -30,7 +30,7 @@ public class PostSchedulerServiceImpl implements PostSchedulerService {
      *
      * 처리 순서 (FK 위반 방지):
      * 1. 파일 매핑 삭제
-     * 2. PostStack 매핑 삭제
+     * 2. PostCategory 매핑 삭제
      * 3. PostTag 매핑 삭제
      * 4. 게시글 영구 삭제
      */
@@ -69,7 +69,7 @@ public class PostSchedulerServiceImpl implements PostSchedulerService {
      */
     private void hardDelete(Post post) {
         postFileService.deleteAllMappings(post.getId());
-        postStackService.deleteAllByPostId(post.getId());
+        postCategoryService.deleteAllByPostId(post.getId());
         postTagService.deleteAllByPostId(post.getId());
         postRepository.delete(post);
     }

@@ -69,8 +69,8 @@ public class PostController {
     }
 
     @Operation(
-            summary = "특정 사용자의 스택별 게시글 목록 조회",
-            description = "닉네임 + 스택명 기준으로 PUBLISHED 게시글 목록을 페이지 조회합니다. 응답 data: `PageResponse<PostItem>`"
+            summary = "특정 사용자의 카테고리별 게시글 목록 조회",
+            description = "닉네임 + 카테고리명 기준으로 PUBLISHED 게시글 목록을 페이지 조회합니다. 응답 data: `PageResponse<PostItem>`"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
@@ -78,14 +78,14 @@ public class PostController {
             @ApiResponse(responseCode = "404", description = "사용자 없음",
                     content = @Content(schema = @Schema(hidden = true))),
     })
-    @GetMapping(value = "/{nickname}/posts", params = "stackName")
+    @GetMapping(value = "/{nickname}/posts", params = "categoryName")
     @ResponseStatus(HttpStatus.OK)
-    public PageResponse<PostResponse.PostItem> getPostsByStack(
+    public PageResponse<PostResponse.PostItem> getPostsByCategory(
             @Parameter(description = "사용자 닉네임", example = "seadev") @PathVariable String nickname,
-            @Parameter(description = "스택명 (StackItem.name)", example = "Spring Boot") @RequestParam String stackName,
+            @Parameter(description = "카테고리명 (CategoryItem.name)", example = "Spring Boot") @RequestParam String categoryName,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<PostResponse.PostItem> posts = postService.getPostsByStack(nickname, stackName, pageable);
+        Page<PostResponse.PostItem> posts = postService.getPostsByCategory(nickname, categoryName, pageable);
         return PageResponse.from(posts);
     }
 
