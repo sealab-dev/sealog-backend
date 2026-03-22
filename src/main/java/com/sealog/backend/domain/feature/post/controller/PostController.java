@@ -104,7 +104,7 @@ public class PostController {
             @RequestParam(required = false, defaultValue = "") String keyword,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<PostResponse.PostItem> results = postService.searchPosts(null, keyword, pageable);
+        Page<PostResponse.PostItem> results = postService.searchPosts(keyword, pageable);
         return PageResponse.from(results);
     }
 

@@ -1,6 +1,5 @@
 package com.sealog.backend.domain.feature.series.dto;
 
-import com.sealog.backend.domain.feature.post.dto.PostMeResponse;
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -13,6 +12,9 @@ import java.util.List;
  */
 public class SeriesMeResponse {
 
+    /**
+     * 내 시리즈 목록 조회를 위한 정보 DTO
+     */
     @Getter
     @Builder
     @Schema(description = "내 시리즈 목록 정보")
@@ -38,9 +40,12 @@ public class SeriesMeResponse {
         }
     }
 
+    /**
+     * 내 시리즈에 속한 게시글 요약 정보 DTO
+     */
     @Getter
     @Builder
-    @Schema(description = "내 시리즈에 속한 게시글 목록 정보")
+    @Schema(description = "내 시리즈 내 게시글 요약 정보")
     public static class MySeriesPostItem {
 
         @Schema(description = "게시글 ID", example = "1")
@@ -52,28 +57,28 @@ public class SeriesMeResponse {
         @Schema(description = "제목", example = "Spring Boot JPA 팁")
         private String title;
 
-        @Schema(description = "본문 앞부분 요약", example = "JPA를 사용할 때 알아두면 좋은 팁들을 정리했습니다.")
+        @Schema(description = "본문 요약")
         private String excerpt;
 
-        @Schema(description = "게시 상태 (PUBLISHED: 공개 / PRIVATE: 비공개 / DRAFT: 작성 중)", example = "PUBLISHED")
+        @Schema(description = "게시 상태 (PUBLISHED / PRIVATE / DRAFT)", example = "PUBLISHED")
         private PostStatus status;
 
-        @Schema(description = "썸네일 이미지 URL (없으면 null)", example = "https://cdn.example.com/thumbnail/abc.jpg")
+        @Schema(description = "썸네일 이미지 URL")
         private String thumbnailUrl;
 
-        @Schema(description = "태그 목록 (최대 3개)", example = "[\"spring\", \"jpa\"]")
+        @Schema(description = "태그명 목록")
         private List<String> tags;
 
-        @Schema(description = "카테고리 목록 (최대 5개)")
-        private List<PostMeResponse.MyCategoryItem> categories;
+        @Schema(description = "카테고리 목록")
+        private List<MyCategoryItem> categories;
 
-        @Schema(description = "생성일시", example = "2024-01-15T10:30:00")
+        @Schema(description = "생성일시")
         private LocalDateTime createdAt;
 
         public static MySeriesPostItem of(
                 Long id, String slug, String title, String excerpt,
                 PostStatus status, String thumbnailUrl,
-                List<String> tags, List<PostMeResponse.MyCategoryItem> categories,
+                List<String> tags, List<MyCategoryItem> categories,
                 LocalDateTime createdAt
         ) {
             return MySeriesPostItem.builder()
@@ -81,6 +86,21 @@ public class SeriesMeResponse {
                     .status(status).thumbnailUrl(thumbnailUrl)
                     .tags(tags).categories(categories).createdAt(createdAt)
                     .build();
+        }
+    }
+
+    /**
+     * 카테고리 요약 정보 (내부 전용)
+     */
+    @Getter
+    @Builder
+    public static class MyCategoryItem {
+        private Long id;
+        private String name;
+        private Integer sortOrder;
+
+        public static MyCategoryItem of(Long id, String name, Integer sortOrder) {
+            return MyCategoryItem.builder().id(id).name(name).sortOrder(sortOrder).build();
         }
     }
 }

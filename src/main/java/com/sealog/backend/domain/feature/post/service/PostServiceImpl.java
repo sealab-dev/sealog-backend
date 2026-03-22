@@ -13,7 +13,6 @@ import com.sealog.backend.domain.feature.post.repository.condition.PostCondition
 import com.sealog.backend.domain.feature.post.util.PostHtmlParser;
 import com.sealog.backend.domain.feature.post.util.PostSlugGenerator;
 import com.sealog.backend.domain.feature.user.entity.User;
-import com.sealog.backend.domain.feature.category.dto.CategoryResponse;
 import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.infra.storage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +41,7 @@ public class PostServiceImpl implements PostService {
     private final PostCategoryService postCategoryService;
     private final PostTagService postTagService;
     private final PostFileService postFileService;
+    private final FileMetadataService fileMetadataService;
     private final FileStorageService fileStorageService;
 
     @Override
@@ -57,30 +57,31 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostResponse.PostDetail getDetail(String nickname, String slug) {
-        return postRepository.findPublishedByNicknameAndSlug(nickname, slug)
-                .map(this::buildPostDetailResponse)
-                .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
+    public Page<PostResponse.PostItem> searchPosts(String keyword, Pageable pageable) {
+        Specification<Post> spec = PostCondition.searchPosts(keyword);
+        return postRepository.findAll(spec, pageable)
+                .map(this::buildPostItemResponse);
     }
 
     @Override
-    public Page<PostResponse.PostItem> searchPosts(String nickname, String keyword, Pageable pageable) {
-        Specification<Post> spec = PostCondition.search(nickname, keyword);
+    public Page<PostResponse.PostItem> searchPostsByNickname(String nickname, String keyword, Pageable pageable) {
+        Specification<Post> spec = PostCondition.searchByNickname(nickname, keyword);
         return postRepository.findAll(spec, pageable)
                 .map(this::buildPostItemResponse);
     }
 
     @Override
     public Page<PostMeResponse.MyPostItem> searchMyPosts(String nickname, String keyword, Pageable pageable) {
-        Specification<Post> spec = PostCondition.search(nickname, keyword);
+        Specification<Post> spec = PostCondition.searchMe(nickname, keyword);
         return postRepository.findAll(spec, pageable)
                 .map(this::buildPostMeItemResponse);
     }
 
     @Override
-    public Page<PostResponse.PostItem> searchPostsByNickname(String nickname, String keyword, Pageable pageable) {
-        return postRepository.findPublishedByNickname(nickname, pageable)
-                .map(this::buildPostItemResponse);
+    public PostResponse.PostDetail getDetail(String nickname, String slug) {
+        return postRepository.findPublishedByNicknameAndSlug(nickname, slug)
+                .map(this::buildPostDetailResponse)
+                .orElseThrow(() -> CustomException.notFound("게시글을 찾을 수 없습니다"));
     }
 
     @Override
@@ -122,11 +123,6 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public PostMeResponse.MyPostItem create(User user, PostMeRequest.Create request, MultipartFile thumbnail) {
-        String thumbnailPath = null;
-        if (thumbnail != null && !thumbnail.isEmpty()) {
-            // TODO: 파일 업로드 연동
-        }
-
         String slug = PostSlugGenerator.generate(request.getTitle());
         String excerpt = PostHtmlParser.extractExcerpt(request.getContent());
 
@@ -137,7 +133,6 @@ public class PostServiceImpl implements PostService {
                 .excerpt(excerpt)
                 .content(request.getContent())
                 .status(PostStatus.PUBLISHED)
-                .thumbnailPath(thumbnailPath)
                 .build();
 
         if (request.getSeriesId() != null) {
@@ -146,7 +141,6 @@ public class PostServiceImpl implements PostService {
         }
 
         Post savedPost = postRepository.save(post);
-
         postCategoryService.savePostCategories(savedPost.getId(), request.getCategoryIds());
         postTagService.updatePostTags(savedPost.getId(), request.getTags());
 
@@ -213,14 +207,14 @@ public class PostServiceImpl implements PostService {
         return null;
     }
 
-    // ========== Private 보조 메소드 (DTO 변환 및 로직 캡슐화) ========== //
+    // ========== Private 보조 메소드 ========== //
 
-    /**
-     * 공개용 게시글 목록 항목 DTO를 생성합니다.
-     */
     private PostResponse.PostItem buildPostItemResponse(Post post) {
         List<String> tags = postTagService.getTagNamesByPostId(post.getId());
-        List<PostResponse.CategoryItem> categories = postCategoryService.getCategoryItemsByPostId(post.getId());
+        List<PostResponse.CategoryItem> categories = postCategoryService.getPostCategoriesByPostId(post.getId()).stream()
+                .map(pc -> PostResponse.CategoryItem.of(pc.getCategory().getId(), pc.getCategory().getName(), pc.getSortOrder()))
+                .collect(Collectors.toList());
+
         PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
                 post.getUser().getNickname(),
                 fileStorageService.getFileUrl(post.getUser().getProfileImagePath())
@@ -240,12 +234,12 @@ public class PostServiceImpl implements PostService {
         );
     }
 
-    /**
-     * 공개용 게시글 상세 정보 DTO를 생성합니다.
-     */
     private PostResponse.PostDetail buildPostDetailResponse(Post post) {
         List<String> tags = postTagService.getTagNamesByPostId(post.getId());
-        List<PostResponse.CategoryItem> categories = postCategoryService.getCategoryItemsByPostId(post.getId());
+        List<PostResponse.CategoryItem> categories = postCategoryService.getPostCategoriesByPostId(post.getId()).stream()
+                .map(pc -> PostResponse.CategoryItem.of(pc.getCategory().getId(), pc.getCategory().getName(), pc.getSortOrder()))
+                .collect(Collectors.toList());
+
         PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
                 post.getUser().getNickname(),
                 fileStorageService.getFileUrl(post.getUser().getProfileImagePath())
@@ -270,16 +264,10 @@ public class PostServiceImpl implements PostService {
         );
     }
 
-    /**
-     * 인증된 사용자용 내 게시글 항목 DTO를 생성합니다.
-     */
     private PostMeResponse.MyPostItem buildPostMeItemResponse(Post post) {
-        List<CategoryResponse.CategoryItem> tags = postTagService.getTagNamesByPostId(post.getId()).stream()
-                .map(tagName -> CategoryResponse.CategoryItem.of(null, tagName, null))
-                .collect(Collectors.toList());
-        
-        List<CategoryResponse.CategoryItem> categories = postCategoryService.getCategoryItemsByPostId(post.getId()).stream()
-                .map(ci -> CategoryResponse.CategoryItem.of(ci.getId(), ci.getName(), null))
+        List<String> tags = postTagService.getTagNamesByPostId(post.getId());
+        List<PostMeResponse.MyCategoryItem> categories = postCategoryService.getPostCategoriesByPostId(post.getId()).stream()
+                .map(pc -> PostMeResponse.MyCategoryItem.of(pc.getCategory().getId(), pc.getCategory().getName(), pc.getSortOrder()))
                 .collect(Collectors.toList());
 
         return PostMeResponse.MyPostItem.of(

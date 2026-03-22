@@ -1,7 +1,6 @@
 package com.sealog.backend.domain.feature.post.dto;
 
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
-import com.sealog.backend.domain.feature.category.dto.CategoryResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -40,11 +39,11 @@ public class PostMeResponse {
         @Schema(description = "썸네일 이미지 URL")
         private String thumbnailUrl;
 
-        @Schema(description = "태그 목록")
-        private List<CategoryResponse.CategoryItem> tags;
+        @Schema(description = "태그명 목록")
+        private List<String> tags;
 
         @Schema(description = "카테고리 목록")
-        private List<CategoryResponse.CategoryItem> categories;
+        private List<MyCategoryItem> categories;
 
         @Schema(description = "생성일시")
         private LocalDateTime createdAt;
@@ -52,8 +51,8 @@ public class PostMeResponse {
         public static MyPostItem of(
                 Long id, String slug, String title, String excerpt,
                 PostStatus status, String thumbnailUrl,
-                List<CategoryResponse.CategoryItem> categories,
-                List<CategoryResponse.CategoryItem> tags,
+                List<MyCategoryItem> categories,
+                List<String> tags,
                 LocalDateTime createdAt
         ) {
             return MyPostItem.builder()
@@ -106,23 +105,23 @@ public class PostMeResponse {
         private List<MyCategoryItem> categories;
 
         @Schema(description = "태그명 목록")
-        private List<String> tagNames;
+        private List<String> tags;
 
         public static MyPostEdit of(
                 Long id, String slug, String title, String excerpt, String content,
                 PostStatus status, String thumbnailUrl, Long seriesId,
-                List<MyCategoryItem> categories, List<String> tagNames
+                List<MyCategoryItem> categories, List<String> tags
         ) {
             return MyPostEdit.builder()
                     .id(id).slug(slug).title(title).excerpt(excerpt).content(content)
                     .status(status).thumbnailUrl(thumbnailUrl).seriesId(seriesId)
-                    .categories(categories).tagNames(tagNames)
+                    .categories(categories).tags(tags)
                     .build();
         }
     }
 
     /**
-     * 수정을 위한 카테고리 매핑 정보 DTO
+     * 카테고리 매핑 정보 DTO
      */
     @Getter
     @Builder

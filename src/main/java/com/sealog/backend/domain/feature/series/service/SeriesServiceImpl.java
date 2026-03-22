@@ -15,8 +15,6 @@ import com.sealog.backend.global.exception.CustomException;
 import com.sealog.backend.domain.feature.post.service.PostCategoryService;
 import com.sealog.backend.domain.feature.post.service.PostTagService;
 import com.sealog.backend.infra.storage.service.FileStorageService;
-import com.sealog.backend.domain.feature.post.dto.PostMeResponse;
-import com.sealog.backend.domain.feature.post.dto.PostResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -157,9 +155,11 @@ public class SeriesServiceImpl implements SeriesService {
      */
     private SeriesResponse.SeriesPostItem toPublicSeriesPostItem(Post entity) {
         List<String> tags = postTagService.getTagNamesByPostId(entity.getId());
-        List<PostResponse.CategoryItem> categories = postCategoryService.getCategoryItemsByPostId(entity.getId());
+        List<SeriesResponse.CategoryItem> categories = postCategoryService.getPostCategoriesByPostId(entity.getId()).stream()
+                .map(pc -> SeriesResponse.CategoryItem.of(pc.getCategory().getId(), pc.getCategory().getName(), pc.getSortOrder()))
+                .collect(Collectors.toList());
 
-        PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
+        SeriesResponse.AuthorInfo author = SeriesResponse.AuthorInfo.of(
                 entity.getUser().getNickname(),
                 fileStorageService.getFileUrl(entity.getUser().getProfileImagePath())
         );
@@ -191,8 +191,8 @@ public class SeriesServiceImpl implements SeriesService {
      */
     private SeriesMeResponse.MySeriesPostItem toMeSeriesPostItem(Post entity) {
         List<String> tags = postTagService.getTagNamesByPostId(entity.getId());
-        List<PostMeResponse.MyCategoryItem> categories = postCategoryService.getPostCategoriesByPostId(entity.getId()).stream()
-                .map(pc -> PostMeResponse.MyCategoryItem.of(pc.getCategory().getId(), pc.getCategory().getName(), pc.getSortOrder()))
+        List<SeriesMeResponse.MyCategoryItem> categories = postCategoryService.getPostCategoriesByPostId(entity.getId()).stream()
+                .map(pc -> SeriesMeResponse.MyCategoryItem.of(pc.getCategory().getId(), pc.getCategory().getName(), pc.getSortOrder()))
                 .collect(Collectors.toList());
 
         return SeriesMeResponse.MySeriesPostItem.of(
@@ -210,10 +210,6 @@ public class SeriesServiceImpl implements SeriesService {
 
     /**
      * 시리즈 소유자 권한을 검증합니다.
-     *
-     * @param series 검증할 시리즈 엔티티
-     * @param userId 검증할 사용자 ID
-     * @throws CustomException.forbidden 소유자가 아닐 경우 발생
      */
     private void verifyOwner(Series series, Long userId) {
         if (!series.getUser().getId().equals(userId)) {

@@ -43,7 +43,7 @@ public class Post extends BaseTimeEntity {
     private String excerpt;
 
     @Lob
-    @Column(nullable = false, columnDefinition = "MEDIUMTEXT") // 성능 테스트를 위한 임시 변경
+    @Column(nullable = false, columnDefinition = "MEDIUMTEXT")
     private String content;
 
     @Enumerated(EnumType.STRING)
@@ -102,8 +102,6 @@ public class Post extends BaseTimeEntity {
     // ============== 삭제 관리 ============== //
     /**
      * 소프트 삭제 처리
-     * - status를 DELETED로 변경
-     * - deletedAt 시간 기록 (BaseTimeEntity)
      */
     public void softDelete() {
         this.markAsDeleted();
@@ -111,8 +109,6 @@ public class Post extends BaseTimeEntity {
 
     /**
      * 삭제 복구
-     * - status를 PUBLISHED로 변경
-     * - deletedAt 초기화 (BaseTimeEntity)
      */
     public void restoreFromDelete() {
         this.restore();

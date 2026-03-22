@@ -25,9 +25,12 @@ public class ExecutionTimeExtension implements BeforeEachCallback, AfterEachCall
 
     @Override
     public void afterEach(ExtensionContext context) {
-        long start = context.getStore(NAMESPACE)
+        Long start = context.getStore(NAMESPACE)
                 .get(START_TIME, Long.class);
-        long duration = System.currentTimeMillis() - start;
-        log.info("[Test] {} | {}ms", context.getDisplayName(), duration);
+        
+        if (start != null) {
+            long duration = System.currentTimeMillis() - start;
+            log.info("[Test] {} | {}ms", context.getDisplayName(), duration);
+        }
     }
 }

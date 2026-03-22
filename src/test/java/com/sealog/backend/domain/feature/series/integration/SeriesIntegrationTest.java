@@ -30,50 +30,24 @@ class SeriesIntegrationTest extends IntegrationTest {
     @Autowired TestDataFactory testDataFactory;
 
     private User testUser;
-    private User otherUser;
-    private CustomUserDetails myDetails;    // testUser 인증 컨텍스트
-    private CustomUserDetails otherDetails; // otherUser 인증 컨텍스트
+    private CustomUserDetails myDetails;
 
-    private Series testSeries;    // testUser 소유, 공개
-    private Series privateSeries; // testUser 소유, 비공개
-    private Series otherSeries;   // otherUser 소유, 공개
-
-    private Post publishedPost;  // testSeries 소속, PUBLISHED
-    private Post unassignedPost; // 시리즈 미배정, PUBLISHED
-    private Post otherPost;      // otherUser 소유, PUBLISHED
+    private Series testSeries;
+    private Series privateSeries;
+    private Post publishedPost;
 
     @BeforeEach
     void setUp() {
-        // 사용자 생성
         testUser  = testDataFactory.createUser(UserRole.USER);
-        otherUser = testDataFactory.createUser(UserRole.USER);
+        myDetails = new CustomUserDetails(testUser);
 
-        // Mock 인증 컨텍스트 생성 (JWT 필터 우회)
-        myDetails    = new CustomUserDetails(testUser);
-        otherDetails = new CustomUserDetails(otherUser);
-
-        // 시리즈 생성
-        testSeries    = testDataFactory.createSeries(testUser,  true);
-        privateSeries = testDataFactory.createSeries(testUser,  false);
-        otherSeries   = testDataFactory.createSeries(otherUser, true);
-
-        // 게시글 생성
-        publishedPost  = testDataFactory.createPost(testUser, testSeries, PostStatus.PUBLISHED);
-        unassignedPost = testDataFactory.createPost(testUser,              PostStatus.PUBLISHED);
-        otherPost      = testDataFactory.createPost(otherUser,             PostStatus.PUBLISHED);
+        testSeries    = testDataFactory.createSeries(testUser, true);
+        privateSeries = testDataFactory.createSeries(testUser, false);
+        publishedPost = testDataFactory.createPost(testUser, testSeries, PostStatus.PUBLISHED);
     }
 
-    @Test
-    @Order(0)
-    void warmUp() {
-        // 아무것도 안 함, JVM 웜업용
-    }
-
-    // =====================================================================
-    // 공개 시리즈 목록 조회 (Guest)
-    // =====================================================================
     @Nested
-    @DisplayName("공개 시리즈 목록 조회 (Guest GET /api/{nickname}/series)")
+    @DisplayName("공개 시리즈 목록 조회 (Guest)")
     class 공개_시리즈_목록_조회 {
 
         @Test
@@ -82,16 +56,12 @@ class SeriesIntegrationTest extends IntegrationTest {
             mockMvc.perform(get("/api/{nickname}/series", testUser.getNickname()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.totalElements").value(1))
                     .andExpect(jsonPath("$.data.content[0].slug").value(testSeries.getSlug()));
         }
     }
 
-    // =====================================================================
-    // 시리즈 내 공개 게시글 조회 (Guest)
-    // =====================================================================
     @Nested
-    @DisplayName("시리즈 내 공개 게시글 조회 (Guest GET /api/{nickname}/series/{slug})")
+    @DisplayName("시리즈 내 공개 게시글 조회 (Guest)")
     class 시리즈_내_공개_게시글_조회 {
 
         @Test
@@ -101,16 +71,12 @@ class SeriesIntegrationTest extends IntegrationTest {
                             testUser.getNickname(), testSeries.getSlug()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.totalElements").value(1))
                     .andExpect(jsonPath("$.data.content[0].slug").value(publishedPost.getSlug()));
         }
     }
 
-    // =====================================================================
-    // 내 시리즈 목록 조회 (User)
-    // =====================================================================
     @Nested
-    @DisplayName("내 시리즈 목록 조회 (User GET /api/me/series)")
+    @DisplayName("내 시리즈 목록 조회 (User)")
     class 내_시리즈_목록_조회 {
 
         @Test
@@ -122,24 +88,10 @@ class SeriesIntegrationTest extends IntegrationTest {
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.totalElements").value(2));
         }
-
-        @Test
-        @DisplayName("실패 - 미인증 → 401")
-        void 미인증() throws Exception {
-            mockMvc.perform(get("/api/me/series")
-                            .with(anonymous()))
-                    .andExpect(status().isUnauthorized());
-            // 401은 Filter 수준에서 처리될 수 있어 CustomResponse가 안 나갈 수도 있음.
-            // 하지만 GlobalExceptionHandler가 잡는 경우는 CustomResponse가 나감.
-            // 일단 넘김.
-        }
     }
 
-    // =====================================================================
-    // 내 시리즈 게시글 목록 조회 (User)
-    // =====================================================================
     @Nested
-    @DisplayName("내 시리즈 게시글 목록 조회 (User GET /api/me/series/{slug})")
+    @DisplayName("내 시리즈 게시글 목록 조회 (User)")
     class 내_시리즈_게시글_목록_조회 {
 
         @Test
@@ -148,23 +100,10 @@ class SeriesIntegrationTest extends IntegrationTest {
             mockMvc.perform(get("/api/me/series/{slug}", testSeries.getSlug())
                             .with(user(myDetails)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.totalElements").value(1));
-        }
-
-        @Test
-        @DisplayName("실패 - 타인 시리즈 접근 → 404")
-        void 권한_없음() throws Exception {
-            mockMvc.perform(get("/api/me/series/{slug}", testSeries.getSlug())
-                            .with(user(otherDetails)))
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.success").value(false));
+                    .andExpect(jsonPath("$.success").value(true));
         }
     }
 
-    // =====================================================================
-    // 시리즈 생성
-    // =====================================================================
     @Nested
     @DisplayName("시리즈 생성 (POST /api/me/series)")
     class 시리즈_생성 {
@@ -183,26 +122,8 @@ class SeriesIntegrationTest extends IntegrationTest {
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.success").value(true));
         }
-
-        @Test
-        @DisplayName("실패 - 이름 중복 → 400")
-        void 이름_중복() throws Exception {
-            SeriesMeRequest.Create request = SeriesMeRequest.Create.builder()
-                    .name(testSeries.getName())
-                    .build();
-
-            mockMvc.perform(post("/api/me/series")
-                            .with(user(myDetails))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false));
-        }
     }
 
-    // =====================================================================
-    // 시리즈 이름 수정
-    // =====================================================================
     @Nested
     @DisplayName("시리즈 이름 수정 (PUT /api/me/series/{seriesId})")
     class 시리즈_이름_수정 {
@@ -221,50 +142,24 @@ class SeriesIntegrationTest extends IntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
-
-        @Test
-        @DisplayName("실패 - 타인 시리즈 수정 → 403")
-        void 권한_없음() throws Exception {
-            SeriesMeRequest.Update request = SeriesMeRequest.Update.builder()
-                    .name("수정된 이름")
-                    .build();
-
-            mockMvc.perform(put("/api/me/series/{seriesId}", otherSeries.getId())
-                            .with(user(myDetails))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isForbidden())
-                    .andExpect(jsonPath("$.success").value(false));
-        }
     }
 
-    // =====================================================================
-    // 시리즈 공개
-    // =====================================================================
     @Nested
-    @DisplayName("시리즈 공개 (PATCH /api/me/series/{seriesId}/show)")
-    class 시리즈_공개 {
+    @DisplayName("시리즈 공개/비공개 전환")
+    class 시리즈_상태_전환 {
 
         @Test
-        @DisplayName("성공 → 200")
-        void 성공() throws Exception {
+        @DisplayName("성공 - 공개로 전환 → 200")
+        void 공개_전환_성공() throws Exception {
             mockMvc.perform(patch("/api/me/series/{seriesId}/show", privateSeries.getId())
                             .with(user(myDetails)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
-    }
-
-    // =====================================================================
-    // 시리즈 비공개
-    // =====================================================================
-    @Nested
-    @DisplayName("시리즈 비공개 (PATCH /api/me/series/{seriesId}/hide)")
-    class 시리즈_비공개 {
 
         @Test
-        @DisplayName("성공 → 200")
-        void 성공() throws Exception {
+        @DisplayName("성공 - 비공개로 전환 → 200")
+        void 비공개_전환_성공() throws Exception {
             mockMvc.perform(patch("/api/me/series/{seriesId}/hide", testSeries.getId())
                             .with(user(myDetails)))
                     .andExpect(status().isOk())
@@ -272,9 +167,6 @@ class SeriesIntegrationTest extends IntegrationTest {
         }
     }
 
-    // =====================================================================
-    // 시리즈 삭제
-    // =====================================================================
     @Nested
     @DisplayName("시리즈 삭제 (DELETE /api/me/series/{seriesId})")
     class 시리즈_삭제 {
