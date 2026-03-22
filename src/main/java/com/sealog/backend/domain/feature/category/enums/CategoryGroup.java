@@ -1,4 +1,4 @@
-package com.sealog.backend.domain.feature.stack.enums;
+package com.sealog.backend.domain.feature.category.enums;
 
 import com.sealog.backend.global.exception.CustomException;
 import lombok.Getter;
@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum StackGroup {
+public enum CategoryGroup {
 
     LANGUAGE("language", "언어"),
     FRAMEWORK("framework", "프레임워크"),
@@ -20,13 +20,12 @@ public enum StackGroup {
     private final String key;
     private final String title;
 
-    public static StackGroup fromKey(String key) {
-        for (StackGroup group : values()) {
+    public static CategoryGroup fromKey(String key) {
+        for (CategoryGroup group : values()) {
             if (group.key.equalsIgnoreCase(key)) {
-                System.out.println("나여");
                 return group;
             }
         }
-        throw CustomException.badRequest("유효하지 않은 스택 그룹입니다 : " + key);
+        throw CustomException.badRequest("유효하지 않은 카테고리 그룹입니다 : " + key);
     }
 }

@@ -45,7 +45,8 @@ out/
 ### AI ###
 GEMINI.md
 CLAUDE.md
-.claude
+.clauderules
 
 ### QueryDSL Q타입 생성 파일 ###
 src/main/generated/
+

@@ -1,6 +1,6 @@
 package com.sealog.backend.domain.feature.post.entity;
 
-import com.sealog.backend.domain.feature.stack.entity.Stack;
+import com.sealog.backend.domain.feature.category.entity.Category;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -8,10 +8,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "post_stack")
+@Table(name = "post_categories")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PostStack {
+public class PostCategory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,16 +22,16 @@ public class PostStack {
     private Post post;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "stack_id", nullable = false)
-    private Stack stack;
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     @Column(name = "sort_order")
     private Integer sortOrder;
 
     @Builder
-    public PostStack(Post post, Stack stack, Integer sortOrder) {
+    public PostCategory(Post post, Category category, Integer sortOrder) {
         this.post = post;
-        this.stack = stack;
+        this.category = category;
         this.sortOrder = sortOrder;
     }
 }
