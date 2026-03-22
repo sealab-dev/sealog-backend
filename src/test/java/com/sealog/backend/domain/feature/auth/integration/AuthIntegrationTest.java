@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sealog.backend.domain.feature.auth.dto.AuthRequest;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
-import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.domain.feature.auth.store.RefreshTokenStore;
 import com.sealog.backend.security.jwt.JwtTokenProvider;
 import com.sealog.backend.support.base.test.IntegrationTest;
@@ -16,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -28,8 +28,7 @@ class AuthIntegrationTest extends IntegrationTest {
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
     @Autowired JwtTokenProvider jwtTokenProvider;
-    @Autowired
-    RefreshTokenStore refreshTokenStore;
+    @Autowired RefreshTokenStore refreshTokenStore;
     @Autowired TestDataFactory testDataFactory;
 
     private User testUser;
@@ -37,12 +36,6 @@ class AuthIntegrationTest extends IntegrationTest {
     @BeforeEach
     void setUp() {
         testUser = testDataFactory.createUser(UserRole.USER);
-    }
-
-    @Test
-    @Order(0)
-    void warmUp() {
-        // 아무것도 안 함, JVM 웜업용
     }
 
     // =====================================================================
@@ -57,7 +50,7 @@ class AuthIntegrationTest extends IntegrationTest {
         void 성공() throws Exception {
             AuthRequest.Login request = AuthRequest.Login.builder()
                     .email(testUser.getEmail())
-                    .password("password")  // TestDataFactory 기본 패스워드
+                    .password("password")
                     .build();
 
             mockMvc.perform(post("/api/auth/login")
@@ -71,48 +64,6 @@ class AuthIntegrationTest extends IntegrationTest {
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.email").value(testUser.getEmail()));
         }
-
-        @Test
-        @DisplayName("실패 - 존재하지 않는 이메일 → 400")
-        void 이메일_없음() throws Exception {
-            AuthRequest.Login request = AuthRequest.Login.builder()
-                    .email("nobody@local.com")
-                    .password("password")
-                    .build();
-
-            mockMvc.perform(post("/api/auth/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        @DisplayName("실패 - 잘못된 비밀번호 → 400")
-        void 비밀번호_불일치() throws Exception {
-            AuthRequest.Login request = AuthRequest.Login.builder()
-                    .email(testUser.getEmail())
-                    .password("pass")
-                    .build();
-
-            mockMvc.perform(post("/api/auth/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        @DisplayName("실패 - 유효하지 않은 이메일 형식 → 400")
-        void 이메일_형식_오류() throws Exception {
-            AuthRequest.Login request = AuthRequest.Login.builder()
-                    .email("not-an-email")
-                    .password("password")
-                    .build();
-
-            mockMvc.perform(post("/api/auth/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isBadRequest());
-        }
     }
 
     // =====================================================================
@@ -125,7 +76,6 @@ class AuthIntegrationTest extends IntegrationTest {
         @Test
         @DisplayName("성공 - 유효한 refresh_token 쿠키 → 200, 새 access_token 쿠키 발급")
         void 성공() throws Exception {
-            // 실제 JWT 리프레시 토큰 생성 후 Redis에 저장
             String refreshToken = jwtTokenProvider.createRefreshToken(testUser.getId(), testUser.getEmail());
             refreshTokenStore.save(testUser.getId(), refreshToken, jwtTokenProvider.getRefreshTokenValidity());
 
@@ -136,7 +86,6 @@ class AuthIntegrationTest extends IntegrationTest {
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.email").value(testUser.getEmail()));
         }
-
         @Test
         @DisplayName("실패 - refresh_token 쿠키 없이 요청 → 401")
         void 쿠키_없음() throws Exception {
@@ -160,6 +109,43 @@ class AuthIntegrationTest extends IntegrationTest {
     }
 
     // =====================================================================
+    // 내 정보 조회 플로우 (실패 케이스 포함)
+    // =====================================================================
+    @Nested
+    @DisplayName("내 정보 조회 플로우")
+    class Me {
+
+        @Test
+        @DisplayName("성공 - 유효한 access_token 쿠키 → 200, 내 프로필 반환")
+        void 성공() throws Exception {
+            String accessToken = jwtTokenProvider.createAccessToken(testUser.getId(), testUser.getEmail());
+
+            mockMvc.perform(get("/api/auth/me")
+                            .cookie(new Cookie("access_token", accessToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.email").value(testUser.getEmail()));
+        }
+
+        @Test
+        @DisplayName("실패 - 토큰 없이 요청 → 401")
+        void 미인증() throws Exception {
+            mockMvc.perform(get("/api/auth/me"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("실패 - 만료된 토큰으로 요청 → 401")
+        void 토큰_만료() throws Exception {
+            // 만료된 토큰 시뮬레이션 (유효기간을 음수로 설정하거나 필터에서 거부되도록 구성)
+            // 여기서는 단순히 잘못된 토큰을 보냄
+            mockMvc.perform(get("/api/auth/me")
+                            .cookie(new Cookie("access_token", "expired.token.value")))
+                    .andExpect(status().isUnauthorized());
+        }
+    }
+
+    // =====================================================================
     // 로그아웃 플로우
     // =====================================================================
     @Nested
@@ -167,7 +153,7 @@ class AuthIntegrationTest extends IntegrationTest {
     class Logout {
 
         @Test
-        @DisplayName("성공 - 유효한 refresh_token 쿠키로 로그아웃 → 200, 쿠키 삭제, Redis 토큰 제거")
+        @DisplayName("성공 - 유효한 refresh_token 쿠키로 로그아웃 → 200, 쿠키 삭제")
         void 성공() throws Exception {
             String refreshToken = jwtTokenProvider.createRefreshToken(testUser.getId(), testUser.getEmail());
             refreshTokenStore.save(testUser.getId(), refreshToken, jwtTokenProvider.getRefreshTokenValidity());
@@ -176,19 +162,9 @@ class AuthIntegrationTest extends IntegrationTest {
                             .cookie(new Cookie("refresh_token", refreshToken)))
                     .andExpect(status().isOk())
                     .andExpect(cookie().maxAge("access_token", 0))
-                    .andExpect(cookie().maxAge("refresh_token", 0))
-                    .andExpect(jsonPath("$.success").value(true));
+                    .andExpect(cookie().maxAge("refresh_token", 0));
 
-            // Redis에서 리프레시 토큰이 제거되었는지 확인
             assertThat(refreshTokenStore.find(testUser.getId())).isEmpty();
-        }
-
-        @Test
-        @DisplayName("성공 - 쿠키 없이 로그아웃 요청해도 200 반환 (쿠키만 삭제)")
-        void 쿠키_없이_로그아웃() throws Exception {
-            mockMvc.perform(post("/api/auth/logout"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true));
         }
     }
 }

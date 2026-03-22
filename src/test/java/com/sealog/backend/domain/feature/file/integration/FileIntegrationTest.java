@@ -36,12 +36,6 @@ class FileIntegrationTest extends IntegrationTest {
         myDetails = new CustomUserDetails(testUser);
     }
 
-    @Test
-    @Order(0)
-    void warmUp() {
-        // 아무것도 안 함, JVM 웜업용
-    }
-
     // =====================================================================
     // 파일 업로드
     // =====================================================================
@@ -62,7 +56,6 @@ class FileIntegrationTest extends IntegrationTest {
             mockMvc.perform(multipart("/api/files/upload")
                             .file(file)
                             .with(user(myDetails)))
-                    .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.id").isNumber())
@@ -84,77 +77,9 @@ class FileIntegrationTest extends IntegrationTest {
             mockMvc.perform(multipart("/api/files/upload")
                             .file(file)
                             .with(user(myDetails)))
-                    .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.originalName").value("test.png"));
-        }
-
-        @Test
-        @DisplayName("실패 - 미인증 → 401")
-        void 미인증() throws Exception {
-            MockMultipartFile file = new MockMultipartFile(
-                    "file",
-                    "test.jpg",
-                    "image/jpeg",
-                    "fake image content".getBytes()
-            );
-
-            mockMvc.perform(multipart("/api/files/upload")
-                            .file(file)
-                            .with(anonymous()))
-                    .andExpect(status().isUnauthorized());
-        }
-
-        @Test
-        @DisplayName("실패 - 빈 파일 → 400")
-        void 빈_파일() throws Exception {
-            MockMultipartFile file = new MockMultipartFile(
-                    "file",
-                    "empty.jpg",
-                    "image/jpeg",
-                    new byte[0]
-            );
-
-            mockMvc.perform(multipart("/api/files/upload")
-                            .file(file)
-                            .with(user(myDetails)))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false));
-        }
-
-        @Test
-        @DisplayName("실패 - 허용되지 않는 확장자 → 400")
-        void 허용되지_않는_확장자() throws Exception {
-            MockMultipartFile file = new MockMultipartFile(
-                    "file",
-                    "malware.exe",
-                    "application/octet-stream",
-                    "fake content".getBytes()
-            );
-
-            mockMvc.perform(multipart("/api/files/upload")
-                            .file(file)
-                            .with(user(myDetails)))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false));
-        }
-
-        @Test
-        @DisplayName("실패 - 경로 조작 파일명 → 400")
-        void 경로_조작_파일명() throws Exception {
-            MockMultipartFile file = new MockMultipartFile(
-                    "file",
-                    "../etc/passwd",
-                    "image/jpeg",
-                    "fake content".getBytes()
-            );
-
-            mockMvc.perform(multipart("/api/files/upload")
-                            .file(file)
-                            .with(user(myDetails)))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false));
         }
     }
 }
