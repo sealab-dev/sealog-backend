@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -61,6 +62,7 @@ class FileIntegrationTest extends IntegrationTest {
             mockMvc.perform(multipart("/api/files/upload")
                             .file(file)
                             .with(user(myDetails)))
+                    .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.id").isNumber())
@@ -68,21 +70,24 @@ class FileIntegrationTest extends IntegrationTest {
         }
 
         @Test
-        @DisplayName("성공 - 문서 파일 업로드 → 200")
-        void 성공_문서() throws Exception {
+        @DisplayName("성공 - png 파일 업로드 → 200")
+        void 성공_png() throws Exception {
+            // PNG 매직 바이트 (89 50 4E 47 0D 0A 1A 0A)
+            byte[] pngHeader = new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
             MockMultipartFile file = new MockMultipartFile(
                     "file",
-                    "document.pdf",
-                    "application/pdf",
-                    "%PDF-1.4".getBytes()
+                    "test.png",
+                    "image/png",
+                    pngHeader
             );
 
             mockMvc.perform(multipart("/api/files/upload")
                             .file(file)
                             .with(user(myDetails)))
+                    .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.originalName").value("document.pdf"));
+                    .andExpect(jsonPath("$.data.originalName").value("test.png"));
         }
 
         @Test

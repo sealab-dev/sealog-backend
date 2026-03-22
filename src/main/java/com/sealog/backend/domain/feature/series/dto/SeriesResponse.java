@@ -61,8 +61,8 @@ public class SeriesResponse {
         @Schema(description = "태그 목록 (최대 3개)", example = "[\"spring\", \"jpa\"]")
         private List<String> tags;
 
-        @Schema(description = "기술 스택 목록 (최대 5개)")
-        private List<PostResponse.StackItem> stacks;
+        @Schema(description = "카테고리 목록 (최대 5개)")
+        private List<PostResponse.CategoryItem> categories;
 
         @Schema(description = "작성자 정보")
         private PostResponse.AuthorInfo author;
@@ -73,13 +73,13 @@ public class SeriesResponse {
         public static SeriesPostItem of(
                 Long id, String slug, String title, String excerpt,
                 PostStatus status, String thumbnailUrl,
-                List<String> tags, List<PostResponse.StackItem> stacks,
+                List<String> tags, List<PostResponse.CategoryItem> categories,
                 PostResponse.AuthorInfo author, LocalDateTime createdAt
         ) {
             return SeriesPostItem.builder()
                     .id(id).slug(slug).title(title).excerpt(excerpt)
                     .status(status).thumbnailUrl(thumbnailUrl)
-                    .tags(tags).stacks(stacks).author(author).createdAt(createdAt)
+                    .tags(tags).categories(categories).author(author).createdAt(createdAt)
                     .build();
         }
     }

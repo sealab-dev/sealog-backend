@@ -12,7 +12,7 @@ import com.sealog.backend.domain.feature.post.repository.PostRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
 import com.sealog.backend.global.exception.CustomException;
-import com.sealog.backend.domain.feature.post.service.PostStackService;
+import com.sealog.backend.domain.feature.post.service.PostCategoryService;
 import com.sealog.backend.domain.feature.post.service.PostTagService;
 import com.sealog.backend.infra.storage.service.FileStorageService;
 import com.sealog.backend.domain.feature.post.dto.PostMeResponse;
@@ -38,7 +38,7 @@ public class SeriesServiceImpl implements SeriesService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final PostTagService postTagService;
-    private final PostStackService postStackService;
+    private final PostCategoryService postCategoryService;
     private final FileStorageService fileStorageService;
 
     // ========== Guest (공개) ========== //
@@ -142,18 +142,22 @@ public class SeriesServiceImpl implements SeriesService {
         return series;
     }
 
-    // ========== DTO Mappers ========== //
+    // ========== Private 보조 메소드 (DTO 변환 및 검증) ========== //
 
+    /**
+     * 공개용 시리즈 항목 DTO를 생성합니다.
+     */
     private SeriesResponse.SeriesItem toPublicSeriesItem(Series entity) {
         long postCount = postRepository.countBySeriesIdAndStatusAndDeletedAtIsNull(entity.getId(), PostStatus.PUBLISHED);
         return SeriesResponse.SeriesItem.of(entity.getId(), entity.getSlug(), entity.getName(), postCount);
     }
 
+    /**
+     * 시리즈 내 게시글 항목 DTO를 생성합니다. (공개용)
+     */
     private SeriesResponse.SeriesPostItem toPublicSeriesPostItem(Post entity) {
         List<String> tags = postTagService.getTagNamesByPostId(entity.getId());
-        List<PostResponse.StackItem> stacks = postStackService.getPostStacksByPostId(entity.getId()).stream()
-                .map(ps -> PostResponse.StackItem.of(ps.getStack().getId(), ps.getStack().getName(), ps.getSortOrder()))
-                .collect(Collectors.toList());
+        List<PostResponse.CategoryItem> categories = postCategoryService.getCategoryItemsByPostId(entity.getId());
 
         PostResponse.AuthorInfo author = PostResponse.AuthorInfo.of(
                 entity.getUser().getNickname(),
@@ -168,21 +172,27 @@ public class SeriesServiceImpl implements SeriesService {
                 entity.getStatus(),
                 fileStorageService.getFileUrl(entity.getThumbnailPath()),
                 tags,
-                stacks,
+                categories,
                 author,
                 entity.getCreatedAt()
         );
     }
 
+    /**
+     * 내 시리즈 목록 항목 DTO를 생성합니다.
+     */
     private SeriesMeResponse.MySeriesItem toMeSeriesItem(Series entity) {
         long postCount = postRepository.countBySeriesIdAndDeletedAtIsNull(entity.getId());
         return SeriesMeResponse.MySeriesItem.of(entity.getId(), entity.getSlug(), entity.getName(), entity.isPublic(), postCount);
     }
 
+    /**
+     * 내 시리즈 내 게시글 항목 DTO를 생성합니다. (관리용)
+     */
     private SeriesMeResponse.MySeriesPostItem toMeSeriesPostItem(Post entity) {
         List<String> tags = postTagService.getTagNamesByPostId(entity.getId());
-        List<PostMeResponse.MyStackItem> stacks = postStackService.getPostStacksByPostId(entity.getId()).stream()
-                .map(ps -> PostMeResponse.MyStackItem.of(ps.getStack().getId(), ps.getStack().getName(), ps.getSortOrder()))
+        List<PostMeResponse.MyCategoryItem> categories = postCategoryService.getPostCategoriesByPostId(entity.getId()).stream()
+                .map(pc -> PostMeResponse.MyCategoryItem.of(pc.getCategory().getId(), pc.getCategory().getName(), pc.getSortOrder()))
                 .collect(Collectors.toList());
 
         return SeriesMeResponse.MySeriesPostItem.of(
@@ -193,11 +203,18 @@ public class SeriesServiceImpl implements SeriesService {
                 entity.getStatus(),
                 fileStorageService.getFileUrl(entity.getThumbnailPath()),
                 tags,
-                stacks,
+                categories,
                 entity.getCreatedAt()
         );
     }
 
+    /**
+     * 시리즈 소유자 권한을 검증합니다.
+     *
+     * @param series 검증할 시리즈 엔티티
+     * @param userId 검증할 사용자 ID
+     * @throws CustomException.forbidden 소유자가 아닐 경우 발생
+     */
     private void verifyOwner(Series series, Long userId) {
         if (!series.getUser().getId().equals(userId)) {
             throw CustomException.forbidden("권한이 없습니다.");

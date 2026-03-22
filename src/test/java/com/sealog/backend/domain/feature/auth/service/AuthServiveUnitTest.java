@@ -48,6 +48,7 @@ class AuthServiveUnitTest extends UnitTest {
     private static final String ENCODED_PW    = "encodedPassword";
     private static final String ACCESS_TOKEN  = "access.token.value";
     private static final String REFRESH_TOKEN = "refresh.token.value";
+    private static final long REFRESH_VALIDITY = 86400000L;
 
     @BeforeEach
     void setUp() {
@@ -61,9 +62,6 @@ class AuthServiveUnitTest extends UnitTest {
         ReflectionTestUtils.setField(testUser, "id", 1L);
     }
 
-    // =====================================================================
-    // 로그인
-    // =====================================================================
     @Nested
     @DisplayName("로그인")
     class Login {
@@ -75,6 +73,7 @@ class AuthServiveUnitTest extends UnitTest {
             given(passwordEncoder.matches(TEST_PASSWORD, ENCODED_PW)).willReturn(true);
             given(jwtTokenProvider.createAccessToken(1L, TEST_EMAIL)).willReturn(ACCESS_TOKEN);
             given(jwtTokenProvider.createRefreshToken(1L, TEST_EMAIL)).willReturn(REFRESH_TOKEN);
+            given(jwtTokenProvider.getRefreshTokenValidity()).willReturn(REFRESH_VALIDITY);
 
             AuthRequest.Login request = AuthRequest.Login.builder()
                     .email(TEST_EMAIL).password(TEST_PASSWORD).build();
@@ -84,12 +83,11 @@ class AuthServiveUnitTest extends UnitTest {
             assertThat(result.getAccessToken()).isEqualTo(ACCESS_TOKEN);
             assertThat(result.getRefreshToken()).isEqualTo(REFRESH_TOKEN);
             assertThat(result.getAuthProfile().getEmail()).isEqualTo(TEST_EMAIL);
-            // Redis에 리프레시 토큰이 저장되었는지 확인
-            verify(refreshTokenStore).save(eq(1L), eq(REFRESH_TOKEN), eq(86400000L));
+            verify(refreshTokenStore).save(eq(1L), eq(REFRESH_TOKEN), eq(REFRESH_VALIDITY));
         }
 
         @Test
-        @DisplayName("실패 - 존재하지 않는 이메일로 로그인하면 401 예외가 발생한다")
+        @DisplayName("실패 - 존재하지 않는 이메일로 로그인하면 400 예외가 발생한다")
         void 이메일_없음() {
             given(userRepository.findByEmail(anyString())).willReturn(Optional.empty());
 
@@ -100,13 +98,13 @@ class AuthServiveUnitTest extends UnitTest {
                     .isInstanceOf(CustomException.class)
                     .satisfies(ex -> {
                         CustomException ce = (CustomException) ex;
-                        assertThat(ce.getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED);
+                        assertThat(ce.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
                         assertThat(ce.getMessage()).contains("이메일 또는 비밀번호가 일치하지 않습니다");
                     });
         }
 
         @Test
-        @DisplayName("실패 - 비밀번호가 틀리면 401 예외가 발생한다")
+        @DisplayName("실패 - 비밀번호가 틀리면 400 예외가 발생한다")
         void 비밀번호_불일치() {
             given(userRepository.findByEmail(TEST_EMAIL)).willReturn(Optional.of(testUser));
             given(passwordEncoder.matches("wrongPw", ENCODED_PW)).willReturn(false);
@@ -118,23 +116,15 @@ class AuthServiveUnitTest extends UnitTest {
                     .isInstanceOf(CustomException.class)
                     .satisfies(ex -> {
                         CustomException ce = (CustomException) ex;
-                        assertThat(ce.getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED);
+                        assertThat(ce.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
                         assertThat(ce.getMessage()).contains("이메일 또는 비밀번호가 일치하지 않습니다");
                     });
         }
     }
 
-    // =====================================================================
-    // 토큰 재발급
-    // =====================================================================
     @Nested
     @DisplayName("토큰 재발급")
     class Refresh {
-
-        @BeforeEach
-        void givenStoredToken() {
-            given(refreshTokenStore.find(1L)).willReturn(Optional.of(REFRESH_TOKEN));
-        }
 
         @Test
         @DisplayName("성공 - 유효한 리프레시 토큰으로 새 액세스 토큰이 발급된다")
@@ -142,12 +132,13 @@ class AuthServiveUnitTest extends UnitTest {
             given(jwtTokenProvider.validateToken(REFRESH_TOKEN)).willReturn(true);
             given(jwtTokenProvider.getUserId(REFRESH_TOKEN)).willReturn(1L);
             given(userRepository.findById(1L)).willReturn(Optional.of(testUser));
+            given(refreshTokenStore.find(1L)).willReturn(Optional.of(REFRESH_TOKEN));
             given(jwtTokenProvider.createAccessToken(1L, TEST_EMAIL)).willReturn("new.access.token");
 
             AuthResponse.Token result = authService.refresh(REFRESH_TOKEN);
 
             assertThat(result.getAccessToken()).isEqualTo("new.access.token");
-            assertThat(result.getRefreshToken()).isNull();   // refresh 시 리프레시 토큰은 재발급 안 함
+            assertThat(result.getRefreshToken()).isNull();
             assertThat(result.getAuthProfile().getEmail()).isEqualTo(TEST_EMAIL);
         }
 
@@ -177,9 +168,6 @@ class AuthServiveUnitTest extends UnitTest {
         }
     }
 
-    // =====================================================================
-    // 로그아웃
-    // =====================================================================
     @Nested
     @DisplayName("로그아웃")
     class Logout {
@@ -189,7 +177,6 @@ class AuthServiveUnitTest extends UnitTest {
         void 성공() {
             given(jwtTokenProvider.validateToken(REFRESH_TOKEN)).willReturn(true);
             given(jwtTokenProvider.getUserId(REFRESH_TOKEN)).willReturn(1L);
-            given(userRepository.findById(1L)).willReturn(Optional.of(testUser));
 
             authService.logout(REFRESH_TOKEN);
 
@@ -204,7 +191,6 @@ class AuthServiveUnitTest extends UnitTest {
             assertThatCode(() -> authService.logout("invalid.token"))
                     .doesNotThrowAnyException();
 
-            // userId 추출 → Redis 삭제까지 진행되면 안 됨
             verify(refreshTokenStore, never()).delete(anyLong());
         }
     }

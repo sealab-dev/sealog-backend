@@ -7,9 +7,9 @@ import com.sealog.backend.domain.feature.series.repository.SeriesRepository;
 import com.sealog.backend.domain.feature.post.entity.Post;
 import com.sealog.backend.domain.feature.post.enums.PostStatus;
 import com.sealog.backend.domain.feature.post.repository.PostRepository;
-import com.sealog.backend.domain.feature.stack.entity.Stack;
-import com.sealog.backend.domain.feature.stack.enums.StackGroup;
-import com.sealog.backend.domain.feature.stack.repository.StackRepository;
+import com.sealog.backend.domain.feature.category.entity.Category;
+import com.sealog.backend.domain.feature.category.enums.CategoryGroup;
+import com.sealog.backend.domain.feature.category.repository.CategoryRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
@@ -43,7 +43,7 @@ public class TestDataFactory {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final SeriesRepository seriesRepository;
-    private final StackRepository stackRepository;
+    private final CategoryRepository categoryRepository;
 
     // JDBC 직접 사용
     private final JdbcTemplate jdbcTemplate;
@@ -91,6 +91,10 @@ public class TestDataFactory {
         );
     }
 
+    public User createUser() {
+        return createUser(UserRole.USER);
+    }
+
 
     /**
      * Post 단일 생성
@@ -102,6 +106,10 @@ public class TestDataFactory {
         return postRepository.save(
                 createEntity(postRepository::count, idx -> buildPost(idx, user, status))
         );
+    }
+
+    public Post createPost(User user) {
+        return createPost(user, PostStatus.PUBLISHED);
     }
 
 
@@ -169,13 +177,13 @@ public class TestDataFactory {
 
 
     /**
-     * Stack 단일 생성
-     * @param stackGroup 스택 그룹
-     * @return 저장된 Stack 엔티티 (ID 포함)
+     * Category 단일 생성
+     * @param categoryGroup 카테고리 그룹
+     * @return 저장된 Category 엔티티 (ID 포함)
      */
-    public Stack createStack(StackGroup stackGroup) {
-        return stackRepository.save(
-                createEntity(stackRepository::count, idx -> buildStack(idx, stackGroup))
+    public Category createCategory(CategoryGroup categoryGroup) {
+        return categoryRepository.save(
+                createEntity(categoryRepository::count, idx -> buildCategory(idx, categoryGroup))
         );
     }
 
@@ -386,12 +394,12 @@ public class TestDataFactory {
 
 
     /**
-     * builder 기반 stack entity 생성
+     * builder 기반 category entity 생성
      */
-    private Stack buildStack(long idx, StackGroup stackGroup) {
-        return Stack.builder()
-                .name("스택%06d".formatted(idx))
-                .stackGroup(stackGroup)
+    private Category buildCategory(long idx, CategoryGroup categoryGroup) {
+        return Category.builder()
+                .name("카테고리%06d".formatted(idx))
+                .categoryGroup(categoryGroup)
                 .build();
     }
 

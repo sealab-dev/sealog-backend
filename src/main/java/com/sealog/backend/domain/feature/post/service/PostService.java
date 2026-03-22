@@ -81,15 +81,15 @@ public interface PostService {
     Page<PostResponse.PostItem> searchPostsByNickname(String nickname, String keyword, Pageable pageable);
 
     /**
-     * 특정 사용자의 스택별 공개 게시글 목록 조회
+     * 특정 사용자의 카테고리별 공개 게시글 목록 조회
      * - PUBLISHED 상태만, 닉네임 일치하는 사용자의 게시글만
      *
-     * @param nickname  조회할 사용자 닉네임
-     * @param stackName 조회할 스택 이름 (Stack.name, unique)
-     * @param pageable  페이지네이션 정보
-     * @return 해당 스택이 적용된 게시글 목록
+     * @param nickname     조회할 사용자 닉네임
+     * @param categoryName 조회할 카테고리 이름 (Category.name, unique)
+     * @param pageable     페이지네이션 정보
+     * @return 해당 카테고리가 적용된 게시글 목록
      */
-    Page<PostResponse.PostItem> getPostsByStack(String nickname, String stackName, Pageable pageable);
+    Page<PostResponse.PostItem> getPostsByCategory(String nickname, String categoryName, Pageable pageable);
 
     // ========== Create, Update, Delete ========== //
 
@@ -142,6 +142,15 @@ public interface PostService {
      * @throws CustomException 게시글 없음, 권한 없음, 이미 복구된 게시글
      */
     void restore(Long userId, Long postId);
+
+    /**
+     * 이미지 업로드
+     *
+     * @param file   업로드할 파일
+     * @param userId 요청 사용자 ID
+     * @return 업로드된 파일 URL
+     */
+    String uploadImage(MultipartFile file, Long userId);
 
     /**
      * 삭제된 게시글 조회

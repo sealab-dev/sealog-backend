@@ -40,9 +40,9 @@ public class PostMeRequest {
         @Schema(description = "태그 목록", example = "[\"spring\", \"jwt\"]")
         private List<String> tags;
 
-        @Size(max = 5, message = "스택은 최대 5개까지 등록할 수 있습니다")
-        @Schema(description = "스택 ID 목록", example = "[1, 3, 5]")
-        private List<Long> stackIds;
+        @Size(max = 5, message = "카테고리는 최대 5개까지 등록할 수 있습니다")
+        @Schema(description = "카테고리 ID 목록", example = "[1, 3, 5]")
+        private List<Long> categoryIds;
 
     }
 
@@ -74,9 +74,9 @@ public class PostMeRequest {
         @Schema(description = "태그 목록", example = "[\"spring\", \"jwt\"]")
         private List<String> tags;
 
-        @Size(max = 5, message = "스택은 최대 5개까지 등록할 수 있습니다")
-        @Schema(description = "스택 ID 목록", example = "[1, 3, 5]")
-        private List<Long> stackIds;
+        @Size(max = 5, message = "카테고리는 최대 5개까지 등록할 수 있습니다")
+        @Schema(description = "카테고리 ID 목록", example = "[1, 3, 5]")
+        private List<Long> categoryIds;
 
     }
 }

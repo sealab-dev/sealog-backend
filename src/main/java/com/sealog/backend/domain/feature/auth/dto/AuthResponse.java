@@ -1,24 +1,36 @@
 package com.sealog.backend.domain.feature.auth.dto;
 
-import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
+/**
+ * 인증 관련 응답 DTO
+ */
 public class AuthResponse {
 
+    /**
+     * 토큰 및 사용자 프로필 요약 응답
+     */
     @Getter
     @Builder
     public static class Token {
-
         private final String accessToken;
         private final String refreshToken;
         private final AuthProfile authProfile;
+
+        public static Token of(String accessToken, String refreshToken, AuthProfile authProfile) {
+            return Token.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .authProfile(authProfile)
+                    .build();
+        }
     }
 
     /**
-     * 사용자 정보 응답
+     * 인증된 사용자 정보 응답
      */
     @Getter
     @Builder
@@ -43,13 +55,13 @@ public class AuthResponse {
         @Schema(description = "프로필 이미지 URL (없으면 null)", example = "https://cdn.example.com/profile/abc.jpg")
         private String profileImageUrl;
 
-        public static AuthProfile from(User user, String profileImageUrl) {
+        public static AuthProfile of(Long id, String email, String name, String nickname, UserRole role, String profileImageUrl) {
             return AuthProfile.builder()
-                    .id(user.getId())
-                    .email(user.getEmail())
-                    .name(user.getName())
-                    .nickname(user.getNickname())
-                    .role(user.getRole())
+                    .id(id)
+                    .email(email)
+                    .name(name)
+                    .nickname(nickname)
+                    .role(role)
                     .profileImageUrl(profileImageUrl)
                     .build();
         }

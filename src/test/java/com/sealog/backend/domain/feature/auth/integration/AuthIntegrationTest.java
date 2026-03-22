@@ -27,7 +27,6 @@ class AuthIntegrationTest extends IntegrationTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
-    @Autowired UserRepository userRepository;
     @Autowired JwtTokenProvider jwtTokenProvider;
     @Autowired
     RefreshTokenStore refreshTokenStore;
