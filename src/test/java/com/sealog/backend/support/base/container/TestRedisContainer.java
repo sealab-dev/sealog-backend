@@ -1,0 +1,19 @@
+package com.sealog.backend.support.base.container;
+
+import com.sealog.backend.support.base.container.legacy.TestContainer;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Bean;
+import org.testcontainers.containers.GenericContainer;
+
+@TestConfiguration(proxyBeanMethods = false)
+public class TestRedisContainer {
+
+    @Bean
+    @ServiceConnection(name = "redis")
+    public GenericContainer<?> redisContainer() {
+        return new GenericContainer<>(TestContainer.DEFAULT_IMAGE_REDIS)
+                .withExposedPorts(TestContainer.DEFAULT_REDIS_PORT);
+    }
+
+}
