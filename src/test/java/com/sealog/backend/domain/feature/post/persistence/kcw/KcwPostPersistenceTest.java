@@ -92,17 +92,8 @@ class KcwPostPersistenceTest extends PersistenceTest {
                     // 5. 보편 케이스 (중규모 매칭 — testUser + otherUser 전용 삽입)
                     LogUtils.showCostLog("QUERY 7", () -> testDataFactory.createTestPosts(2_000, PostStatus.PUBLISHED, testUser, COMMON_KEYWORD, CONTENT_LENGTH));
                     LogUtils.showCostLog("QUERY 8", () -> testDataFactory.createTestPosts(500, PostStatus.PUBLISHED, otherUser, COMMON_KEYWORD, CONTENT_LENGTH));
-
-                    // 6. QueryDSL 클래스 로딩 유도
-                    // 최초 1번, querydsl 쿼리를 수행하지 않으면, 클래스 로딩으로 인해 실행 시간이 (100ms 이상 지연 발생. 정상 비교 불가)
-                    postRepository.searchFt(null, NO_MATCH_KEYWORD, PageRequest.of(0, 1));
                 }
         );
-    }
-
-    @Test
-    @Order(0)
-    void warmUp() {
     }
 
     // =====================================================================

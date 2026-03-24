@@ -4,6 +4,7 @@ import com.sealog.backend.infra.orm.querydsl.QueryDslConfig;
 import com.sealog.backend.support.base.config.TestGlobalConfig;
 import com.sealog.backend.support.base.container.TestMariaDBContainer;
 import com.sealog.backend.support.component.TestDataFactory;
+import com.sealog.backend.support.component.TestQueryDslWarmUp;
 import com.sealog.backend.support.constant.TestMode;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +19,11 @@ import org.springframework.test.context.jdbc.Sql;
  * 사용 목적:
  * - 대량 데이터 기반 쿼리 성능·정확성 검증
  * - @BeforeAll로 생성한 데이터를 테스트 간 유지 (clearDatabase no-op)
- * - 테스트 종료 시 truncateAll()로 직접 정리
  */
 @Tag(TestMode.PERSISTENCE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DataJpaTest
-@Import({TestDataFactory.class, QueryDslConfig.class, TestMariaDBContainer.class})
+@Import({TestDataFactory.class, QueryDslConfig.class, TestMariaDBContainer.class, TestQueryDslWarmUp.class})
 @Sql(
         // Spring 컨텍스트 로딩(=JPA 테이블 생성) 완료 이후, 첫 번째 테스트 메서드 실행 이전에 실행
         scripts = "/sql/index.sql",
@@ -34,12 +34,15 @@ public abstract class PersistenceTest extends TestGlobalConfig /*extends TestPer
 
     // 사용 의존성
     @Autowired protected TestDataFactory testDataFactory;
+    @Autowired protected TestQueryDslWarmUp testQueryDslWarmUp;
 
     // warmUp 수행 여부
     private static volatile boolean warmedUp = false;
 
+    @Order(Integer.MIN_VALUE)
     @Test
-    void warmup() {
+    void warmUp() {
+        testQueryDslWarmUp.warmUp(); // querydsl WarmUp (필요 클래스 로딩)
     }
 
     /**
@@ -47,6 +50,7 @@ public abstract class PersistenceTest extends TestGlobalConfig /*extends TestPer
      */
     @BeforeAll
     protected void truncateAll() {
-        testDataFactory.clearTable();
+        testDataFactory.clearTable();   // 테이블 정리
+        testQueryDslWarmUp.warmUp();    // querydsl WarmUp (필요 클래스 로딩)
     }
 }
