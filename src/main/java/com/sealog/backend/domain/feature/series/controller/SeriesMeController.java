@@ -72,7 +72,7 @@ public class SeriesMeController {
             @Parameter(description = "시리즈 슬러그", example = "spring-series") @PathVariable String slug,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<SeriesMeResponse.MySeriesPostItem> items = seriesService.getPagedPostItemsMe(userDetails.getUserId(), slug, pageable);
+        Page<SeriesMeResponse.MySeriesPostItem> items = seriesService.getPagedPostItemsMe(userDetails.getUserId(), userDetails.getNickname(), slug, pageable);
         return PageResponse.from(items);
     }
 

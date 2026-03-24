@@ -44,13 +44,14 @@ public interface SeriesService {
      * - 공개/비공개 및 모든 게시글 상태(PUBLISHED, DRAFT 등)를 포함합니다.
      *
      * @param userId   소유자(나)의 ID
+     * @param nickname 소유자(나)의 닉네임
      * @param slug     시리즈 slug
      * @param pageable 페이징 정보
      * @return 시리즈 내 전체 게시글 목록 페이지
      * @throws CustomException.notFound  시리즈를 찾을 수 없는 경우 발생
      * @throws CustomException.forbidden 본인의 시리즈가 아닐 경우 발생
      */
-    Page<SeriesMeResponse.MySeriesPostItem> getPagedPostItemsMe(Long userId, String slug, Pageable pageable);
+    Page<SeriesMeResponse.MySeriesPostItem> getPagedPostItemsMe(Long userId, String nickname, String slug, Pageable pageable);
 
     /**
      * 내 전체 시리즈 목록을 페이징 조회합니다.
