@@ -1,6 +1,6 @@
 package com.sealog.backend.support.base.container;
 
-import com.sealog.backend.support.base.container.legacy.TestContainer;
+import com.sealog.backend.support.constant.TestContainer;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
