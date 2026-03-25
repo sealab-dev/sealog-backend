@@ -198,6 +198,10 @@ public class PostServiceImpl implements PostService {
             throw CustomException.forbidden("권한이 없습니다.");
         }
 
+        if (!post.isDeleted()) {
+            throw CustomException.badRequest("삭제되지 않은 게시글입니다.");
+        }
+
         post.restoreFromDelete();
     }
 

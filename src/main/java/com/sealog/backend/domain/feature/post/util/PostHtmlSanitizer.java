@@ -36,7 +36,7 @@ public class PostHtmlSanitizer {
 
     private static final Safelist SAFELIST = Safelist.relaxed()
             .addTags("hr")
-            .addAttributes("img", "data-file-id", "data-file-path")
+            .addAttributes("img", "src", "data-file-id", "data-file-path")
             .addAttributes("div", "data-type")
             .addTags("video")
             .addAttributes("video", "src", "controls", "width", "height", "data-file-id", "data-file-path")
