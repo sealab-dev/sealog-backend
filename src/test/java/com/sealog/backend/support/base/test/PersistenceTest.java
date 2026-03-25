@@ -39,12 +39,6 @@ public abstract class PersistenceTest extends TestGlobalConfig /*extends TestPer
     // warmUp 수행 여부
     private static volatile boolean warmedUp = false;
 
-    @Order(Integer.MIN_VALUE)
-    @Test
-    void warmUp() {
-        testQueryDslWarmUp.warmUp(); // querydsl WarmUp (필요 클래스 로딩)
-    }
-
     /**
      * 각 테스트 클래스 종료 후, 테이블 재생성 (TRUNCATE)
      */
