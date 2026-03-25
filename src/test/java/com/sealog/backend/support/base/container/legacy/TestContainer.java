@@ -1,4 +1,4 @@
-package com.sealog.backend.support.base.container;
+package com.sealog.backend.support.base.container.legacy;
 
 import lombok.experimental.UtilityClass;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -20,7 +20,7 @@ public class TestContainer {
     public static final int DEFAULT_REDIS_PORT = 6379;
 
     // 컨테이너 상수
-    private static final MariaDBContainer<?> MARIA_DB =
+    public static final MariaDBContainer<?> MARIA_DB =
             new MariaDBContainer<>(TestContainer.DEFAULT_IMAGE_DATABASE)
                     .withDatabaseName(TestContainer.DEFAULT_DATABASE_NAME)
                     .withUsername(TestContainer.DEFAULT_DATABASE_USERNAME)
@@ -33,7 +33,7 @@ public class TestContainer {
                             "--innodb-ft-min-token-size=2"          // 한글 2글자 검색을 위해 MariaDB 설정
                     );
 
-    private static final GenericContainer<?> REDIS =
+    public static final GenericContainer<?> REDIS =
             new GenericContainer<>(TestContainer.DEFAULT_IMAGE_REDIS)
                     .withExposedPorts(TestContainer.DEFAULT_REDIS_PORT);
 

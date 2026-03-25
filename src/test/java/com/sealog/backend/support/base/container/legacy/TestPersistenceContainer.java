@@ -1,4 +1,4 @@
-package com.sealog.backend.support.base.container;
+package com.sealog.backend.support.base.container.legacy;
 
 import com.sealog.backend.support.base.config.TestGlobalConfig;
 import org.springframework.test.context.DynamicPropertyRegistry;

@@ -13,7 +13,7 @@ import com.sealog.backend.domain.feature.category.repository.CategoryRepository;
 import com.sealog.backend.domain.feature.user.entity.User;
 import com.sealog.backend.domain.feature.user.enums.UserRole;
 import com.sealog.backend.domain.feature.user.repository.UserRepository;
-import com.sealog.backend.support.base.container.TestContainer;
+import com.sealog.backend.support.base.container.legacy.TestContainer;
 import com.sealog.backend.support.constant.TestSql;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.context.TestComponent;
@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 /**
@@ -74,6 +73,10 @@ public class TestDataFactory {
         // 3. FK Constraint 활성화
         jdbcTemplate.execute(TestSql.FOREIGN_KEY_CHECKS_ACTIVATION);
     }
+
+    // =========================================================
+    // 헬퍼 함수
+    // =========================================================
 
 
     // =========================================================
