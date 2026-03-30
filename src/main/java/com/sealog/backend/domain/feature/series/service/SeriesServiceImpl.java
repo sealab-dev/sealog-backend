@@ -59,8 +59,8 @@ public class SeriesServiceImpl implements SeriesService {
     // ========== User (인증/소유자) ========== //
 
     @Override
-    public Page<SeriesMeResponse.MySeriesPostItem> getPagedPostItemsMe(Long userId, String slug, Pageable pageable) {
-        Series series = seriesRepository.findByNicknameAndSlug(null, slug)
+    public Page<SeriesMeResponse.MySeriesPostItem> getPagedPostItemsMe(Long userId, String nickname, String slug, Pageable pageable) {
+        Series series = seriesRepository.findByNicknameAndSlug(nickname, slug)
                 .orElseThrow(() -> CustomException.notFound("시리즈를 찾을 수 없습니다."));
         
         verifyOwner(series, userId);

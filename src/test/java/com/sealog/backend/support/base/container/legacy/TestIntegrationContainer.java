@@ -1,6 +1,7 @@
 package com.sealog.backend.support.base.container.legacy;
 
 import com.sealog.backend.support.base.config.TestGlobalConfig;
+import com.sealog.backend.support.constant.TestContainer;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
@@ -17,8 +18,25 @@ public abstract class TestIntegrationContainer extends TestGlobalConfig {
 
     // static 블록
     static {
-        MARIA_DB = TestContainer.getAndStartMariaDBContainer();
-        REDIS = TestContainer.getAndStartRedisContainer();
+        MARIA_DB = new MariaDBContainer<>(TestContainer.DEFAULT_IMAGE_DATABASE)
+                .withDatabaseName(TestContainer.DEFAULT_DATABASE_NAME)
+                .withUsername(TestContainer.DEFAULT_DATABASE_USERNAME)
+                .withPassword(TestContainer.DEFAULT_DATABASE_PASSWORD)
+                .withUrlParam("serverTimezone", "Asia/Seoul")
+                .withUrlParam("characterEncoding", "UTF-8")
+                .withCommand(
+                        "--innodb-flush-log-at-trx-commit=2",  // commit 시 fsync 제거 (OS 버퍼에 쓰기만)
+                        "--innodb-doublewrite=OFF",             // 이중 쓰기 버퍼 비활성화 (데이터 파일 쓰기 절반으로 감소, 운영 환경 비권장)
+                        "--innodb-buffer-pool-size=512M",       // dirty page 수용 공간 확대 (DB 버퍼 공간 증가로 삽입 시간 개선)
+                        "--max-allowed-packet=128M",            // MariaDB로 전송하는 단일 패킷 최대 크기
+                        "--innodb-ft-min-token-size=2"          // 한글 2글자 검색을 위해 MariaDB 설정
+                );
+
+        REDIS = new GenericContainer<>(TestContainer.DEFAULT_IMAGE_REDIS)
+                .withExposedPorts(TestContainer.DEFAULT_REDIS_PORT);
+
+        MARIA_DB.start();
+        REDIS.start();
     }
 
     /**
@@ -27,8 +45,11 @@ public abstract class TestIntegrationContainer extends TestGlobalConfig {
      */
     @DynamicPropertySource
     static void overrideContainerProperties(DynamicPropertyRegistry registry) {
-        TestContainer.registerMariaDb(MARIA_DB, registry);
-        TestContainer.registerRedis(REDIS, registry);
-    }
+        registry.add("spring.datasource.url", MARIA_DB::getJdbcUrl);
+        registry.add("spring.datasource.username", MARIA_DB::getUsername);
+        registry.add("spring.datasource.password", MARIA_DB::getPassword);
+        registry.add("spring.data.redis.host", REDIS::getHost);
+        registry.add("spring.data.redis.port", () -> String.valueOf(REDIS.getMappedPort(TestContainer.DEFAULT_REDIS_PORT)));
 
+    }
 }

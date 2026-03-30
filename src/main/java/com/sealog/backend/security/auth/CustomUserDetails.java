@@ -28,6 +28,14 @@ public class CustomUserDetails implements UserDetails {
     }
 
     /**
+     * 사용자 닉네임 반환
+     * - Controller에서 인증된 사용자 닉네임 조회 시 사용
+     */
+    public String getNickname() {
+        return user.getNickname();
+    }
+
+    /**
      * 권한 목록 반환
      * - ROLE_ADMIN, ROLE_USER 등
      */
